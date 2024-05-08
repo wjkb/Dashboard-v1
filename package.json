@@ -1,6 +1,7 @@
 {
   "name": "react-admin",
   "version": "0.1.0",
+  "homepage": "https://HTX-Dashboard-for-SB2.github.io/SB2-Dashboard",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.11.4",
