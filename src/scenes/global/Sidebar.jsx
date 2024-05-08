@@ -5,6 +5,7 @@ import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import { Link } from "react-router-dom";
 import { tokens } from "../../theme";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+import AppsOutlinedIcon from "@mui/icons-material/AppsOutlined";
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
@@ -113,6 +114,13 @@ const Sidebar = () => {
             title="Dashboard"
             to="/"
             icon={<HomeOutlinedIcon />}
+            selected={selected}
+            setSelected={setSelected}
+          />
+          <Item
+            title="Manage platforms"
+            to="/manageplatforms"
+            icon={<AppsOutlinedIcon />}
             selected={selected}
             setSelected={setSelected}
           />
