@@ -1,15 +1,17 @@
 import { ColorModeContext, useMode } from "./theme";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { Routes, Route } from "react-router-dom";
+import { useState } from "react";
 import Topbar from "./scenes/global/Topbar";
 import Sidebar from "./scenes/global/Sidebar";
 import Dashboard from "./scenes/dashboard";
 import Form from "./scenes/form";
 // import Team from "./scenes/Team";
-// import Platforms from "./scenes/Platforms";
+import Platforms from "./scenes/platforms";
 
 function App() {
   const [theme, colorMode] = useMode();
+  const [selectedPlatform, setSelectedPlatform] = useState(null);
 
   return (
     <ColorModeContext.Provider value={colorMode}>
@@ -21,9 +23,12 @@ function App() {
             <Topbar />
             <Routes>
               <Route path="/" element={<Dashboard />} />
+              <Route
+                path="/platforms"
+                element={<Platforms selectedPlatform={selectedPlatform} />}
+              />
               <Route path="/addbot" element={<Form />} />
               {/* <Route path="/team" element={<Team />} /> */}
-              {/* <Route path="/platforms" element={<Platforms />} /> */}
             </Routes>
           </main>
         </div>

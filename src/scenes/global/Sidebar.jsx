@@ -119,7 +119,7 @@ const Sidebar = () => {
           />
           <Item
             title="Manage platforms"
-            to="/manageplatforms"
+            to="/platforms"
             icon={<AppsOutlinedIcon />}
             selected={selected}
             setSelected={setSelected}
