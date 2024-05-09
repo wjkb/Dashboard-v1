@@ -36,7 +36,7 @@ const botScheme = yup.object().shape({
   email: yup.string().email("Invalid email"),
   persona: yup.string().required("required"),
   model: yup.string().required("required"),
-  platforms: yup.array().min(1, "Select at least one platform"),
+  platforms: yup.array().min(1, "required"),
 });
 
 const Form = () => {
@@ -144,39 +144,33 @@ const Form = () => {
                 helperText={touched.model && errors.model}
                 sx={{ gridColumn: "span 4" }}
               />
+
               {/* Platform field*/}
-              <Select
+              <TextField
+                select
                 fullWidth
                 variant="filled"
-                type="text"
                 label="Platforms"
-                multiple
-                displayEmpty={true}
-                renderValue={(selected) =>
-                  selected.join(", ") || "Platforms Used"
-                }
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.platforms}
+                id="platforms"
                 name="platforms"
+                value={values.platforms}
+                onChange={handleChange}
+                onBlur={handleBlur}
                 error={!!touched.platforms && !!errors.platforms}
                 helperText={touched.platforms && errors.platforms}
+                SelectProps={{
+                  multiple: true,
+                  renderValue: (selected) => selected.join(", "),
+                }}
                 sx={{ gridColumn: "span 4" }}
               >
-                {platformNames.map((name) => (
-                  <MenuItem key={name} value={name}>
-                    <Checkbox checked={values.platforms.indexOf(name) > -1} />
-                    <ListItemText primary={name} />
+                {platformNames.map((platform) => (
+                  <MenuItem key={platform} value={platform}>
+                    <Checkbox checked={values.platforms.includes(platform)} />
+                    <ListItemText primary={platform} />
                   </MenuItem>
                 ))}
-              </Select>
-              {/* {touched.platforms && errors.platforms ? (
-                <FormHelperText
-                  sx={{ color: "#bf3333", marginLeft: "16px !important" }}
-                >
-                  {touched.platforms && errors.platforms}
-                </FormHelperText>
-              ) : null} */}
+              </TextField>
             </Box>
             <Box display="flex" justifyContent="end" mt="20px">
               <Button type="submit" color="secondary" variant="contained">
