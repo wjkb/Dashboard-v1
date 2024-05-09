@@ -30,7 +30,7 @@ const platformNames = ["Facebook", "Whatsapp", "Telegram"];
 const botScheme = yup.object().shape({
   phoneNumber: yup
     .string()
-    .required("Phone number is required")
+    .required("required")
     .matches(phoneRegExp, "Invalid phone number"),
   name: yup.string().required("required"),
   email: yup.string().email("Invalid email"),
