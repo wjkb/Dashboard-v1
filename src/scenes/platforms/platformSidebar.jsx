@@ -37,7 +37,7 @@ const PlatformSidebar = ({ selectedPlatform }) => {
     <Box
       sx={{
         "& .pro-sidebar-inner": {
-          background: theme.palette.primary.main + " !important",
+          background: "#53057e !important",
         },
         "& .pro-icon-wrapper": {
           backgroundColor: "transparent !important",
