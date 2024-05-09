@@ -150,7 +150,7 @@ const Form = () => {
                 select
                 fullWidth
                 variant="filled"
-                label="Platforms"
+                label="Platform(s)"
                 id="platforms"
                 name="platforms"
                 value={values.platforms}
