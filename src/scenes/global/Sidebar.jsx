@@ -49,7 +49,7 @@ const Sidebar = () => {
         "& .pro-inner-item:hover": {
           color: "#ff00fe !important",
         },
-        "& .pro-inner-item.active": {
+        "& .pro-menu-item.active": {
           color: "#ff00fe !important",
         },
       }}
