@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
 import "react-pro-sidebar/dist/css/styles.css";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import { tokens } from "../../theme";
 import FacebookOutlinedIcon from "@mui/icons-material/FacebookOutlined";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
@@ -86,6 +86,7 @@ const PlatformSidebar = () => {
           </Menu>
         </ProSidebar>
       </Box>
+      <Outlet />
     </>
   );
 };

@@ -30,7 +30,7 @@ const FacebookBotsSidebar = () => {
   const theme = useTheme();
   const colors = tokens;
 
-  return <h1> THIS IS USED TO TEST IF THIS COMPONENT RENDERS </h1>;
+  return <h1> THIS IS USED TO TEST IF THIS 'FacebookBotsSidebar' COMPONENT RENDERS </h1>;
 };
 
 export default FacebookBotsSidebar;
