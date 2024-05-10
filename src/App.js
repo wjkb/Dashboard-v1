@@ -23,12 +23,8 @@ function App() {
             <Topbar />
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route
-                path="/platforms"
-                element={<Platforms />}
-              />
+              <Route path="/platforms" element={<Platforms />} />
               <Route path="/addbot" element={<Form />} />
-              {/* <Route path="/team" element={<Team />} /> */}
             </Routes>
           </main>
         </div>
