@@ -10,7 +10,7 @@ const Platforms = ({ selectedPlatform }) => {
           <Header title="Platforms" subtitle="Choose the platform:" />
         </Box>
       </Box>
-      <PlatformSidebar selectedPlatform={selectedPlatform} />
+      <PlatformSidebar />
     </>
   );
 };

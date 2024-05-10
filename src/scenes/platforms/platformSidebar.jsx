@@ -4,9 +4,9 @@ import "react-pro-sidebar/dist/css/styles.css";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import { Link } from "react-router-dom";
 import { tokens } from "../../theme";
-import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
-import AppsOutlinedIcon from "@mui/icons-material/AppsOutlined";
-import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
+import FacebookOutlinedIcon from '@mui/icons-material/FacebookOutlined';
+import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
+import SendOutlinedIcon from '@mui/icons-material/SendOutlined';
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
@@ -27,11 +27,11 @@ const Item = ({ title, to, icon, selected, setSelected }) => {
   );
 };
 
-const PlatformSidebar = ({ selectedPlatform }) => {
+const PlatformSidebar = () => {
   const theme = useTheme();
   const colors = tokens;
 
-  const [selected, setSelected] = useState(selectedPlatform || "Dashboard");
+  const [selected, setSelected] = useState(null);
 
   return (
     <Box
@@ -59,21 +59,21 @@ const PlatformSidebar = ({ selectedPlatform }) => {
           <Item
             title="Facebook"
             to="/platforms/facebook"
-            icon={<HomeOutlinedIcon />}
+            icon={<FacebookOutlinedIcon />}
             selected={selected}
             setSelected={setSelected}
           />
           <Item
             title="WhatsApp"
             to="/platforms/whatsapp"
-            icon={<AppsOutlinedIcon />}
+            icon={<ForumOutlinedIcon />}
             selected={selected}
             setSelected={setSelected}
           />
           <Item
             title="Telegram"
             to="/platforms/telegram"
-            icon={<PeopleOutlinedIcon />}
+            icon={<SendOutlinedIcon />}
             selected={selected}
             setSelected={setSelected}
           />

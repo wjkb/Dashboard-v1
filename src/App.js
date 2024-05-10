@@ -25,7 +25,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route
                 path="/platforms"
-                element={<Platforms selectedPlatform={selectedPlatform} />}
+                element={<Platforms />}
               />
               <Route path="/addbot" element={<Form />} />
               {/* <Route path="/team" element={<Team />} /> */}
