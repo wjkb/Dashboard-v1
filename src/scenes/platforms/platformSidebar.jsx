@@ -7,7 +7,6 @@ import { tokens } from "../../theme";
 import FacebookOutlinedIcon from '@mui/icons-material/FacebookOutlined';
 import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined';
-import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
