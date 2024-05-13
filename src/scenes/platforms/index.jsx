@@ -72,14 +72,14 @@ const PlatformSidebar = () => {
               setSelected={setSelected}
             />
             <Item
-              title="WhatsApp {work in progress}"
+              title="WhatsApp"
               to="/platforms/whatsapp"
               icon={<ForumOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
             <Item
-              title="Telegram {work in progress}"
+              title="Telegram"
               to="/platforms/telegram"
               icon={<SendOutlinedIcon />}
               selected={selected}

@@ -7,9 +7,9 @@ import Sidebar from "./scenes/global/Sidebar";
 import Dashboard from "./scenes/dashboard";
 import Form from "./scenes/form";
 import PlatformSidebar from "./scenes/platforms";
-import FacebookBots from "./scenes/platforms/FacebookBots";
-import WhatsappBotsSidebar from "./scenes/platforms/WhatsappBotsSidebar";
-import TelegramBotsSidebar from "./scenes/platforms/TelegramBotsSidebar";
+import FacebookBots from "./scenes/bots/FacebookBots";
+import WhatsappBotsSidebar from "./scenes/bots/WhatsappBots";
+import TelegramBotsSidebar from "./scenes/bots/TelegramBots";
 
 function App() {
   const [theme, colorMode] = useMode();
