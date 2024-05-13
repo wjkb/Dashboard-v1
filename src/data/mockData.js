@@ -1,77 +1,84 @@
-import { tokens } from "../theme";
-
-export const mockDataTeam = [
+export const mockDataAllBots = [
   {
     id: 1,
-    name: "Jon Snow",
-    email: "jonsnow@gmail.com",
-    age: 35,
-    phone: "(665)121-5454",
-    access: "admin",
+    phone: "90000001",
+    name: "Lim Wei Jie",
+    email: "limweijie@gmail.com",
+    persona: "Middle-aged man",
+    model: "Llama 2",
+    platforms: ["Facebook", "WhatsApp"],
   },
   {
     id: 2,
-    name: "Cersei Lannister",
-    email: "cerseilannister@gmail.com",
-    age: 42,
-    phone: "(421)314-2288",
-    access: "manager",
+    phone: "90000002",
+    name: "Chua Mei Ling",
+    email: "chuameiling@gmail.com",
+    persona: "Middle-aged man",
+    model: "Llama 3",
+    platforms: ["WhatsApp", "Telegram"],
   },
   {
     id: 3,
-    name: "Jaime Lannister",
-    email: "jaimelannister@gmail.com",
-    age: 45,
-    phone: "(422)982-6739",
-    access: "user",
+    phone: "90000003",
+    name: "Ahmad Yusof",
+    email: "ahmadyusof@gmail.com",
+    persona: "Old man",
+    model: "Llama 2",
+    platforms: ["Facebook"],
   },
   {
     id: 4,
-    name: "Anya Stark",
-    email: "anyastark@gmail.com",
-    age: 16,
-    phone: "(921)425-6742",
-    access: "admin",
+    phone: "90000004",
+    name: "Wong Li Hua",
+    email: "wonglihua@gmail.com",
+    persona: "Young woman",
+    model: "Llama 2",
+    platforms: ["Facebook", "Telegram"],
   },
   {
     id: 5,
-    name: "Daenerys Targaryen",
-    email: "daenerystargaryen@gmail.com",
-    age: 31,
-    phone: "(421)445-1189",
-    access: "user",
+    phone: "90000005",
+    name: "Tan Wei",
+    email: "tanwei@gmail.com",
+    persona: "Young man",
+    model: "Llama 3",
+    platforms: ["Facebook", "WhatsApp"],
   },
   {
     id: 6,
-    name: "Ever Melisandre",
-    email: "evermelisandre@gmail.com",
-    age: 150,
-    phone: "(232)545-6483",
-    access: "manager",
+    phone: "90000006",
+    name: "Lim Mei Ling",
+    email: "limmeiling@gmail.com",
+    persona: "Middle-aged woman",
+    model: "Llama 2",
+    platforms: ["WhatsApp", "Telegram"],
   },
   {
     id: 7,
-    name: "Ferrara Clifford",
-    email: "ferraraclifford@gmail.com",
-    age: 44,
-    phone: "(543)124-0123",
-    access: "user",
+    phone: "90000007",
+    name: "Rajendra Kumar",
+    email: "rajendrakumar@gmail.com",
+    persona: "Old man",
+    model: "Llama 3",
+    platforms: ["Facebook"],
   },
   {
     id: 8,
-    name: "Rossini Frances",
-    email: "rossinifrances@gmail.com",
-    age: 36,
-    phone: "(222)444-5555",
-    access: "user",
+    phone: "90000008",
+    name: "Loh Jia Hui",
+    email: "lohjiahui@gmail.com",
+    persona: "Middle-aged woman",
+    model: "Llama 2",
+    platforms: ["Telegram"],
   },
   {
     id: 9,
-    name: "Harvey Roxie",
-    email: "harveyroxie@gmail.com",
-    age: 65,
-    phone: "(444)555-6239",
-    access: "admin",
+    phone: "90000009",
+    name: "Soh Wei Lun",
+    email: "sohweilun@gmail.com",
+    persona: "Young man",
+    model: "Llama 3",
+    platforms: ["Facebook", "WhatsApp", "Telegram"],
   },
 ];
 
@@ -430,170 +437,170 @@ export const mockPieData = [
   },
 ];
 
-export const mockLineData = [
-  {
-    id: "japan",
-    color: tokens("dark").greenAccent[500],
-    data: [
-      {
-        x: "plane",
-        y: 101,
-      },
-      {
-        x: "helicopter",
-        y: 75,
-      },
-      {
-        x: "boat",
-        y: 36,
-      },
-      {
-        x: "train",
-        y: 216,
-      },
-      {
-        x: "subway",
-        y: 35,
-      },
-      {
-        x: "bus",
-        y: 236,
-      },
-      {
-        x: "car",
-        y: 88,
-      },
-      {
-        x: "moto",
-        y: 232,
-      },
-      {
-        x: "bicycle",
-        y: 281,
-      },
-      {
-        x: "horse",
-        y: 1,
-      },
-      {
-        x: "skateboard",
-        y: 35,
-      },
-      {
-        x: "others",
-        y: 14,
-      },
-    ],
-  },
-  {
-    id: "france",
-    color: tokens("dark").blueAccent[300],
-    data: [
-      {
-        x: "plane",
-        y: 212,
-      },
-      {
-        x: "helicopter",
-        y: 190,
-      },
-      {
-        x: "boat",
-        y: 270,
-      },
-      {
-        x: "train",
-        y: 9,
-      },
-      {
-        x: "subway",
-        y: 75,
-      },
-      {
-        x: "bus",
-        y: 175,
-      },
-      {
-        x: "car",
-        y: 33,
-      },
-      {
-        x: "moto",
-        y: 189,
-      },
-      {
-        x: "bicycle",
-        y: 97,
-      },
-      {
-        x: "horse",
-        y: 87,
-      },
-      {
-        x: "skateboard",
-        y: 299,
-      },
-      {
-        x: "others",
-        y: 251,
-      },
-    ],
-  },
-  {
-    id: "us",
-    color: tokens("dark").redAccent[200],
-    data: [
-      {
-        x: "plane",
-        y: 191,
-      },
-      {
-        x: "helicopter",
-        y: 136,
-      },
-      {
-        x: "boat",
-        y: 91,
-      },
-      {
-        x: "train",
-        y: 190,
-      },
-      {
-        x: "subway",
-        y: 211,
-      },
-      {
-        x: "bus",
-        y: 152,
-      },
-      {
-        x: "car",
-        y: 189,
-      },
-      {
-        x: "moto",
-        y: 152,
-      },
-      {
-        x: "bicycle",
-        y: 8,
-      },
-      {
-        x: "horse",
-        y: 197,
-      },
-      {
-        x: "skateboard",
-        y: 107,
-      },
-      {
-        x: "others",
-        y: 170,
-      },
-    ],
-  },
-];
+// export const mockLineData = [
+//   {
+//     id: "japan",
+//     color: tokens("dark").greenAccent[500],
+//     data: [
+//       {
+//         x: "plane",
+//         y: 101,
+//       },
+//       {
+//         x: "helicopter",
+//         y: 75,
+//       },
+//       {
+//         x: "boat",
+//         y: 36,
+//       },
+//       {
+//         x: "train",
+//         y: 216,
+//       },
+//       {
+//         x: "subway",
+//         y: 35,
+//       },
+//       {
+//         x: "bus",
+//         y: 236,
+//       },
+//       {
+//         x: "car",
+//         y: 88,
+//       },
+//       {
+//         x: "moto",
+//         y: 232,
+//       },
+//       {
+//         x: "bicycle",
+//         y: 281,
+//       },
+//       {
+//         x: "horse",
+//         y: 1,
+//       },
+//       {
+//         x: "skateboard",
+//         y: 35,
+//       },
+//       {
+//         x: "others",
+//         y: 14,
+//       },
+//     ],
+//   },
+//   {
+//     id: "france",
+//     color: tokens("dark").blueAccent[300],
+//     data: [
+//       {
+//         x: "plane",
+//         y: 212,
+//       },
+//       {
+//         x: "helicopter",
+//         y: 190,
+//       },
+//       {
+//         x: "boat",
+//         y: 270,
+//       },
+//       {
+//         x: "train",
+//         y: 9,
+//       },
+//       {
+//         x: "subway",
+//         y: 75,
+//       },
+//       {
+//         x: "bus",
+//         y: 175,
+//       },
+//       {
+//         x: "car",
+//         y: 33,
+//       },
+//       {
+//         x: "moto",
+//         y: 189,
+//       },
+//       {
+//         x: "bicycle",
+//         y: 97,
+//       },
+//       {
+//         x: "horse",
+//         y: 87,
+//       },
+//       {
+//         x: "skateboard",
+//         y: 299,
+//       },
+//       {
+//         x: "others",
+//         y: 251,
+//       },
+//     ],
+//   },
+//   {
+//     id: "us",
+//     color: tokens("dark").redAccent[200],
+//     data: [
+//       {
+//         x: "plane",
+//         y: 191,
+//       },
+//       {
+//         x: "helicopter",
+//         y: 136,
+//       },
+//       {
+//         x: "boat",
+//         y: 91,
+//       },
+//       {
+//         x: "train",
+//         y: 190,
+//       },
+//       {
+//         x: "subway",
+//         y: 211,
+//       },
+//       {
+//         x: "bus",
+//         y: 152,
+//       },
+//       {
+//         x: "car",
+//         y: 189,
+//       },
+//       {
+//         x: "moto",
+//         y: 152,
+//       },
+//       {
+//         x: "bicycle",
+//         y: 8,
+//       },
+//       {
+//         x: "horse",
+//         y: 197,
+//       },
+//       {
+//         x: "skateboard",
+//         y: 107,
+//       },
+//       {
+//         x: "others",
+//         y: 170,
+//       },
+//     ],
+//   },
+// ];
 
 export const mockGeographyData = [
   {

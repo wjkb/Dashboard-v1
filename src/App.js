@@ -7,7 +7,7 @@ import Sidebar from "./scenes/global/Sidebar";
 import Dashboard from "./scenes/dashboard";
 import Form from "./scenes/form";
 import PlatformSidebar from "./scenes/platforms";
-import FacebookBotsSidebar from "./scenes/platforms/FacebookBotsSidebar";
+import FacebookBots from "./scenes/platforms/FacebookBots";
 import WhatsappBotsSidebar from "./scenes/platforms/WhatsappBotsSidebar";
 import TelegramBotsSidebar from "./scenes/platforms/TelegramBotsSidebar";
 
@@ -26,7 +26,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/platforms" element={<PlatformSidebar />}>
-                <Route path="facebook" element={<FacebookBotsSidebar />} />
+                <Route path="facebook" element={<FacebookBots />} />
                 <Route path="whatsapp" element={<WhatsappBotsSidebar />} />
                 <Route path="telegram" element={<TelegramBotsSidebar />} />
               </Route>
