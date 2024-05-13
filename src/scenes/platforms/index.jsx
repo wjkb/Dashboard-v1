@@ -34,12 +34,7 @@ const PlatformSidebar = () => {
   const [selected, setSelected] = useState(null);
 
   return (
-    <>
-      <Box m="20px">
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Header title="Platforms" subtitle="Choose the platform:" />
-        </Box>
-      </Box>
+    <Box display="flex" height="calc(100% - 68.56px)">
       <Box
         sx={{
           "& .pro-sidebar-inner": {
@@ -61,6 +56,13 @@ const PlatformSidebar = () => {
       >
         <ProSidebar>
           <Menu iconShape="square">
+            <Typography
+              variant="h6"
+              color={colors.grey[300]}
+              sx={{ m: "15px 0 5px 20px" }}
+            >
+              Choose the platform:
+            </Typography>
             {/* MENU ITEMS */}
             <Item
               title="Facebook"
@@ -87,7 +89,7 @@ const PlatformSidebar = () => {
         </ProSidebar>
       </Box>
       <Outlet />
-    </>
+    </Box>
   );
 };
 
