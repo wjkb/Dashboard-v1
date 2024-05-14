@@ -5,11 +5,12 @@ import { useState } from "react";
 import Topbar from "./scenes/global/Topbar";
 import Sidebar from "./scenes/global/Sidebar";
 import Dashboard from "./scenes/dashboard";
-import Form from "./scenes/form";
 import PlatformSidebar from "./scenes/platforms";
-import FacebookBots from "./scenes/bots/FacebookBots";
-import WhatsappBotsSidebar from "./scenes/bots/WhatsappBots";
-import TelegramBotsSidebar from "./scenes/bots/TelegramBots";
+import FacebookBots from "./scenes/platformBots/FacebookBots";
+import WhatsappBotsSidebar from "./scenes/platformBots/WhatsappBots";
+import TelegramBotsSidebar from "./scenes/platformBots/TelegramBots";
+import ManageBots from "./scenes/manageBots";
+import Form from "./scenes/form";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -30,6 +31,7 @@ function App() {
                 <Route path="whatsapp" element={<WhatsappBotsSidebar />} />
                 <Route path="telegram" element={<TelegramBotsSidebar />} />
               </Route>
+              <Route path="/managebots" element={<ManageBots />} />
               <Route path="/addbot" element={<Form />} />
             </Routes>
           </main>
