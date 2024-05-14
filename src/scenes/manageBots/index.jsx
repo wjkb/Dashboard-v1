@@ -99,7 +99,7 @@ const ManageBots = () => {
   ];
 
   return (
-    <Box margin="20px" width="70%">
+    <Box margin="20px" width="auto">
       <Header title="All Bots" subtitle="Managing All Bots" />
       <Box
         height="75vh"
