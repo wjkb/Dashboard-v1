@@ -15,7 +15,12 @@ const Topbar = () => {
   // const colorMode = useContext(ColorModeContext);
 
   return (
-    <Box display="flex" justifyContent="space-between" p={2}>
+    <Box
+      display="flex"
+      justifyContent="space-between"
+      p={2}
+      backgroundColor="#6c1f98"
+    >
       {/* SEARCH BAR */}
       <Box display="flex" backgroundColor={colors.grey[700]} borderRadius="3px">
         <InputBase sx={{ ml: 2, flex: 1 }} placeholder="Search" />

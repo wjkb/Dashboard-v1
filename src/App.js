@@ -6,10 +6,10 @@ import Topbar from "./scenes/global/Topbar";
 import Sidebar from "./scenes/global/Sidebar";
 import Dashboard from "./scenes/dashboard";
 import Form from "./scenes/form";
-// import Team from "./scenes/Team";
 import PlatformSidebar from "./scenes/platforms";
-import FacebookBotsSidebar from "./scenes/platforms/FacebookBotsSidebar";
-import WhatsappBotsSidebar from "./scenes/platforms/WhatsappBotsSidebar";
+import FacebookBots from "./scenes/bots/FacebookBots";
+import WhatsappBotsSidebar from "./scenes/bots/WhatsappBots";
+import TelegramBotsSidebar from "./scenes/bots/TelegramBots";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -26,9 +26,9 @@ function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/platforms" element={<PlatformSidebar />}>
-                <Route path="facebook" element={<FacebookBotsSidebar />} />
-                {/* <Route path="whatsapp" element={<WhatsappBotsSidebar />} /> */}
-                {/* <Route path="telegram" element={<TelegramBotsSidebar />} /> */}
+                <Route path="facebook" element={<FacebookBots />} />
+                <Route path="whatsapp" element={<WhatsappBotsSidebar />} />
+                <Route path="telegram" element={<TelegramBotsSidebar />} />
               </Route>
               <Route path="/addbot" element={<Form />} />
             </Routes>
