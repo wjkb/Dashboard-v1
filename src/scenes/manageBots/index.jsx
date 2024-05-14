@@ -1,10 +1,11 @@
-import { Box, useTheme } from "@mui/material";
+import { Box, useTheme, Button } from "@mui/material";
 import { tokens } from "../../theme";
 import { DataGrid } from "@mui/x-data-grid";
 import { mockDataAllBots } from "../../data/mockData";
 import Header from "../../components/Header";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
+import EditIcon from "@mui/icons-material/Edit";
 
 const transformedData = mockDataAllBots.map((bot) => ({
   ...bot,
@@ -71,10 +72,34 @@ const ManageBots = () => {
       flex: 1,
       renderCell: (params) => renderPlatformIcon(params.row.Telegram),
     },
+    {
+      headerName: "Actions",
+      flex: 2,
+      renderCell: () => (
+        <Box>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<EditIcon />}
+            style={{ width: "100px", marginRight: "10px" }}
+          >
+            Edit
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            startIcon={<CloseIcon />}
+            style={{ width: "100px" }}
+          >
+            Delete
+          </Button>
+        </Box>
+      ),
+    },
   ];
 
   return (
-    <Box margin="20px" width="80%">
+    <Box margin="20px" width="70%">
       <Header title="All Bots" subtitle="Managing All Bots" />
       <Box
         height="75vh"
