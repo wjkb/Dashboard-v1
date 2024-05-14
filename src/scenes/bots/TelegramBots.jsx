@@ -9,17 +9,17 @@ const TelegramBots = () => {
   const colors = tokens;
 
   const columns = [
-    { field: "id", headerName: "ID" },
+    { field: "id", headerName: "ID", flex: 0.5 },
     {
       field: "phone",
       headerName: "Phone Number",
       flex: 1,
+      cellClassName: "phone-column--cell",
     },
     {
       field: "name",
       headerName: "Name",
       flex: 1,
-      cellClassName: "name-column--cell",
     },
     {
       field: "email",
@@ -45,7 +45,34 @@ const TelegramBots = () => {
   return (
     <Box margin="20px" width="50%">
       <Header title="Telegram Bots" subtitle="Managing Telegram Bots" />
-      <Box height="75vh">
+      <Box
+        height="75vh"
+        sx={{
+          "& .MuiDataGrid-root": {
+            border: "none",
+          },
+          "& .MuiDataGrid-cell": {
+            borderBottom: "none",
+          },
+          "& .phone-column--cell": {
+            color: colors.greenAccent,
+          },
+          "& .MuiDataGrid-columnHeader": {
+            backgroundColor: "#28231d",
+            borderBottom: "none",
+          },
+          "& .MuiDataGrid-virtualScroller": {
+            backgroundColor: "#0c0908",
+          },
+          "& .MuiDataGrid-footerContainer": {
+            borderTop: "none",
+            backgroundColor: "#28231d",
+          },
+          "& .MuiCheckbox-root": {
+            color: `${colors.greenAccent} !important`,
+          },
+        }}
+      >
         <DataGrid rows={filteredData} columns={columns} />
       </Box>
     </Box>
