@@ -57,19 +57,19 @@ const ManageBots = () => {
     {
       field: "Facebook",
       headerName: "Facebook",
-      flex: 1,
+      flex: 0.5,
       renderCell: (params) => renderPlatformIcon(params.row.Facebook),
     },
     {
       field: "WhatsApp",
       headerName: "WhatsApp",
-      flex: 1,
+      flex: 0.5,
       renderCell: (params) => renderPlatformIcon(params.row.WhatsApp),
     },
     {
       field: "Telegram",
       headerName: "Telegram",
-      flex: 1,
+      flex: 0.5,
       renderCell: (params) => renderPlatformIcon(params.row.Telegram),
     },
     {
