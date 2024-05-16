@@ -11,6 +11,8 @@ import WhatsappBotsSidebar from "./scenes/platformBots/WhatsappBots";
 import TelegramBotsSidebar from "./scenes/platformBots/TelegramBots";
 import ManageBots from "./scenes/manageBots";
 import Form from "./scenes/form";
+import FacebookBotConversations from "./scenes/platformBots/FacebookBotConversations.jsx";
+import FacebookUserMessages from "./scenes/platformBots/FacebookUserMessages";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -28,6 +30,14 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/platforms" element={<PlatformSidebar />}>
                 <Route path="facebook" element={<FacebookBots />} />
+                <Route
+                  path="facebook/:botId"
+                  element={<FacebookBotConversations />}
+                />
+                <Route
+                  path="facebook/:botId/:userId"
+                  element={<FacebookUserMessages />}
+                />
                 <Route path="whatsapp" element={<WhatsappBotsSidebar />} />
                 <Route path="telegram" element={<TelegramBotsSidebar />} />
               </Route>

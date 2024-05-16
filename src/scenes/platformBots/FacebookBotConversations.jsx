@@ -1,0 +1,89 @@
+import { Box, useTheme, Button } from "@mui/material";
+import { tokens } from "../../theme";
+import { DataGrid } from "@mui/x-data-grid";
+import { useParams, useNavigate } from "react-router-dom";
+import { facebookConversations } from "../../data/mockData";
+import Header from "../../components/Header";
+
+const FacebookBotConversations = () => {
+  const { botId } = useParams();
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const colors = tokens;
+
+  const botConversations = facebookConversations.find(
+    (conv) => conv.botId === parseInt(botId)
+  );
+
+  const columns = [
+    {
+      field: "user",
+      headerName: "User",
+      flex: 1,
+      cellClassName: "userid-column--cell",
+    },
+    {
+      headerName: "View Messages",
+      flex: 1,
+      renderCell: (params) => (
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() =>
+            navigate(`/platforms/facebook/${botId}/${params.row.user}`)
+          }
+        >
+          View
+        </Button>
+      ),
+    },
+  ];
+
+  const rows = botConversations
+    ? botConversations.conversations.map((conv, index) => ({
+        id: index + 1,
+        user: conv.user,
+      }))
+    : [];
+
+  return (
+    <Box margin="20px" width="50%">
+      <Header
+        title={`Bot Conversations (ID: ${botId})`}
+        subtitle="List of users this bot is talking to"
+      />
+      <Box
+        height="75vh"
+        sx={{
+          "& .MuiDataGrid-root": {
+            border: "none",
+          },
+          "& .MuiDataGrid-cell": {
+            borderBottom: "none",
+          },
+          "& .phone-column--cell": {
+            color: colors.greenAccent,
+          },
+          "& .MuiDataGrid-columnHeader": {
+            backgroundColor: "#28231d",
+            borderBottom: "none",
+          },
+          "& .MuiDataGrid-virtualScroller": {
+            backgroundColor: "#0c0908",
+          },
+          "& .MuiDataGrid-footerContainer": {
+            borderTop: "none",
+            backgroundColor: "#28231d",
+          },
+          "& .MuiCheckbox-root": {
+            color: `${colors.greenAccent} !important`,
+          },
+        }}
+      >
+        <DataGrid rows={rows} columns={columns} />
+      </Box>
+    </Box>
+  );
+};
+
+export default FacebookBotConversations;

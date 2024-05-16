@@ -4,10 +4,12 @@ import { DataGrid } from "@mui/x-data-grid";
 import { mockDataAllBots } from "../../data/mockData";
 import Header from "../../components/Header";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
+import { useNavigate } from "react-router-dom";
 
 const FacebookBots = () => {
   const theme = useTheme();
   const colors = tokens;
+  const navigate = useNavigate();
 
   const columns = [
     { field: "id", headerName: "ID", flex: 0.5 },
@@ -40,13 +42,14 @@ const FacebookBots = () => {
     {
       headerName: "Conversations",
       flex: 2,
-      renderCell: () => (
+      renderCell: (params) => (
         <Box>
           <Button
             variant="contained"
             color="primary"
             startIcon={<QuestionAnswerIcon />}
             style={{ width: "100px", marginRight: "10px" }}
+            onClick={() => navigate(`/platforms/facebook/${params.row.id}`)}
           >
             View
           </Button>
