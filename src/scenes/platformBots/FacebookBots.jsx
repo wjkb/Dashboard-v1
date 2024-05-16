@@ -1,8 +1,9 @@
-import { Box, useTheme } from "@mui/material";
+import { Box, useTheme, Button } from "@mui/material";
 import { tokens } from "../../theme";
 import { DataGrid } from "@mui/x-data-grid";
 import { mockDataAllBots } from "../../data/mockData";
 import Header from "../../components/Header";
+import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 
 const FacebookBots = () => {
   const theme = useTheme();
@@ -35,6 +36,22 @@ const FacebookBots = () => {
       field: "model",
       headerName: "Model",
       flex: 1,
+    },
+    {
+      headerName: "Conversations",
+      flex: 2,
+      renderCell: () => (
+        <Box>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<QuestionAnswerIcon />}
+            style={{ width: "100px", marginRight: "10px" }}
+          >
+            View
+          </Button>
+        </Box>
+      ),
     },
   ];
 
