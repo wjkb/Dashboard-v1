@@ -17,7 +17,7 @@ const FacebookUserMessages = () => {
   );
 
   return (
-    <Box margin="20px" width="50%">
+    <Box margin="20px" width="80%">
       <Header
         title={`Messages with ${userId}`}
         subtitle="Conversation details"
