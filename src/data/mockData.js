@@ -210,69 +210,125 @@ export const facebookConversations = [
   {
     botId: 1,
     botName: "Lim Wei Jie",
-    conversation: [
+    conversations: [
       {
-        timestamp: "2024-05-15T14:30:00Z",
         user: "User123",
-        message: "Hello, can you help me with my order?",
-        direction: "incoming",
+        messages: [
+          {
+            timestamp: "2024-05-15T14:30:00Z",
+            message: "Hello, can you help me with my order?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T14:31:00Z",
+            message:
+              "Sure, I'd be happy to assist. Could you please provide your order number?",
+            direction: "outgoing",
+          },
+          {
+            timestamp: "2024-05-15T14:32:00Z",
+            message: "It's 12345.",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T14:33:00Z",
+            message: "Thank you. I'll check the status for you now.",
+            direction: "outgoing",
+          },
+        ],
       },
       {
-        timestamp: "2024-05-15T14:31:00Z",
-        user: "Lim Wei Jie",
-        message:
-          "Sure, I'd be happy to assist. Could you please provide your order number?",
-        direction: "outgoing",
-      },
-      {
-        timestamp: "2024-05-15T14:32:00Z",
-        user: "User123",
-        message: "It's 12345.",
-        direction: "incoming",
-      },
-      {
-        timestamp: "2024-05-15T14:33:00Z",
-        user: "Lim Wei Jie",
-        message: "Thank you. I'll check the status for you now.",
-        direction: "outgoing",
+        user: "User789",
+        messages: [
+          {
+            timestamp: "2024-05-15T15:30:00Z",
+            message: "Hey Lim, do you know the store hours for today?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T15:31:00Z",
+            message: "Yes, the store is open from 9 AM to 8 PM today.",
+            direction: "outgoing",
+          },
+        ],
       },
     ],
   },
   {
     botId: 3,
     botName: "Ahmad Yusof",
-    conversation: [
+    conversations: [
       {
-        timestamp: "2024-05-15T15:00:00Z",
         user: "User456",
-        message: "Hi Ahmad, can you tell me the best way to learn programming?",
-        direction: "incoming",
+        messages: [
+          {
+            timestamp: "2024-05-15T15:00:00Z",
+            message:
+              "Hi Ahmad, can you tell me the best way to learn programming?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T15:01:00Z",
+            message:
+              "Certainly! I recommend starting with online tutorials and practicing by building small projects.",
+            direction: "outgoing",
+          },
+        ],
       },
       {
-        timestamp: "2024-05-15T15:01:00Z",
-        user: "Ahmad Yusof",
-        message:
-          "Certainly! I recommend starting with online tutorials and practicing by building small projects.",
-        direction: "outgoing",
+        user: "User321",
+        messages: [
+          {
+            timestamp: "2024-05-15T16:00:00Z",
+            message:
+              "Hey, can you suggest some online courses for data science?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T16:01:00Z",
+            message: "Sure! Coursera and edX offer great data science courses.",
+            direction: "outgoing",
+          },
+        ],
       },
     ],
   },
   {
     botId: 4,
     botName: "Wong Li Hua",
-    conversation: [
+    conversations: [
       {
-        timestamp: "2024-05-15T16:00:00Z",
         user: "User789",
-        message: "Can you suggest some good books on personal finance?",
-        direction: "incoming",
+        messages: [
+          {
+            timestamp: "2024-05-15T16:00:00Z",
+            message: "Can you suggest some good books on personal finance?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T16:01:00Z",
+            message:
+              "Of course! 'Rich Dad Poor Dad' by Robert Kiyosaki and 'The Total Money Makeover' by Dave Ramsey are great choices.",
+            direction: "outgoing",
+          },
+        ],
       },
       {
-        timestamp: "2024-05-15T16:01:00Z",
-        user: "Wong Li Hua",
-        message:
-          "Of course! 'Rich Dad Poor Dad' by Robert Kiyosaki and 'The Total Money Makeover' by Dave Ramsey are great choices.",
-        direction: "outgoing",
+        user: "User654",
+        messages: [
+          {
+            timestamp: "2024-05-15T17:00:00Z",
+            message:
+              "Hi Li Hua, what are the best investment options for beginners?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T17:01:00Z",
+            message:
+              "I recommend starting with index funds and ETFs. They are low-cost and diversified.",
+            direction: "outgoing",
+          },
+        ],
       },
     ],
   },
@@ -282,68 +338,133 @@ export const whatsappConversations = [
   {
     botId: 1,
     botName: "Lim Wei Jie",
-    conversation: [
+    conversations: [
       {
-        timestamp: "2024-05-15T14:00:00Z",
         user: "User123",
-        message: "Hey Lim, can you recommend a good restaurant nearby?",
-        direction: "incoming",
+        messages: [
+          {
+            timestamp: "2024-05-15T14:00:00Z",
+            message: "Hey Lim, can you recommend a good restaurant nearby?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T14:01:00Z",
+            message:
+              "Sure, how about trying 'The Fancy Feast'? It's highly rated.",
+            direction: "outgoing",
+          },
+        ],
       },
       {
-        timestamp: "2024-05-15T14:01:00Z",
-        user: "Lim Wei Jie",
-        message: "Sure, how about trying 'The Fancy Feast'? It's highly rated.",
-        direction: "outgoing",
+        user: "User456",
+        messages: [
+          {
+            timestamp: "2024-05-15T15:00:00Z",
+            message: "Lim, do you know if the pharmacy is open today?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T15:01:00Z",
+            message: "Yes, it's open until 6 PM today.",
+            direction: "outgoing",
+          },
+        ],
       },
     ],
   },
   {
     botId: 2,
     botName: "Chua Mei Ling",
-    conversation: [
+    conversations: [
       {
-        timestamp: "2024-05-15T15:30:00Z",
-        user: "User456",
-        message: "Hi, I need help with setting up my new phone.",
-        direction: "incoming",
+        user: "User789",
+        messages: [
+          {
+            timestamp: "2024-05-15T15:30:00Z",
+            message: "Hi, I need help with setting up my new phone.",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T15:31:00Z",
+            message: "I'd be happy to help. What model is it?",
+            direction: "outgoing",
+          },
+          {
+            timestamp: "2024-05-15T15:32:00Z",
+            message: "It's an iPhone 13.",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T15:33:00Z",
+            message:
+              "Great choice! Let's start by turning it on and connecting to Wi-Fi.",
+            direction: "outgoing",
+          },
+        ],
       },
       {
-        timestamp: "2024-05-15T15:31:00Z",
-        user: "Chua Mei Ling",
-        message: "I'd be happy to help. What model is it?",
-        direction: "outgoing",
-      },
-      {
-        timestamp: "2024-05-15T15:32:00Z",
-        user: "User456",
-        message: "It's an iPhone 13.",
-        direction: "incoming",
-      },
-      {
-        timestamp: "2024-05-15T15:33:00Z",
-        user: "Chua Mei Ling",
-        message:
-          "Great choice! Let's start by turning it on and connecting to Wi-Fi.",
-        direction: "outgoing",
+        user: "User321",
+        messages: [
+          {
+            timestamp: "2024-05-15T16:30:00Z",
+            message: "Hey Chua, how do I transfer my contacts to a new phone?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T16:31:00Z",
+            message:
+              "You can use the 'Move to iOS' app if you're switching to an iPhone. For Android, use Google Backup.",
+            direction: "outgoing",
+          },
+        ],
       },
     ],
   },
   {
     botId: 5,
     botName: "Tan Wei",
-    conversation: [
+    conversations: [
       {
-        timestamp: "2024-05-15T16:30:00Z",
         user: "User789",
-        message: "Tan, can you remind me of my schedule for tomorrow?",
-        direction: "incoming",
+        messages: [
+          {
+            timestamp: "2024-05-15T16:30:00Z",
+            message: "Tan, can you remind me of my schedule for tomorrow?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T16:31:00Z",
+            message:
+              "You have a meeting at 10 AM, lunch with Sarah at 1 PM, and a gym session at 6 PM.",
+            direction: "outgoing",
+          },
+        ],
       },
       {
-        timestamp: "2024-05-15T16:31:00Z",
-        user: "Tan Wei",
-        message:
-          "You have a meeting at 10 AM, lunch with Sarah at 1 PM, and a gym session at 6 PM.",
-        direction: "outgoing",
+        user: "User654",
+        messages: [
+          {
+            timestamp: "2024-05-15T17:45:00Z",
+            message:
+              "Hi Tan, can you set a reminder for my doctor's appointment next week?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T17:46:00Z",
+            message: "Sure, what time is your appointment?",
+            direction: "outgoing",
+          },
+          {
+            timestamp: "2024-05-15T17:47:00Z",
+            message: "It's at 3 PM on Tuesday.",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T17:48:00Z",
+            message: "Got it. I've set a reminder for you.",
+            direction: "outgoing",
+          },
+        ],
       },
     ],
   },
@@ -353,57 +474,115 @@ export const telegramConversations = [
   {
     botId: 2,
     botName: "Chua Mei Ling",
-    conversation: [
+    conversations: [
       {
-        timestamp: "2024-05-15T14:15:00Z",
         user: "User123",
-        message: "Hello Chua, can you help me find a good recipe for dinner?",
-        direction: "incoming",
+        messages: [
+          {
+            timestamp: "2024-05-15T14:15:00Z",
+            message:
+              "Hello Chua, can you help me find a good recipe for dinner?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T14:16:00Z",
+            message:
+              "Sure! How about trying a simple stir-fry with vegetables and chicken?",
+            direction: "outgoing",
+          },
+        ],
       },
       {
-        timestamp: "2024-05-15T14:16:00Z",
-        user: "Chua Mei Ling",
-        message:
-          "Sure! How about trying a simple stir-fry with vegetables and chicken?",
-        direction: "outgoing",
+        user: "User456",
+        messages: [
+          {
+            timestamp: "2024-05-15T15:45:00Z",
+            message: "Hi Chua, do you have any tips for meal prepping?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T15:46:00Z",
+            message:
+              "Yes! Start by planning your meals for the week and prepping ingredients in advance.",
+            direction: "outgoing",
+          },
+        ],
       },
     ],
   },
   {
     botId: 6,
     botName: "Lim Mei Ling",
-    conversation: [
+    conversations: [
       {
-        timestamp: "2024-05-15T15:45:00Z",
         user: "User456",
-        message: "Hi, can you recommend some good movies to watch?",
-        direction: "incoming",
+        messages: [
+          {
+            timestamp: "2024-05-15T15:45:00Z",
+            message: "Hi, can you recommend some good movies to watch?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T15:46:00Z",
+            message:
+              "Sure! 'Inception', 'The Matrix', and 'The Shawshank Redemption' are all excellent choices.",
+            direction: "outgoing",
+          },
+        ],
       },
       {
-        timestamp: "2024-05-15T15:46:00Z",
-        user: "Lim Mei Ling",
-        message:
-          "Sure! 'Inception', 'The Matrix', and 'The Shawshank Redemption' are all excellent choices.",
-        direction: "outgoing",
+        user: "User321",
+        messages: [
+          {
+            timestamp: "2024-05-15T16:15:00Z",
+            message: "Hey Lim, any suggestions for TV shows?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T16:16:00Z",
+            message:
+              "Yes! 'Stranger Things', 'Breaking Bad', and 'The Crown' are highly recommended.",
+            direction: "outgoing",
+          },
+        ],
       },
     ],
   },
   {
     botId: 9,
     botName: "Soh Wei Lun",
-    conversation: [
+    conversations: [
       {
-        timestamp: "2024-05-15T16:45:00Z",
         user: "User789",
-        message: "Hey Soh, what's the weather like today?",
-        direction: "incoming",
+        messages: [
+          {
+            timestamp: "2024-05-15T16:45:00Z",
+            message: "Hey Soh, what's the weather like today?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T16:46:00Z",
+            message:
+              "It's sunny with a chance of rain in the afternoon. Perfect for a morning walk!",
+            direction: "outgoing",
+          },
+        ],
       },
       {
-        timestamp: "2024-05-15T16:46:00Z",
-        user: "Soh Wei Lun",
-        message:
-          "It's sunny with a chance of rain in the afternoon. Perfect for a morning walk!",
-        direction: "outgoing",
+        user: "User654",
+        messages: [
+          {
+            timestamp: "2024-05-15T17:00:00Z",
+            message: "Hi Soh, can you give me an update on the stock market?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T17:01:00Z",
+            message:
+              "The market is up by 2% today, with tech stocks leading the gains.",
+            direction: "outgoing",
+          },
+        ],
       },
     ],
   },
