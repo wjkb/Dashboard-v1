@@ -1,15 +1,15 @@
 import { Box, useTheme, List, ListItem, ListItemText } from "@mui/material";
-import { tokens } from "../../theme";
+import { tokens } from "../../../theme";
 import { useParams } from "react-router-dom";
-import { facebookConversations } from "../../data/mockData";
-import Header from "../../components/Header";
+import { whatsappConversations } from "../../../data/mockData";
+import Header from "../../../components/Header";
 
-const FacebookUserMessages = () => {
+const WhatsappUserMessages = () => {
   const { botId, userId } = useParams();
   const theme = useTheme();
   const colors = tokens;
 
-  const botConversations = facebookConversations.find(
+  const botConversations = whatsappConversations.find(
     (conv) => conv.botId === parseInt(botId)
   );
   const userConversation = botConversations?.conversations.find(
@@ -42,4 +42,4 @@ const FacebookUserMessages = () => {
   );
 };
 
-export default FacebookUserMessages;
+export default WhatsappUserMessages;

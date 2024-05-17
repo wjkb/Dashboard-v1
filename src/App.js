@@ -8,10 +8,14 @@ import PlatformSidebar from "./scenes/platforms";
 import FacebookBots from "./scenes/platformBots/FacebookBots";
 import WhatsappBots from "./scenes/platformBots/WhatsappBots";
 import TelegramBots from "./scenes/platformBots/TelegramBots";
+import FacebookBotConversations from "./scenes/conversations/Facebook/FacebookBotConversations";
+import WhatsappBotConversations from "./scenes/conversations/Whatsapp/WhatsappBotConversations";
+import TelegramBotConversations from "./scenes/conversations/Telegram/TelegramBotConversations";
+import FacebookUserMessages from "./scenes/conversations/Facebook/FacebookUserMessages";
+import WhatsappUserMessages from "./scenes/conversations/Whatsapp/WhatsappUserMessages";
+import TelegramUserMessages from "./scenes/conversations/Telegram/TelegramUserMessages";
 import ManageBots from "./scenes/manageBots";
 import Form from "./scenes/form";
-import FacebookBotConversations from "./scenes/platformBots/FacebookBotConversations";
-import FacebookUserMessages from "./scenes/platformBots/FacebookUserMessages";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -32,8 +36,16 @@ function App() {
                     <Route path=":userId" element={<FacebookUserMessages />} />
                   </Route>
                 </Route>
-                <Route path="whatsapp" element={<WhatsappBots />} />
-                <Route path="telegram" element={<TelegramBots />} />
+                <Route path="whatsapp" element={<WhatsappBots />}>
+                  <Route path=":botId" element={<WhatsappBotConversations />}>
+                    <Route path=":userId" element={<WhatsappUserMessages />} />
+                  </Route>
+                </Route>
+                <Route path="telegram" element={<TelegramBots />}>
+                  <Route path=":botId" element={<TelegramBotConversations />}>
+                    <Route path=":userId" element={<TelegramUserMessages />} />
+                  </Route>
+                </Route>
               </Route>
               <Route path="/managebots" element={<ManageBots />} />
               <Route path="/addbot" element={<Form />} />

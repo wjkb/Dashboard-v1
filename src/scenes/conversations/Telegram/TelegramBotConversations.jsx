@@ -1,17 +1,17 @@
 import { Box, useTheme, Button } from "@mui/material";
-import { tokens } from "../../theme";
+import { tokens } from "../../../theme";
 import { DataGrid } from "@mui/x-data-grid";
 import { useParams, useNavigate, Outlet } from "react-router-dom";
-import { facebookConversations } from "../../data/mockData";
-import Header from "../../components/Header";
+import { telegramConversations } from "../../../data/mockData";
+import Header from "../../../components/Header";
 
-const FacebookBotConversations = () => {
+const TelegramBotConversations = () => {
   const { botId } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
   const colors = tokens;
 
-  const botConversations = facebookConversations.find(
+  const botConversations = telegramConversations.find(
     (conv) => conv.botId === parseInt(botId)
   );
 
@@ -23,6 +23,7 @@ const FacebookBotConversations = () => {
       cellClassName: "userid-column--cell",
     },
     {
+      field: "viewMessages",
       headerName: "View Messages",
       flex: 1,
       renderCell: (params) => (
@@ -30,7 +31,7 @@ const FacebookBotConversations = () => {
           variant="contained"
           color="primary"
           onClick={() =>
-            navigate(`/platforms/facebook/${botId}/${params.row.user}`)
+            navigate(`/platforms/telegram/${botId}/${params.row.user}`)
           }
         >
           View
@@ -62,7 +63,7 @@ const FacebookBotConversations = () => {
             "& .MuiDataGrid-cell": {
               borderBottom: "none",
             },
-            "& .phone-column--cell": {
+            "& .userid-column--cell": {
               color: colors.greenAccent,
             },
             "& .MuiDataGrid-columnHeader": {
@@ -91,4 +92,4 @@ const FacebookBotConversations = () => {
   );
 };
 
-export default FacebookBotConversations;
+export default TelegramBotConversations;

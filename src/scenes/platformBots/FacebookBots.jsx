@@ -40,8 +40,9 @@ const FacebookBots = () => {
       flex: 1,
     },
     {
+      field: "conversations",
       headerName: "Conversations",
-      flex: 2,
+      flex: 1,
       renderCell: (params) => (
         <Box>
           <Button
