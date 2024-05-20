@@ -1,15 +1,39 @@
+import React, { useEffect, useState } from "react";
 import { Box, useTheme, Button } from "@mui/material";
 import { tokens } from "../../theme";
 import { DataGrid } from "@mui/x-data-grid";
-import { mockDataAllBots } from "../../data/mockData";
 import Header from "../../components/Header";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import { useNavigate, Outlet } from "react-router-dom";
+import { getBots } from "../../api";
 
 const FacebookBots = () => {
   const theme = useTheme();
   const colors = tokens;
   const navigate = useNavigate();
+  const [bots, setBots] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchBots = async () => {
+      try {
+        const botsData = await getBots();
+        console.log("Bots data:", botsData);
+        const filteredBots = botsData.filter((bot) =>
+          bot.platforms.some((platform) => platform.platform === "Facebook")
+        );
+        console.log("Filtered bots:", filteredBots);
+        setBots(filteredBots);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBots();
+  }, []);
 
   const columns = [
     { field: "id", headerName: "ID", flex: 0.5 },
@@ -59,9 +83,13 @@ const FacebookBots = () => {
     },
   ];
 
-  const filteredData = mockDataAllBots.filter((bot) =>
-    bot.platforms.includes("Facebook")
-  );
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <Box display="flex">
@@ -95,7 +123,7 @@ const FacebookBots = () => {
             },
           }}
         >
-          <DataGrid rows={filteredData} columns={columns} />
+          <DataGrid rows={bots} columns={columns} />
         </Box>
       </Box>
       <Box flex={1} height="100%">

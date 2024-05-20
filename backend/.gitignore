@@ -6,5 +6,7 @@
 
 # production
 
+
 # misc
-/.venv
+/venv
+/__pycache__
