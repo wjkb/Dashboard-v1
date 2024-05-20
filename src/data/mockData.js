@@ -206,236 +206,420 @@ export const mockDataContacts = [
   },
 ];
 
-export const mockDataInvoices = [
+export const facebookConversations = [
   {
-    id: 1,
-    name: "Jon Snow",
-    email: "jonsnow@gmail.com",
-    cost: "21.24",
-    phone: "(665)121-5454",
-    date: "03/12/2022",
+    botId: 1,
+    botName: "Lim Wei Jie",
+    conversations: [
+      {
+        user: "User123",
+        messages: [
+          {
+            timestamp: "2024-05-15T14:30:00Z",
+            message: "Hello, can you help me with my order?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T14:31:00Z",
+            message:
+              "Sure, I'd be happy to assist. Could you please provide your order number?",
+            direction: "outgoing",
+          },
+          {
+            timestamp: "2024-05-15T14:32:00Z",
+            message: "It's 12345.",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T14:33:00Z",
+            message: "Thank you. I'll check the status for you now.",
+            direction: "outgoing",
+          },
+        ],
+      },
+      {
+        user: "User789",
+        messages: [
+          {
+            timestamp: "2024-05-15T15:30:00Z",
+            message: "Hey Lim, do you know the store hours for today?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T15:31:00Z",
+            message: "Yes, the store is open from 9 AM to 8 PM today.",
+            direction: "outgoing",
+          },
+        ],
+      },
+    ],
   },
   {
-    id: 2,
-    name: "Cersei Lannister",
-    email: "cerseilannister@gmail.com",
-    cost: "1.24",
-    phone: "(421)314-2288",
-    date: "06/15/2021",
+    botId: 3,
+    botName: "Ahmad Yusof",
+    conversations: [
+      {
+        user: "User456",
+        messages: [
+          {
+            timestamp: "2024-05-15T15:00:00Z",
+            message:
+              "Hi Ahmad, can you tell me the best way to learn programming?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T15:01:00Z",
+            message:
+              "Certainly! I recommend starting with online tutorials and practicing by building small projects.",
+            direction: "outgoing",
+          },
+        ],
+      },
+      {
+        user: "User321",
+        messages: [
+          {
+            timestamp: "2024-05-15T16:00:00Z",
+            message:
+              "Hey, can you suggest some online courses for data science?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T16:01:00Z",
+            message: "Sure! Coursera and edX offer great data science courses.",
+            direction: "outgoing",
+          },
+        ],
+      },
+    ],
   },
   {
-    id: 3,
-    name: "Jaime Lannister",
-    email: "jaimelannister@gmail.com",
-    cost: "11.24",
-    phone: "(422)982-6739",
-    date: "05/02/2022",
-  },
-  {
-    id: 4,
-    name: "Anya Stark",
-    email: "anyastark@gmail.com",
-    cost: "80.55",
-    phone: "(921)425-6742",
-    date: "03/21/2022",
-  },
-  {
-    id: 5,
-    name: "Daenerys Targaryen",
-    email: "daenerystargaryen@gmail.com",
-    cost: "1.24",
-    phone: "(421)445-1189",
-    date: "01/12/2021",
-  },
-  {
-    id: 6,
-    name: "Ever Melisandre",
-    email: "evermelisandre@gmail.com",
-    cost: "63.12",
-    phone: "(232)545-6483",
-    date: "11/02/2022",
-  },
-  {
-    id: 7,
-    name: "Ferrara Clifford",
-    email: "ferraraclifford@gmail.com",
-    cost: "52.42",
-    phone: "(543)124-0123",
-    date: "02/11/2022",
-  },
-  {
-    id: 8,
-    name: "Rossini Frances",
-    email: "rossinifrances@gmail.com",
-    cost: "21.24",
-    phone: "(222)444-5555",
-    date: "05/02/2021",
-  },
-];
-
-export const mockTransactions = [
-  {
-    txId: "01e4dsa",
-    user: "johndoe",
-    date: "2021-09-01",
-    cost: "43.95",
-  },
-  {
-    txId: "0315dsaa",
-    user: "jackdower",
-    date: "2022-04-01",
-    cost: "133.45",
-  },
-  {
-    txId: "01e4dsa",
-    user: "aberdohnny",
-    date: "2021-09-01",
-    cost: "43.95",
-  },
-  {
-    txId: "51034szv",
-    user: "goodmanave",
-    date: "2022-11-05",
-    cost: "200.95",
-  },
-  {
-    txId: "0a123sb",
-    user: "stevebower",
-    date: "2022-11-02",
-    cost: "13.55",
-  },
-  {
-    txId: "01e4dsa",
-    user: "aberdohnny",
-    date: "2021-09-01",
-    cost: "43.95",
-  },
-  {
-    txId: "120s51a",
-    user: "wootzifer",
-    date: "2019-04-15",
-    cost: "24.20",
-  },
-  {
-    txId: "0315dsaa",
-    user: "jackdower",
-    date: "2022-04-01",
-    cost: "133.45",
-  },
-];
-
-export const mockBarData = [
-  {
-    country: "AD",
-    "hot dog": 137,
-    "hot dogColor": "hsl(229, 70%, 50%)",
-    burger: 96,
-    burgerColor: "hsl(296, 70%, 50%)",
-    kebab: 72,
-    kebabColor: "hsl(97, 70%, 50%)",
-    donut: 140,
-    donutColor: "hsl(340, 70%, 50%)",
-  },
-  {
-    country: "AE",
-    "hot dog": 55,
-    "hot dogColor": "hsl(307, 70%, 50%)",
-    burger: 28,
-    burgerColor: "hsl(111, 70%, 50%)",
-    kebab: 58,
-    kebabColor: "hsl(273, 70%, 50%)",
-    donut: 29,
-    donutColor: "hsl(275, 70%, 50%)",
-  },
-  {
-    country: "AF",
-    "hot dog": 109,
-    "hot dogColor": "hsl(72, 70%, 50%)",
-    burger: 23,
-    burgerColor: "hsl(96, 70%, 50%)",
-    kebab: 34,
-    kebabColor: "hsl(106, 70%, 50%)",
-    donut: 152,
-    donutColor: "hsl(256, 70%, 50%)",
-  },
-  {
-    country: "AG",
-    "hot dog": 133,
-    "hot dogColor": "hsl(257, 70%, 50%)",
-    burger: 52,
-    burgerColor: "hsl(326, 70%, 50%)",
-    kebab: 43,
-    kebabColor: "hsl(110, 70%, 50%)",
-    donut: 83,
-    donutColor: "hsl(9, 70%, 50%)",
-  },
-  {
-    country: "AI",
-    "hot dog": 81,
-    "hot dogColor": "hsl(190, 70%, 50%)",
-    burger: 80,
-    burgerColor: "hsl(325, 70%, 50%)",
-    kebab: 112,
-    kebabColor: "hsl(54, 70%, 50%)",
-    donut: 35,
-    donutColor: "hsl(285, 70%, 50%)",
-  },
-  {
-    country: "AL",
-    "hot dog": 66,
-    "hot dogColor": "hsl(208, 70%, 50%)",
-    burger: 111,
-    burgerColor: "hsl(334, 70%, 50%)",
-    kebab: 167,
-    kebabColor: "hsl(182, 70%, 50%)",
-    donut: 18,
-    donutColor: "hsl(76, 70%, 50%)",
-  },
-  {
-    country: "AM",
-    "hot dog": 80,
-    "hot dogColor": "hsl(87, 70%, 50%)",
-    burger: 47,
-    burgerColor: "hsl(141, 70%, 50%)",
-    kebab: 158,
-    kebabColor: "hsl(224, 70%, 50%)",
-    donut: 49,
-    donutColor: "hsl(274, 70%, 50%)",
+    botId: 4,
+    botName: "Wong Li Hua",
+    conversations: [
+      {
+        user: "User789",
+        messages: [
+          {
+            timestamp: "2024-05-15T16:00:00Z",
+            message: "Can you suggest some good books on personal finance?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T16:01:00Z",
+            message:
+              "Of course! 'Rich Dad Poor Dad' by Robert Kiyosaki and 'The Total Money Makeover' by Dave Ramsey are great choices.",
+            direction: "outgoing",
+          },
+        ],
+      },
+      {
+        user: "User654",
+        messages: [
+          {
+            timestamp: "2024-05-15T17:00:00Z",
+            message:
+              "Hi Li Hua, what are the best investment options for beginners?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T17:01:00Z",
+            message:
+              "I recommend starting with index funds and ETFs. They are low-cost and diversified.",
+            direction: "outgoing",
+          },
+        ],
+      },
+    ],
   },
 ];
 
-export const mockPieData = [
+export const whatsappConversations = [
   {
-    id: "hack",
-    label: "hack",
-    value: 239,
-    color: "hsl(104, 70%, 50%)",
+    botId: 1,
+    botName: "Lim Wei Jie",
+    conversations: [
+      {
+        user: "User123",
+        messages: [
+          {
+            timestamp: "2024-05-15T14:00:00Z",
+            message: "Hey Lim, can you recommend a good restaurant nearby?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T14:01:00Z",
+            message:
+              "Sure, how about trying 'The Fancy Feast'? It's highly rated.",
+            direction: "outgoing",
+          },
+        ],
+      },
+      {
+        user: "User456",
+        messages: [
+          {
+            timestamp: "2024-05-15T15:00:00Z",
+            message: "Lim, do you know if the pharmacy is open today?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T15:01:00Z",
+            message: "Yes, it's open until 6 PM today.",
+            direction: "outgoing",
+          },
+        ],
+      },
+    ],
   },
   {
-    id: "make",
-    label: "make",
-    value: 170,
-    color: "hsl(162, 70%, 50%)",
+    botId: 2,
+    botName: "Chua Mei Ling",
+    conversations: [
+      {
+        user: "User789",
+        messages: [
+          {
+            timestamp: "2024-05-15T15:30:00Z",
+            message: "Hi, I need help with setting up my new phone.",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T15:31:00Z",
+            message: "I'd be happy to help. What model is it?",
+            direction: "outgoing",
+          },
+          {
+            timestamp: "2024-05-15T15:32:00Z",
+            message: "It's an iPhone 13.",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T15:33:00Z",
+            message:
+              "Great choice! Let's start by turning it on and connecting to Wi-Fi.",
+            direction: "outgoing",
+          },
+        ],
+      },
+      {
+        user: "User321",
+        messages: [
+          {
+            timestamp: "2024-05-15T16:30:00Z",
+            message: "Hey Chua, how do I transfer my contacts to a new phone?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T16:31:00Z",
+            message:
+              "You can use the 'Move to iOS' app if you're switching to an iPhone. For Android, use Google Backup.",
+            direction: "outgoing",
+          },
+        ],
+      },
+    ],
   },
   {
-    id: "go",
-    label: "go",
-    value: 322,
-    color: "hsl(291, 70%, 50%)",
-  },
-  {
-    id: "lisp",
-    label: "lisp",
-    value: 503,
-    color: "hsl(229, 70%, 50%)",
-  },
-  {
-    id: "scala",
-    label: "scala",
-    value: 584,
-    color: "hsl(344, 70%, 50%)",
+    botId: 5,
+    botName: "Tan Wei",
+    conversations: [
+      {
+        user: "User789",
+        messages: [
+          {
+            timestamp: "2024-05-15T16:30:00Z",
+            message: "Tan, can you remind me of my schedule for tomorrow?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T16:31:00Z",
+            message:
+              "You have a meeting at 10 AM, lunch with Sarah at 1 PM, and a gym session at 6 PM.",
+            direction: "outgoing",
+          },
+        ],
+      },
+      {
+        user: "User654",
+        messages: [
+          {
+            timestamp: "2024-05-15T17:45:00Z",
+            message:
+              "Hi Tan, can you set a reminder for my doctor's appointment next week?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T17:46:00Z",
+            message: "Sure, what time is your appointment?",
+            direction: "outgoing",
+          },
+          {
+            timestamp: "2024-05-15T17:47:00Z",
+            message: "It's at 3 PM on Tuesday.",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T17:48:00Z",
+            message: "Got it. I've set a reminder for you.",
+            direction: "outgoing",
+          },
+        ],
+      },
+    ],
   },
 ];
+
+export const telegramConversations = [
+  {
+    botId: 2,
+    botName: "Chua Mei Ling",
+    conversations: [
+      {
+        user: "User123",
+        messages: [
+          {
+            timestamp: "2024-05-15T14:15:00Z",
+            message:
+              "Hello Chua, can you help me find a good recipe for dinner?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T14:16:00Z",
+            message:
+              "Sure! How about trying a simple stir-fry with vegetables and chicken?",
+            direction: "outgoing",
+          },
+        ],
+      },
+      {
+        user: "User456",
+        messages: [
+          {
+            timestamp: "2024-05-15T15:45:00Z",
+            message: "Hi Chua, do you have any tips for meal prepping?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T15:46:00Z",
+            message:
+              "Yes! Start by planning your meals for the week and prepping ingredients in advance.",
+            direction: "outgoing",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    botId: 6,
+    botName: "Lim Mei Ling",
+    conversations: [
+      {
+        user: "User456",
+        messages: [
+          {
+            timestamp: "2024-05-15T15:45:00Z",
+            message: "Hi, can you recommend some good movies to watch?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T15:46:00Z",
+            message:
+              "Sure! 'Inception', 'The Matrix', and 'The Shawshank Redemption' are all excellent choices.",
+            direction: "outgoing",
+          },
+        ],
+      },
+      {
+        user: "User321",
+        messages: [
+          {
+            timestamp: "2024-05-15T16:15:00Z",
+            message: "Hey Lim, any suggestions for TV shows?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T16:16:00Z",
+            message:
+              "Yes! 'Stranger Things', 'Breaking Bad', and 'The Crown' are highly recommended.",
+            direction: "outgoing",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    botId: 9,
+    botName: "Soh Wei Lun",
+    conversations: [
+      {
+        user: "User789",
+        messages: [
+          {
+            timestamp: "2024-05-15T16:45:00Z",
+            message: "Hey Soh, what's the weather like today?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T16:46:00Z",
+            message:
+              "It's sunny with a chance of rain in the afternoon. Perfect for a morning walk!",
+            direction: "outgoing",
+          },
+        ],
+      },
+      {
+        user: "User654",
+        messages: [
+          {
+            timestamp: "2024-05-15T17:00:00Z",
+            message: "Hi Soh, can you give me an update on the stock market?",
+            direction: "incoming",
+          },
+          {
+            timestamp: "2024-05-15T17:01:00Z",
+            message:
+              "The market is up by 2% today, with tech stocks leading the gains.",
+            direction: "outgoing",
+          },
+        ],
+      },
+    ],
+  },
+];
+
+// export const mockPieData = [
+//   {
+//     id: "hack",
+//     label: "hack",
+//     value: 239,
+//     color: "hsl(104, 70%, 50%)",
+//   },
+//   {
+//     id: "make",
+//     label: "make",
+//     value: 170,
+//     color: "hsl(162, 70%, 50%)",
+//   },
+//   {
+//     id: "go",
+//     label: "go",
+//     value: 322,
+//     color: "hsl(291, 70%, 50%)",
+//   },
+//   {
+//     id: "lisp",
+//     label: "lisp",
+//     value: 503,
+//     color: "hsl(229, 70%, 50%)",
+//   },
+//   {
+//     id: "scala",
+//     label: "scala",
+//     value: 584,
+//     color: "hsl(344, 70%, 50%)",
+//   },
+// ];
 
 // export const mockLineData = [
 //   {

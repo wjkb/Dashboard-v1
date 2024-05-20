@@ -88,7 +88,9 @@ const PlatformSidebar = () => {
           </Menu>
         </ProSidebar>
       </Box>
-      <Outlet />
+      <Box flex={1} height="100%">
+        <Outlet />
+      </Box>
     </Box>
   );
 };

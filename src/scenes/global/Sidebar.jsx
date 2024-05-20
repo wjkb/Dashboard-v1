@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
 import "react-pro-sidebar/dist/css/styles.css";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { tokens } from "../../theme";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import AppsOutlinedIcon from "@mui/icons-material/AppsOutlined";
@@ -33,6 +33,12 @@ const Sidebar = () => {
   const colors = tokens;
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selected, setSelected] = useState("Dashboard");
+  const location = useLocation();
+
+  const resolveImagePath = () => {
+    const currentPath = location.pathname;
+    return `${process.env.PUBLIC_URL}/assets/user.png`;
+  };
 
   return (
     <Box
@@ -89,7 +95,7 @@ const Sidebar = () => {
                   alt="profile=user"
                   width="100px"
                   height="100px"
-                  src={"../../assets/user.png"}
+                  src={resolveImagePath()}
                   style={{ cursor: "pointer", borderRadius: "50%" }}
                 />
               </Box>
