@@ -5,7 +5,7 @@ import { DataGrid } from "@mui/x-data-grid";
 import Header from "../../components/Header";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import { useNavigate, Outlet } from "react-router-dom";
-import { getBots } from "../../api";
+import { getPlatformBots } from "../../api";
 
 const TelegramBots = () => {
   const theme = useTheme();
@@ -18,13 +18,9 @@ const TelegramBots = () => {
   useEffect(() => {
     const fetchBots = async () => {
       try {
-        const botsData = await getBots();
+        const botsData = await getPlatformBots("telegram");
         console.log("Bots data:", botsData);
-        const filteredBots = botsData.filter((bot) =>
-          bot.platforms.some((platform) => platform.platform === "Telegram")
-        );
-        console.log("Filtered bots:", filteredBots);
-        setBots(filteredBots);
+        setBots(botsData);
       } catch (err) {
         setError(err.message);
       } finally {
