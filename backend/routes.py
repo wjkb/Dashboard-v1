@@ -4,7 +4,7 @@ from backend.models import db, Bot, Platform, Conversation, FacebookMessage, Wha
 api = Blueprint('api', __name__)
 
 @api.route('/api/bots', methods=['GET'])
-def get_bots():
+def get_all_bots():
     try:
         bots = Bot.query.all()
         return jsonify([bot.serialize() for bot in bots])
