@@ -3,6 +3,9 @@ from backend.models import db, Bot, Platform, Conversation, FacebookMessage, Wha
 
 api = Blueprint('api', __name__)
 
+
+### GET APIs
+
 @api.route('/api/bots', methods=['GET'])
 def get_all_bots():
     try:
@@ -78,3 +81,39 @@ def get_bot_conversation_messages(platform, bot_id, user):
         print(f"Error occurred: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
 
+
+### POST APIs
+@api.route('/api/bots', methods=['POST'])
+def create_bot():
+    try:
+        data = request.json
+        print(f"Received data: {data}")  # Debugging line
+
+        # Check if all required fields are present
+        required_fields = ['phoneNumber', 'name', 'persona', 'model', 'platforms']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({"error": f"Missing required field: {field}"}), 400
+
+        new_bot = Bot(
+            phone=data['phoneNumber'],
+            name=data['name'],
+            email=data.get('email', ''),  # Optional field
+            persona=data['persona'],
+            model=data['model']
+        )
+        db.session.add(new_bot)
+        db.session.commit()
+        print(f"Created bot: {new_bot.serialize()}")  # Debugging line
+
+        for platform in data['platforms']:
+            new_platform = Platform(bot_id=new_bot.id, platform=platform)
+            db.session.add(new_platform)
+            print(f"Added platform: {platform}")  # Debugging line
+
+        db.session.commit()
+        return jsonify(new_bot.serialize()), 201
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
+    
