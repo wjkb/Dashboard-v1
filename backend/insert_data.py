@@ -5,6 +5,16 @@ from backend.models import db, Bot, Platform, Conversation, FacebookMessage, Wha
 app = create_app()
 
 with app.app_context():
+    
+    # Delete existing data
+    db.session.query(FacebookMessage).delete()
+    db.session.query(WhatsappMessage).delete()
+    db.session.query(TelegramMessage).delete()
+    db.session.query(Conversation).delete()
+    db.session.query(Platform).delete()
+    db.session.query(Bot).delete()
+    db.session.commit()
+
     # Insert bots
     bots_data = [
         ('90000001', 'Lim Wei Jie', 'limweijie@gmail.com', 'Middle-aged man', 'Llama 2'),
@@ -45,17 +55,7 @@ with app.app_context():
     conversations_data = [
         (1, 'Facebook', 'User123'), (1, 'Facebook', 'User789'),
         (1, 'WhatsApp', 'User123'), (1, 'WhatsApp', 'User456'),
-        (2, 'WhatsApp', 'User789'), (2, 'WhatsApp', 'User321'),
         (2, 'Telegram', 'User123'), (2, 'Telegram', 'User456'),
-        (3, 'Facebook', 'User456'), (3, 'Facebook', 'User321'),
-        (4, 'Facebook', 'User789'), (4, 'Facebook', 'User654'),
-        (4, 'Telegram', 'User123'), (4, 'Telegram', 'User456'),
-        (5, 'WhatsApp', 'User789'), (5, 'WhatsApp', 'User654'),
-        (5, 'Facebook', 'User123'),
-        (6, 'WhatsApp', 'User456'), (6, 'Telegram', 'User789'),
-        (7, 'Facebook', 'User123'),
-        (8, 'Telegram', 'User123'),
-        (9, 'Facebook', 'User789'), (9, 'WhatsApp', 'User456'), (9, 'Telegram', 'User321')
     ]
 
     for bot_id, platform, user in conversations_data:
@@ -93,10 +93,10 @@ with app.app_context():
 
     # Insert Telegram messages
     telegram_messages_data = [
-        (7, datetime(2024, 5, 15, 14, 15), 'Hello Chua, can you help me find a good recipe for dinner?', 'incoming'),
-        (7, datetime(2024, 5, 15, 14, 16), 'Sure! How about trying a simple stir-fry with vegetables and chicken?', 'outgoing'),
-        (8, datetime(2024, 5, 15, 15, 45), 'Hi Chua, do you have any tips for meal prepping?', 'incoming'),
-        (8, datetime(2024, 5, 15, 15, 46), 'Yes! Start by planning your meals for the week and prepping ingredients in advance.', 'outgoing')
+        (5, datetime(2024, 5, 15, 14, 15), 'Hello Chua, can you help me find a good recipe for dinner?', 'incoming'),
+        (5, datetime(2024, 5, 15, 14, 16), 'Sure! How about trying a simple stir-fry with vegetables and chicken?', 'outgoing'),
+        (6, datetime(2024, 5, 15, 15, 45), 'Hi Chua, do you have any tips for meal prepping?', 'incoming'),
+        (6, datetime(2024, 5, 15, 15, 46), 'Yes! Start by planning your meals for the week and prepping ingredients in advance.', 'outgoing')
     ]
 
     for conversation_id, timestamp, message, direction in telegram_messages_data:
