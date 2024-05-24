@@ -1,0 +1,89 @@
+# Starting the Backend Server
+
+1. **Navigate to the backend directory:**
+
+   ```sh
+   cd backend
+   ```
+
+2. **(Optional, but highly recommended) Activate the virtual environment:**
+
+   - **If on Windows:**
+     1. Create the virtual environment (if not already created):
+        ```sh
+        python -m venv venv
+        ```
+     2. Activate the virtual environment:
+        ```sh
+        .\venv\Scripts\activate
+        ```
+   - **If on Linux:**
+     1. Create the virtual environment (if not already created):
+        ```sh
+        python3 -m venv venv
+        ```
+     2. Activate the virtual environment:
+        ```sh
+        source venv/bin/activate
+        ```
+
+3. **Install the required packages:**
+
+   ```sh
+   pip install -r requirements.txt
+   ```
+
+4. **Set the Flask application environment variable:**
+
+   - **If on Windows:**
+     - Using Command Prompt:
+       ```sh
+       set FLASK_APP=__init__.py
+       ```
+     - Using PowerShell:
+       ```sh
+       $env:FLASK_APP="__init__.py"
+       ```
+   - **If on Linux:**
+     ```sh
+     export FLASK_APP=__init__.py
+     ```
+
+5. **Run the Flask application:**
+   ```sh
+   flask run
+   ```
+
+## Resetting the Database
+
+To reset the mock database to original form, do **STEP 1 & 4** from **Starting the Backend Server** section, then open a Flask shell using the following command:
+
+```sh
+flask shell
+```
+
+then run
+
+```sh
+from backend.insert_data import *
+```
+
+You should see "Data inserted successfully" printed in your terminal.
+
+# Starting the Frontend
+
+1. **Navigate to the frontend directory:**
+   ```sh
+   cd frontend
+   ```
+2. **Install Node.js**
+3. **Install the required packages:**
+   ```sh
+   npm install
+   ```
+4. **Start the React application**
+   ```sh
+   npm start
+   ```
+
+**Note: You may need to move the node_modules folder to inside the frontend directory. The root folder should only contain 2 folders, titled 'backend' and 'frontend'.**
