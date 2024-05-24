@@ -1,70 +1,89 @@
-# Getting Started with Create React App
+# Starting the Backend Server
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+1. **Navigate to the backend directory:**
 
-## Available Scripts
+   ```sh
+   cd backend
+   ```
 
-In the project directory, you can run:
+2. **(Optional, but highly recommended) Activate the virtual environment:**
 
-### `npm start`
+   - **If on Windows:**
+     1. Create the virtual environment (if not already created):
+        ```sh
+        python -m venv venv
+        ```
+     2. Activate the virtual environment:
+        ```sh
+        .\venv\Scripts\activate
+        ```
+   - **If on Linux:**
+     1. Create the virtual environment (if not already created):
+        ```sh
+        python3 -m venv venv
+        ```
+     2. Activate the virtual environment:
+        ```sh
+        source venv/bin/activate
+        ```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+3. **Install the required packages:**
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+   ```sh
+   pip install -r requirements.txt
+   ```
 
-### `npm test`
+4. **Set the Flask application environment variable:**
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+   - **If on Windows:**
+     - Using Command Prompt:
+       ```sh
+       set FLASK_APP=__init__.py
+       ```
+     - Using PowerShell:
+       ```sh
+       $env:FLASK_APP="__init__.py"
+       ```
+   - **If on Linux:**
+     ```sh
+     export FLASK_APP=__init__.py
+     ```
 
-### `npm run build`
+5. **Run the Flask application:**
+   ```sh
+   flask run
+   ```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Resetting the Database
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+To reset the mock database to original form, do **STEP 1 & 4** from **Starting the Backend Server** section, then open a Flask shell using the following command:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```sh
+flask shell
+```
 
-### `npm run eject`
+then run
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```sh
+from backend.insert_data import *
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+You should see "Data inserted successfully" printed in your terminal.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+# Starting the Frontend
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+1. **Navigate to the frontend directory:**
+   ```sh
+   cd frontend
+   ```
+2. **Install Node.js**
+3. **Install the required packages:**
+   ```sh
+   npm install
+   ```
+4. **Start the React application**
+   ```sh
+   npm start
+   ```
 
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+**Note: You may need to move the node_modules folder to inside the frontend directory. The root folder should only contain 2 folders, titled 'backend' and 'frontend'.**

@@ -1,22 +1,46 @@
+import React, { useEffect, useState } from "react";
 import { Box, useTheme, Button } from "@mui/material";
 import { tokens } from "../../theme";
 import { DataGrid } from "@mui/x-data-grid";
-import { mockDataAllBots } from "../../data/mockData";
 import Header from "../../components/Header";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
-
-const transformedData = mockDataAllBots.map((bot) => ({
-  ...bot,
-  Facebook: bot.platforms.includes("Facebook"),
-  WhatsApp: bot.platforms.includes("WhatsApp"),
-  Telegram: bot.platforms.includes("Telegram"),
-}));
+import { getAllBots } from "../../api";
 
 const ManageBots = () => {
   const theme = useTheme();
   const colors = tokens;
+  const [bots, setBots] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchBots = async () => {
+      try {
+        const botsData = await getAllBots();
+        const transformedData = botsData.map((bot) => ({
+          ...bot,
+          Facebook: bot.platforms.some(
+            (platform) => platform.platform === "Facebook"
+          ),
+          WhatsApp: bot.platforms.some(
+            (platform) => platform.platform === "WhatsApp"
+          ),
+          Telegram: bot.platforms.some(
+            (platform) => platform.platform === "Telegram"
+          ),
+        }));
+        setBots(transformedData);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBots();
+  }, []);
 
   const renderPlatformIcon = (value) => {
     return value ? (
@@ -98,6 +122,14 @@ const ManageBots = () => {
     },
   ];
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
   return (
     <Box margin="20px" width="auto">
       <Header title="All Bots" subtitle="Managing All Bots" />
@@ -129,7 +161,7 @@ const ManageBots = () => {
           },
         }}
       >
-        <DataGrid rows={transformedData} columns={columns} />
+        <DataGrid rows={bots} columns={columns} />
       </Box>
     </Box>
   );

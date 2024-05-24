@@ -1,19 +1,34 @@
+import React, { useEffect, useState } from "react";
 import { Box, useTheme, Button } from "@mui/material";
 import { tokens } from "../../../theme";
 import { DataGrid } from "@mui/x-data-grid";
 import { useParams, useNavigate, Outlet } from "react-router-dom";
-import { telegramConversations } from "../../../data/mockData";
+import { getBotConversations } from "../../../api";
 import Header from "../../../components/Header";
 
-const TelegramBotConversations = () => {
+const WhatsappBotConversations = () => {
   const { botId } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
   const colors = tokens;
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const botConversations = telegramConversations.find(
-    (conv) => conv.botId === parseInt(botId)
-  );
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        const convData = await getBotConversations("whatsapp", botId);
+        setConversations(convData);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConversations();
+  }, [botId]);
 
   const columns = [
     {
@@ -31,7 +46,7 @@ const TelegramBotConversations = () => {
           variant="contained"
           color="primary"
           onClick={() =>
-            navigate(`/platforms/telegram/${botId}/${params.row.user}`)
+            navigate(`/platforms/whatsapp/${botId}/${params.row.user}`)
           }
         >
           View
@@ -40,12 +55,18 @@ const TelegramBotConversations = () => {
     },
   ];
 
-  const rows = botConversations
-    ? botConversations.conversations.map((conv, index) => ({
-        id: index + 1,
-        user: conv.user,
-      }))
-    : [];
+  const rows = conversations.map((conv, index) => ({
+    id: index + 1,
+    user: conv.user,
+  }));
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <Box display="flex">
@@ -92,4 +113,4 @@ const TelegramBotConversations = () => {
   );
 };
 
-export default TelegramBotConversations;
+export default WhatsappBotConversations;

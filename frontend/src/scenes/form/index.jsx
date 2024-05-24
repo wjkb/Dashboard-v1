@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Box,
   Button,
@@ -6,13 +7,13 @@ import {
   ListItemText,
   FormHelperText,
 } from "@mui/material";
-import Select, { SelectChangeEvent } from "@mui/material/Select";
 import Checkbox from "@mui/material/Checkbox";
 import MenuItem from "@mui/material/MenuItem";
 import { Formik } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
+import { createBot } from "../../api";
 
 const initialValues = {
   phoneNumber: "",
@@ -25,7 +26,7 @@ const initialValues = {
 
 const phoneRegExp = /^(6|8|9)\d{7}$/;
 
-const platformNames = ["Facebook", "Whatsapp", "Telegram"];
+const platformNames = ["Facebook", "WhatsApp", "Telegram"];
 
 const botScheme = yup.object().shape({
   phoneNumber: yup
@@ -42,8 +43,13 @@ const botScheme = yup.object().shape({
 const Form = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
 
-  const handleFormSubmit = (values) => {
-    console.log(values);
+  const handleFormSubmit = async (values) => {
+    try {
+      const response = await createBot(values);
+      console.log("Bot created successfully", response);
+    } catch (error) {
+      console.error("Error creating bot", error);
+    }
   };
 
   return (
@@ -62,6 +68,7 @@ const Form = () => {
           handleBlur,
           handleChange,
           handleSubmit,
+          isSubmitting,
         }) => (
           <form onSubmit={handleSubmit}>
             <Box
@@ -173,7 +180,12 @@ const Form = () => {
               </TextField>
             </Box>
             <Box display="flex" justifyContent="end" mt="20px">
-              <Button type="submit" color="secondary" variant="contained">
+              <Button
+                type="submit"
+                color="secondary"
+                variant="contained"
+                disabled={isSubmitting}
+              >
                 Create New Bot
               </Button>
             </Box>
