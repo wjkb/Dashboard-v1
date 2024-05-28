@@ -1,12 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { Box, useTheme, Button } from "@mui/material";
+import {
+  Box,
+  useTheme,
+  Button,
+  TextField,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+} from "@mui/material";
 import { tokens } from "../../theme";
 import { DataGrid } from "@mui/x-data-grid";
 import Header from "../../components/Header";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
-import { getAllBots } from "../../api";
+import { getAllBots, updateBot, deleteBot } from "../../api";
 
 const ManageBots = () => {
   const theme = useTheme();
@@ -14,6 +23,8 @@ const ManageBots = () => {
   const [bots, setBots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedBot, setSelectedBot] = useState(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchBots = async () => {
@@ -41,6 +52,36 @@ const ManageBots = () => {
 
     fetchBots();
   }, []);
+
+  const handleEdit = async () => {
+    try {
+      await updateBot(selectedBot.id, selectedBot);
+      setBots(
+        bots.map((bot) => (bot.id === selectedBot.id ? selectedBot : bot))
+      );
+      setEditDialogOpen(false);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleChange = (e) => {
+    setSelectedBot({ ...selectedBot, [e.target.name]: e.target.value });
+  };
+
+  const handleEditClick = (bot) => {
+    setSelectedBot(bot);
+    setEditDialogOpen(true);
+  };
+
+  const handleDelete = async (botId) => {
+    try {
+      await deleteBot(botId);
+      setBots(bots.filter((bot) => bot.id !== botId));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   const renderPlatformIcon = (value) => {
     return value ? (
@@ -99,13 +140,14 @@ const ManageBots = () => {
     {
       headerName: "Actions",
       flex: 2,
-      renderCell: () => (
+      renderCell: (params) => (
         <Box>
           <Button
             variant="contained"
             color="primary"
             startIcon={<EditIcon />}
             style={{ width: "100px", marginRight: "10px" }}
+            onClick={() => handleEditClick(params.row)}
           >
             Edit
           </Button>
@@ -114,6 +156,7 @@ const ManageBots = () => {
             color="error"
             startIcon={<CloseIcon />}
             style={{ width: "100px" }}
+            onClick={() => handleDelete(params.row.id)}
           >
             Delete
           </Button>
@@ -163,6 +206,65 @@ const ManageBots = () => {
       >
         <DataGrid rows={bots} columns={columns} />
       </Box>
+
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
+        <DialogTitle>Edit Bot</DialogTitle>
+        <DialogContent>
+          <TextField
+            margin="dense"
+            label="Phone Number"
+            type="text"
+            fullWidth
+            name="phone"
+            value={selectedBot?.phone || ""}
+            onChange={handleChange}
+          />
+          <TextField
+            margin="dense"
+            label="Name"
+            type="text"
+            fullWidth
+            name="name"
+            value={selectedBot?.name || ""}
+            onChange={handleChange}
+          />
+          <TextField
+            margin="dense"
+            label="Email"
+            type="email"
+            fullWidth
+            name="email"
+            value={selectedBot?.email || ""}
+            onChange={handleChange}
+          />
+          <TextField
+            margin="dense"
+            label="Persona"
+            type="text"
+            fullWidth
+            name="persona"
+            value={selectedBot?.persona || ""}
+            onChange={handleChange}
+          />
+          <TextField
+            margin="dense"
+            label="Model"
+            type="text"
+            fullWidth
+            name="model"
+            value={selectedBot?.model || ""}
+            onChange={handleChange}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleEdit} color="primary">
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
