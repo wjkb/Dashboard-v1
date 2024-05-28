@@ -73,7 +73,7 @@ export const createBot = async (botData) => {
 };
 
 // PUT APIs
-export const updateBot = async (botId, updatedData) => {
+export const editBot = async (botId, updatedData) => {
   try {
     const response = await fetch(`${API_URL}/bots/${botId}`, {
       method: "PUT",
