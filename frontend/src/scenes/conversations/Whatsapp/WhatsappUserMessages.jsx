@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Box, useTheme, List, ListItem, ListItemText } from "@mui/material";
+import {
+  Box,
+  useTheme,
+  List,
+  ListItem,
+  Paper,
+  Typography,
+} from "@mui/material";
 import { tokens } from "../../../theme";
 import { useParams } from "react-router-dom";
 import { getBotConversationMessages } from "../../../api";
@@ -8,7 +15,7 @@ import Header from "../../../components/Header";
 const WhatsappUserMessages = () => {
   const { botId, userId } = useParams();
   const theme = useTheme();
-  const colors = tokens;
+  const colors = tokens; // Use the tokens directly as there is no mode-specific colors
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -40,24 +47,57 @@ const WhatsappUserMessages = () => {
     return <div>Error: {error}</div>;
   }
 
+  const messageStyles = {
+    incoming: {
+      backgroundColor: colors.grey[100],
+      color: colors.black,
+      marginRight: "auto",
+    },
+    outgoing: {
+      backgroundColor: colors.greenAccent,
+      color: colors.black,
+      marginLeft: "auto",
+    },
+  };
+
+  const formatDateTime = (timestamp) => {
+    const date = new Date(timestamp);
+    const formattedDateTime = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+    return formattedDateTime;
+  };
+
   return (
     <Box margin="20px" width="80%">
       <Header
         title={`Messages with ${userId}`}
         subtitle="Conversation details"
       />
-      <Box height="75vh">
+      <Box height="75vh" display="flex" flexDirection="column">
         <List>
           {messages.map((msg, index) => (
-            <ListItem key={index} alignItems="flex-start">
-              <ListItemText
-                primary={
-                  msg.direction === "incoming"
-                    ? `User: ${msg.message}`
-                    : `Bot: ${msg.message}`
-                }
-                secondary={msg.timestamp}
-              />
+            <ListItem
+              key={index}
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems:
+                  msg.direction === "incoming" ? "flex-start" : "flex-end",
+              }}
+            >
+              <Paper
+                elevation={1}
+                sx={{
+                  padding: theme.spacing(1),
+                  borderRadius: theme.shape.borderRadius,
+                  maxWidth: "60%",
+                  ...messageStyles[msg.direction],
+                }}
+              >
+                <Typography variant="body1">{msg.message}</Typography>
+                <Typography variant="caption" color={colors.grey[500]}>
+                  {formatDateTime(msg.timestamp)}
+                </Typography>
+              </Paper>
             </ListItem>
           ))}
         </List>
