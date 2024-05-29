@@ -122,7 +122,7 @@ def create_bot():
 ### PUT APIs
 
 @api.route('/api/bots/<int:bot_id>', methods=['PUT'])
-def update_bot(bot_id):
+def edit_bot(bot_id):
     try:
         bot = Bot.query.get(bot_id)
         if not bot:
@@ -135,6 +135,21 @@ def update_bot(bot_id):
         bot.email = data.get('email', bot.email)
         bot.persona = data.get('persona', bot.persona)
         bot.model = data.get('model', bot.model)
+
+        # Update platforms
+        new_platforms = data.get('platforms', [])
+        existing_platforms = {platform.platform for platform in bot.platforms}
+
+        # Add new platforms
+        for platform_name in new_platforms:
+            if platform_name not in existing_platforms:
+                new_platform = Platform(bot_id=bot.id, platform=platform_name)
+                db.session.add(new_platform)
+
+        # Remove platforms that are no longer selected
+        for platform in bot.platforms:
+            if platform.platform not in new_platforms:
+                db.session.delete(platform)
 
         db.session.commit()
 

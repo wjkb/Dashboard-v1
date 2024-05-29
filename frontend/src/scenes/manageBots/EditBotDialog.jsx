@@ -52,7 +52,15 @@ const EditBotDialog = ({ open, onClose, bot, onSave }) => {
   };
 
   const handleSave = () => {
-    onSave(formData);
+    const platforms = [];
+    if (formData.Facebook) platforms.push("Facebook");
+    if (formData.WhatsApp) platforms.push("WhatsApp");
+    if (formData.Telegram) platforms.push("Telegram");
+
+    onSave({
+      ...formData,
+      platforms,
+    });
   };
 
   return (

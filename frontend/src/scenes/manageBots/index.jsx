@@ -213,6 +213,8 @@ const ManageBots = () => {
       >
         <DataGrid rows={bots} columns={columns} />
       </Box>
+
+      {/* Conditional rendering of EditBotDialog */}
       {selectedBot && (
         <EditBotDialog
           open={editDialogOpen}
@@ -221,6 +223,8 @@ const ManageBots = () => {
           onSave={handleSave}
         />
       )}
+
+      {/* Conditional rendering of DeleteConfirmationDialog */}
       {selectedBot && (
         <DeleteConfirmationDialog
           open={deleteDialogOpen}
