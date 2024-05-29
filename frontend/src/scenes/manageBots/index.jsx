@@ -61,7 +61,18 @@ const ManageBots = () => {
     try {
       await editBot(selectedBot.id, updatedData);
       const updatedBots = bots.map((bot) =>
-        bot.id === selectedBot.id ? { ...bot, ...updatedData } : bot
+        bot.id === selectedBot.id
+          ? {
+              ...bot,
+              ...updatedData,
+              platforms: updatedData.platforms.map((platform) => ({
+                platform,
+              })),
+              Facebook: updatedData.platforms.includes("Facebook"),
+              WhatsApp: updatedData.platforms.includes("WhatsApp"),
+              Telegram: updatedData.platforms.includes("Telegram"),
+            }
+          : bot
       );
       setBots(updatedBots);
       handleDialogClose();
