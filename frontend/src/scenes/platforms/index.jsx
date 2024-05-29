@@ -8,6 +8,7 @@ import { tokens } from "../../theme";
 import FacebookOutlinedIcon from "@mui/icons-material/FacebookOutlined";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
+import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
@@ -31,6 +32,7 @@ const PlatformSidebar = () => {
   const theme = useTheme();
   const colors = tokens;
 
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [selected, setSelected] = useState(null);
 
   return (
@@ -54,15 +56,40 @@ const PlatformSidebar = () => {
           },
         }}
       >
-        <ProSidebar>
+        <ProSidebar collapsed={isCollapsed}>
           <Menu iconShape="square">
-            <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
+            <MenuItem
+              icon={isCollapsed ? <MenuOutlinedIcon /> : undefined}
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              style={{
+                margin: "10px 0 20px 0",
+                color: colors.grey[100],
+              }}
             >
-              Choose the platform:
-            </Typography>
+              {!isCollapsed && (
+                <Box
+                  display="flex"
+                  justifyContent="right"
+                  alignItems="center"
+                  ml="15px"
+                >
+                  <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
+                    <MenuOutlinedIcon />
+                  </IconButton>
+                </Box>
+              )}
+            </MenuItem>
+
+            {!isCollapsed && (
+              <Typography
+                variant="h6"
+                color={colors.grey[300]}
+                sx={{ m: "15px 0 5px 20px" }}
+              >
+                Choose the platform:
+              </Typography>
+            )}
+
             {/* MENU ITEMS */}
             <Item
               title="Facebook"
