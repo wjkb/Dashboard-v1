@@ -6,7 +6,9 @@ import Header from "../../components/Header";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
-import { getAllBots } from "../../api";
+import { getAllBots, editBot, deleteBot } from "../../api";
+import EditBotDialog from "./EditBotDialog";
+import DeleteConfirmationDialog from "./DeleteConfirmationDialog";
 
 const ManageBots = () => {
   const theme = useTheme();
@@ -14,6 +16,9 @@ const ManageBots = () => {
   const [bots, setBots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedBot, setSelectedBot] = useState(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchBots = async () => {
@@ -41,6 +46,60 @@ const ManageBots = () => {
 
     fetchBots();
   }, []);
+
+  const handleEditClick = (bot) => {
+    setSelectedBot(bot);
+    setEditDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setEditDialogOpen(false);
+    setSelectedBot(null);
+  };
+
+  const handleSave = async (updatedData) => {
+    try {
+      await editBot(selectedBot.id, updatedData);
+      const updatedBots = bots.map((bot) =>
+        bot.id === selectedBot.id
+          ? {
+              ...bot,
+              ...updatedData,
+              platforms: updatedData.platforms.map((platform) => ({
+                platform,
+              })),
+              Facebook: updatedData.platforms.includes("Facebook"),
+              WhatsApp: updatedData.platforms.includes("WhatsApp"),
+              Telegram: updatedData.platforms.includes("Telegram"),
+            }
+          : bot
+      );
+      setBots(updatedBots);
+      handleDialogClose();
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const handleDeleteClick = (bot) => {
+    setSelectedBot(bot);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteDialogClose = () => {
+    setDeleteDialogOpen(false);
+    setSelectedBot(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteBot(selectedBot.id);
+      setBots(bots.filter((bot) => bot.id !== selectedBot.id));
+      handleDeleteDialogClose();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   const renderPlatformIcon = (value) => {
     return value ? (
@@ -99,13 +158,14 @@ const ManageBots = () => {
     {
       headerName: "Actions",
       flex: 2,
-      renderCell: () => (
+      renderCell: (params) => (
         <Box>
           <Button
             variant="contained"
             color="primary"
             startIcon={<EditIcon />}
             style={{ width: "100px", marginRight: "10px" }}
+            onClick={() => handleEditClick(params.row)}
           >
             Edit
           </Button>
@@ -114,6 +174,7 @@ const ManageBots = () => {
             color="error"
             startIcon={<CloseIcon />}
             style={{ width: "100px" }}
+            onClick={() => handleDeleteClick(params.row)}
           >
             Delete
           </Button>
@@ -163,6 +224,26 @@ const ManageBots = () => {
       >
         <DataGrid rows={bots} columns={columns} />
       </Box>
+
+      {/* Conditional rendering of EditBotDialog */}
+      {selectedBot && (
+        <EditBotDialog
+          open={editDialogOpen}
+          onClose={handleDialogClose}
+          bot={selectedBot}
+          onSave={handleSave}
+        />
+      )}
+
+      {/* Conditional rendering of DeleteConfirmationDialog */}
+      {selectedBot && (
+        <DeleteConfirmationDialog
+          open={deleteDialogOpen}
+          onClose={handleDeleteDialogClose}
+          onConfirm={handleDeleteConfirm}
+          bot={selectedBot}
+        />
+      )}
     </Box>
   );
 };

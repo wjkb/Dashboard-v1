@@ -71,3 +71,37 @@ export const createBot = async (botData) => {
     throw new Error(`Error creating bot: ${error.message}`);
   }
 };
+
+// PUT APIs
+export const editBot = async (botId, updatedData) => {
+  try {
+    const response = await fetch(`${API_URL}/bots/${botId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updatedData),
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error updating bot: ${error.message}`);
+  }
+};
+
+// DELETE APIs
+export const deleteBot = async (botId) => {
+  try {
+    const response = await fetch(`${API_URL}/bots/${botId}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error deleting bot: ${error.message}`);
+  }
+};

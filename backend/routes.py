@@ -83,11 +83,12 @@ def get_bot_conversation_messages(platform, bot_id, user):
 
 
 ### POST APIs
+
 @api.route('/api/bots', methods=['POST'])
 def create_bot():
     try:
         data = request.json
-        print(f"Received data: {data}")  # Debugging line
+        print(f"Received data: {data}")
 
         # Check if all required fields are present
         required_fields = ['phoneNumber', 'name', 'persona', 'model', 'platforms']
@@ -104,15 +105,88 @@ def create_bot():
         )
         db.session.add(new_bot)
         db.session.commit()
-        print(f"Created bot: {new_bot.serialize()}")  # Debugging line
+        print(f"Created bot: {new_bot.serialize()}")
 
         for platform in data['platforms']:
             new_platform = Platform(bot_id=new_bot.id, platform=platform)
             db.session.add(new_platform)
-            print(f"Added platform: {platform}")  # Debugging line
+            print(f"Added platform: {platform}")
 
         db.session.commit()
         return jsonify(new_bot.serialize()), 201
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
+    
+
+### PUT APIs
+
+@api.route('/api/bots/<int:bot_id>', methods=['PUT'])
+def edit_bot(bot_id):
+    try:
+        bot = Bot.query.get(bot_id)
+        if not bot:
+            return jsonify({"error": "Bot not found"}), 404
+
+        data = request.json
+
+        bot.phone = data.get('phone', bot.phone)
+        bot.name = data.get('name', bot.name)
+        bot.email = data.get('email', bot.email)
+        bot.persona = data.get('persona', bot.persona)
+        bot.model = data.get('model', bot.model)
+
+        # Update platforms
+        new_platforms = data.get('platforms', [])
+        existing_platforms = {platform.platform for platform in bot.platforms}
+
+        # Add new platforms
+        for platform_name in new_platforms:
+            if platform_name not in existing_platforms:
+                new_platform = Platform(bot_id=bot.id, platform=platform_name)
+                db.session.add(new_platform)
+
+        # Remove platforms that are no longer selected
+        for platform in bot.platforms:
+            if platform.platform not in new_platforms:
+                db.session.delete(platform)
+
+        db.session.commit()
+
+        return jsonify({"message": "Bot updated successfully"}), 200
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
+
+
+### DELETE APIs
+
+@api.route('/api/bots/<int:bot_id>', methods=['DELETE'])
+def delete_bot(bot_id):
+    try:
+        bot = Bot.query.get(bot_id)
+        if not bot:
+            return jsonify({"error": "Bot not found"}), 404
+        
+        # Get all conversations related to the bot
+        conversations = Conversation.query.filter_by(bot_id=bot_id).all()
+        for conversation in conversations:
+            # Delete all related Facebook, WhatsApp, and Telegram messages
+            FacebookMessage.query.filter_by(conversation_id=conversation.id).delete()
+            WhatsappMessage.query.filter_by(conversation_id=conversation.id).delete()
+            TelegramMessage.query.filter_by(conversation_id=conversation.id).delete()
+        
+        # Delete all conversations
+        Conversation.query.filter_by(bot_id=bot_id).delete()
+
+        # Delete all platforms related to the bot
+        Platform.query.filter_by(bot_id=bot_id).delete()
+
+        # Delete the bot itself
+        db.session.delete(bot)
+        db.session.commit()
+        
+        return jsonify({"message": "Bot and related data deleted successfully"}), 200
     except Exception as e:
         print(f"Error occurred: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
