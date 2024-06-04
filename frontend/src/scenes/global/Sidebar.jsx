@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
 import "react-pro-sidebar/dist/css/styles.css";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
@@ -34,6 +34,20 @@ const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selected, setSelected] = useState("Dashboard");
   const location = useLocation();
+
+  // Function to determine the selected item based on the current path
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === "/") {
+      setSelected("Dashboard");
+    } else if (path.startsWith("/platforms")) {
+      setSelected("Manage platforms");
+    } else if (path.startsWith("/managebots")) {
+      setSelected("Manage bots");
+    } else if (path.startsWith("/addbot")) {
+      setSelected("Add Bot");
+    }
+  }, [location.pathname]);
 
   const resolveImagePath = () => {
     const currentPath = location.pathname;

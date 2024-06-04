@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -13,6 +13,8 @@ import { Formik } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
+import AddConfirmationDialog from "./AddConfirmationDialog";
+import SuccessDialog from "./SuccessDialog";
 import { createBot } from "../../api";
 
 const initialValues = {
@@ -42,14 +44,45 @@ const botScheme = yup.object().shape({
 
 const Form = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false); // State for SuccessDialog
+  const [formValues, setFormValues] = useState(initialValues);
+  const [submitFormFn, setSubmitFormFn] = useState(() => () => {});
 
-  const handleFormSubmit = async (values) => {
+  const handleFormSubmit = async (values, { resetForm }) => {
     try {
       const response = await createBot(values);
       console.log("Bot created successfully", response);
+      resetForm();
+      setIsDialogOpen(false);
+      setIsSuccessDialogOpen(true); // Open SuccessDialog on successful submission
     } catch (error) {
       console.error("Error creating bot", error);
     }
+  };
+
+  const handleOpenDialog = async (values, submitForm, validateForm) => {
+    const errors = await validateForm();
+    if (Object.keys(errors).length === 0) {
+      setFormValues(values);
+      setSubmitFormFn(() => submitForm);
+      setIsDialogOpen(true);
+    } else {
+      // Ensure that validation errors are shown if validation fails
+      submitForm();
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+  };
+
+  const handleConfirmDialog = () => {
+    submitFormFn();
+  };
+
+  const handleCloseSuccessDialog = () => {
+    setIsSuccessDialogOpen(false);
   };
 
   return (
@@ -57,9 +90,9 @@ const Form = () => {
       <Header title="Add New Bot" subtitle="" />
 
       <Formik
-        onSubmit={handleFormSubmit}
         initialValues={initialValues}
         validationSchema={botScheme}
+        onSubmit={handleFormSubmit}
       >
         {({
           values,
@@ -69,127 +102,145 @@ const Form = () => {
           handleChange,
           handleSubmit,
           isSubmitting,
+          validateForm,
         }) => (
-          <form onSubmit={handleSubmit}>
-            <Box
-              display="grid"
-              gap="30px"
-              gridTemplateColumns="repeat(4, minmax(0, 1fr))"
-              sx={{
-                "& > div": { gridColumn: isNonMobile ? undefined : "span 4" },
+          <>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleOpenDialog(values, handleSubmit, validateForm);
               }}
             >
-              {/* Phone Number field*/}
-              <TextField
-                fullWidth
-                variant="filled"
-                type="text"
-                label="Phone Number"
-                placeholder="e.g. 91234567"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.phoneNumber}
-                name="phoneNumber"
-                error={!!touched.phoneNumber && !!errors.phoneNumber}
-                helperText={touched.phoneNumber && errors.phoneNumber}
-                sx={{ gridColumn: "span 4" }}
-              />
-              {/* Name field*/}
-              <TextField
-                fullWidth
-                variant="filled"
-                type="text"
-                label="Name"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.name}
-                name="name"
-                error={!!touched.name && !!errors.name}
-                helperText={touched.name && errors.name}
-                sx={{ gridColumn: "span 4" }}
-              />
-              {/* Email field*/}
-              <TextField
-                fullWidth
-                variant="filled"
-                type="text"
-                label="Email (optional)"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.email}
-                name="email"
-                error={!!touched.email && !!errors.email}
-                helperText={touched.email && errors.email}
-                sx={{ gridColumn: "span 4" }}
-              />
-              {/* Persona field*/}
-              <TextField
-                fullWidth
-                variant="filled"
-                type="text"
-                label="Persona"
-                placeholder="e.g. Old Lady"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.persona}
-                name="persona"
-                error={!!touched.persona && !!errors.persona}
-                helperText={touched.persona && errors.persona}
-                sx={{ gridColumn: "span 4" }}
-              />
-              {/* Model field*/}
-              <TextField
-                fullWidth
-                variant="filled"
-                type="text"
-                label="Model Used to Train Bot"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.model}
-                name="model"
-                error={!!touched.model && !!errors.model}
-                helperText={touched.model && errors.model}
-                sx={{ gridColumn: "span 4" }}
-              />
-
-              {/* Platform field*/}
-              <TextField
-                select
-                fullWidth
-                variant="filled"
-                label="Platform(s)"
-                id="platforms"
-                name="platforms"
-                value={values.platforms}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                error={!!touched.platforms && !!errors.platforms}
-                helperText={touched.platforms && errors.platforms}
-                SelectProps={{
-                  multiple: true,
-                  renderValue: (selected) => selected.join(", "),
+              <Box
+                display="grid"
+                gap="30px"
+                gridTemplateColumns="repeat(4, minmax(0, 1fr))"
+                sx={{
+                  "& > div": { gridColumn: isNonMobile ? undefined : "span 4" },
                 }}
-                sx={{ gridColumn: "span 4" }}
               >
-                {platformNames.map((platform) => (
-                  <MenuItem key={platform} value={platform}>
-                    <Checkbox checked={values.platforms.includes(platform)} />
-                    <ListItemText primary={platform} />
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Box>
-            <Box display="flex" justifyContent="end" mt="20px">
-              <Button
-                type="submit"
-                color="secondary"
-                variant="contained"
-                disabled={isSubmitting}
-              >
-                Create New Bot
-              </Button>
-            </Box>
-          </form>
+                {/* Phone Number field */}
+                <TextField
+                  fullWidth
+                  variant="filled"
+                  type="text"
+                  label="Phone Number"
+                  placeholder="e.g. 91234567"
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                  value={values.phoneNumber}
+                  name="phoneNumber"
+                  error={!!touched.phoneNumber && !!errors.phoneNumber}
+                  helperText={touched.phoneNumber && errors.phoneNumber}
+                  sx={{ gridColumn: "span 4" }}
+                />
+                {/* Name field */}
+                <TextField
+                  fullWidth
+                  variant="filled"
+                  type="text"
+                  label="Name"
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                  value={values.name}
+                  name="name"
+                  error={!!touched.name && !!errors.name}
+                  helperText={touched.name && errors.name}
+                  sx={{ gridColumn: "span 4" }}
+                />
+                {/* Email field */}
+                <TextField
+                  fullWidth
+                  variant="filled"
+                  type="text"
+                  label="Email (optional)"
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                  value={values.email}
+                  name="email"
+                  error={!!touched.email && !!errors.email}
+                  helperText={touched.email && errors.email}
+                  sx={{ gridColumn: "span 4" }}
+                />
+                {/* Persona field */}
+                <TextField
+                  fullWidth
+                  variant="filled"
+                  type="text"
+                  label="Persona"
+                  placeholder="e.g. Old Lady"
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                  value={values.persona}
+                  name="persona"
+                  error={!!touched.persona && !!errors.persona}
+                  helperText={touched.persona && errors.persona}
+                  sx={{ gridColumn: "span 4" }}
+                />
+                {/* Model field */}
+                <TextField
+                  fullWidth
+                  variant="filled"
+                  type="text"
+                  label="Model Used to Train Bot"
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                  value={values.model}
+                  name="model"
+                  error={!!touched.model && !!errors.model}
+                  helperText={touched.model && errors.model}
+                  sx={{ gridColumn: "span 4" }}
+                />
+
+                {/* Platform field */}
+                <TextField
+                  select
+                  fullWidth
+                  variant="filled"
+                  label="Platform(s)"
+                  id="platforms"
+                  name="platforms"
+                  value={values.platforms}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={!!touched.platforms && !!errors.platforms}
+                  helperText={touched.platforms && errors.platforms}
+                  SelectProps={{
+                    multiple: true,
+                    renderValue: (selected) => selected.join(", "),
+                  }}
+                  sx={{ gridColumn: "span 4" }}
+                >
+                  {platformNames.map((platform) => (
+                    <MenuItem key={platform} value={platform}>
+                      <Checkbox checked={values.platforms.includes(platform)} />
+                      <ListItemText primary={platform} />
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Box>
+              <Box display="flex" justifyContent="end" mt="20px">
+                <Button
+                  type="submit"
+                  color="secondary"
+                  variant="contained"
+                  disabled={isSubmitting}
+                >
+                  Create New Bot
+                </Button>
+              </Box>
+            </form>
+            <AddConfirmationDialog
+              open={isDialogOpen}
+              onClose={handleCloseDialog}
+              onConfirm={handleConfirmDialog}
+              values={formValues}
+            />
+            <SuccessDialog
+              open={isSuccessDialogOpen}
+              onClose={handleCloseSuccessDialog}
+            />
+          </>
         )}
       </Formik>
     </Box>
