@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from backend.models import db, Bot, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage
+from backend.utils import save_file
 
 api = Blueprint('api', __name__)
 

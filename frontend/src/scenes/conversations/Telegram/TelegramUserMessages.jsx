@@ -15,7 +15,7 @@ import Header from "../../../components/Header";
 const TelegramUserMessages = () => {
   const { botId, userId } = useParams();
   const theme = useTheme();
-  const colors = tokens; // Use the tokens directly as there is no mode-specific colors
+  const colors = tokens;
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -93,7 +93,16 @@ const TelegramUserMessages = () => {
                   ...messageStyles[msg.direction],
                 }}
               >
-                <Typography variant="body1">{msg.message}</Typography>
+                {msg.file_path && (
+                  <img
+                    src={`http://localhost:5000/${msg.file_path}`}
+                    alt="Message attachment"
+                    style={{ maxWidth: "100%", marginBottom: theme.spacing(1) }}
+                  />
+                )}
+                {msg.message && (
+                  <Typography variant="body1">{msg.message}</Typography>
+                )}
                 <Typography variant="caption" color={colors.grey[500]}>
                   {formatDateTime(msg.timestamp)}
                 </Typography>
