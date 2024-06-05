@@ -69,7 +69,7 @@ with app.app_context():
         (1, datetime(2024, 5, 15, 14, 31), 'Sure, I\'d be happy to assist. Could you please provide your order number?', 'outgoing', None, None),
         (1, datetime(2024, 5, 15, 14, 32), 'It\'s 12345.', 'incoming', None, None),
         (1, datetime(2024, 5, 15, 14, 33), 'Thank you. I\'ll check the status for you now.', 'outgoing', None, None),
-        (1, datetime(2024, 5, 15, 14, 35), None, 'incoming', 'files/Facebook/1/User123/image1.jpg', 'image/jpeg'),
+        (1, datetime(2024, 5, 15, 14, 35), None, 'outgoing', 'files/Facebook/1/User123/image1.jpg', 'image/jpeg'),
         (1, datetime(2024, 5, 15, 14, 36), 'Why did you send me a random cat picture??', 'incoming', None, None),
         (1, datetime(2024, 5, 15, 14, 37), 'Hello? Are you there?', 'incoming', None, None),
         (1, datetime(2024, 5, 15, 14, 38), 'OMG! I am so sorry, that was an accident', 'outgoing', None, None),
