@@ -72,7 +72,7 @@ const FacebookBotConversations = () => {
     <Box display="flex">
       <Box margin="20px" width="30%">
         <Header
-          title={`Bot Conversations (ID: ${botId})`}
+          title={`Conversations (ID: ${botId})`}
           subtitle="List of users this bot is talking to"
         />
         <Box
