@@ -1,6 +1,5 @@
 import os
-from flask import send_from_directory
-from flask import Flask
+from flask import send_from_directory, request, Flask, make_response
 from flask_cors import CORS
 from backend.config import Config
 from backend.models import db
@@ -19,10 +18,16 @@ def create_app():
     with app.app_context():
         db.create_all()
 
-    # Serve files from the files directory
+    # Serve files from the files directory with conditional download headers
     @app.route('/files/<path:filename>')
     def serve_files(filename):
-        return send_from_directory(os.path.join(app.root_path, 'files'), filename)
+        directory = os.path.join(app.root_path, 'files')
+        response = make_response(send_from_directory(directory, filename))
+        # Check the 'download' query parameter
+        download = request.args.get('download')
+        if download == 'true':
+            response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+        return response
 
     return app
 
