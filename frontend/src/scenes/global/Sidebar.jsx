@@ -44,6 +44,8 @@ const Sidebar = () => {
       setSelected("Manage platforms");
     } else if (path.startsWith("/managebots")) {
       setSelected("Manage bots");
+    } else if (path.startsWith("/manual-send")) {
+      setSelected("Manual Send");
     } else if (path.startsWith("/addbot")) {
       setSelected("Add Bot");
     }
@@ -148,6 +150,13 @@ const Sidebar = () => {
             title="Manage bots"
             to="/managebots"
             icon={<PeopleOutlinedIcon />}
+            selected={selected}
+            setSelected={setSelected}
+          />
+          <Item
+            title="Manual Send"
+            to="/manual-send"
+            icon={<PersonOutlinedIcon />}
             selected={selected}
             setSelected={setSelected}
           />

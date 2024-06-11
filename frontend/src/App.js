@@ -15,6 +15,7 @@ import FacebookUserMessages from "./scenes/conversations/Facebook/FacebookUserMe
 import WhatsappUserMessages from "./scenes/conversations/Whatsapp/WhatsappUserMessages";
 import TelegramUserMessages from "./scenes/conversations/Telegram/TelegramUserMessages";
 import ManageBots from "./scenes/manageBots";
+import ManualSendForm from "./scenes/manualSend";
 import AddBotForm from "./scenes/addBot";
 
 function App() {
@@ -48,7 +49,7 @@ function App() {
                 </Route>
               </Route>
               <Route path="/managebots" element={<ManageBots />} />
-              <Route path="/manual-send" element={<AddBotForm />} />
+              <Route path="/manual-send" element={<ManualSendForm />} />
               <Route path="/addbot" element={<AddBotForm />} />
             </Routes>
           </main>
