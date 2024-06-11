@@ -15,7 +15,7 @@ import FacebookUserMessages from "./scenes/conversations/Facebook/FacebookUserMe
 import WhatsappUserMessages from "./scenes/conversations/Whatsapp/WhatsappUserMessages";
 import TelegramUserMessages from "./scenes/conversations/Telegram/TelegramUserMessages";
 import ManageBots from "./scenes/manageBots";
-import Form from "./scenes/form";
+import AddBotForm from "./scenes/addBot";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -48,7 +48,8 @@ function App() {
                 </Route>
               </Route>
               <Route path="/managebots" element={<ManageBots />} />
-              <Route path="/addbot" element={<Form />} />
+              <Route path="/manual-send" element={<AddBotForm />} />
+              <Route path="/addbot" element={<AddBotForm />} />
             </Routes>
           </main>
         </div>
