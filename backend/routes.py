@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from backend.models import db, Bot, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage
-from backend.utils import save_file
+from backend.utils import save_file, create_zip
 
 api = Blueprint('api', __name__)
 
@@ -118,6 +118,17 @@ def create_bot():
     except Exception as e:
         print(f"Error occurred: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
+    
+
+@api.route('/download/zip', methods=['POST'])
+def download_zip():
+    data = request.get_json()
+    file_paths = data.get('filePaths', [])
+    try:
+        zip_file_path = create_zip(file_paths)
+        return jsonify({'zipFileUrl': f'http://localhost:5000/{zip_file_path}'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     
 
 ### PUT APIs

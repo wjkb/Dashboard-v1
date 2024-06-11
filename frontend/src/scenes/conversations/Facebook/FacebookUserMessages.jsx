@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Box, useTheme, Tabs, Tab } from "@mui/material";
+import { Box, Tabs, Tab } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { getBotConversationMessages } from "../../../api";
 import Header from "../../../components/Header";
@@ -32,6 +32,7 @@ const FacebookUserMessages = () => {
             .map((msg) => ({
               filePath: msg.file_path,
               fileName: msg.file_path.split("/").pop(),
+              fileType: msg.file_type,
               messageId: msg.id,
             }))
         );
