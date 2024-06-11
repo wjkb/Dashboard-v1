@@ -60,8 +60,10 @@ class FacebookMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
-    message = db.Column(db.Text, nullable=False)
+    message = db.Column(db.Text, nullable=True)
     direction = db.Column(db.String(10), nullable=False)
+    file_path = db.Column(db.String(255), nullable=True)
+    file_type = db.Column(db.String(50), nullable=True)
 
     def serialize(self):
         return {
@@ -69,15 +71,19 @@ class FacebookMessage(db.Model):
             'conversation_id': self.conversation_id,
             'timestamp': self.timestamp.isoformat(),
             'message': self.message,
-            'direction': self.direction
+            'direction': self.direction,
+            'file_path': self.file_path,
+            'file_type': self.file_type
         }
 
 class WhatsappMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
-    message = db.Column(db.Text, nullable=False)
+    message = db.Column(db.Text, nullable=True)
     direction = db.Column(db.String(10), nullable=False)
+    file_path = db.Column(db.String(255), nullable=True)
+    file_type = db.Column(db.String(50), nullable=True)
 
     def serialize(self):
         return {
@@ -85,15 +91,19 @@ class WhatsappMessage(db.Model):
             'conversation_id': self.conversation_id,
             'timestamp': self.timestamp.isoformat(),
             'message': self.message,
-            'direction': self.direction
+            'direction': self.direction,
+            'file_path': self.file_path,
+            'file_type': self.file_type
         }
 
 class TelegramMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
-    message = db.Column(db.Text, nullable=False)
+    message = db.Column(db.Text, nullable=True)
     direction = db.Column(db.String(10), nullable=False)
+    file_path = db.Column(db.String(255), nullable=True)
+    file_type = db.Column(db.String(50), nullable=True)
 
     def serialize(self):
         return {
@@ -101,5 +111,7 @@ class TelegramMessage(db.Model):
             'conversation_id': self.conversation_id,
             'timestamp': self.timestamp.isoformat(),
             'message': self.message,
-            'direction': self.direction
+            'direction': self.direction,
+            'file_path': self.file_path,
+            'file_type': self.file_type
         }

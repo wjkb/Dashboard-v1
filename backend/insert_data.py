@@ -65,42 +65,75 @@ with app.app_context():
 
     # Insert Facebook messages
     facebook_messages_data = [
-        (1, datetime(2024, 5, 15, 14, 30), 'Hello, can you help me with my order?', 'incoming'),
-        (1, datetime(2024, 5, 15, 14, 31), 'Sure, I\'d be happy to assist. Could you please provide your order number?', 'outgoing'),
-        (1, datetime(2024, 5, 15, 14, 32), 'It\'s 12345.', 'incoming'),
-        (1, datetime(2024, 5, 15, 14, 33), 'Thank you. I\'ll check the status for you now.', 'outgoing'),
-        (2, datetime(2024, 5, 15, 15, 30), 'Hey Lim, do you know the store hours for today?', 'incoming'),
-        (2, datetime(2024, 5, 15, 15, 31), 'Yes, the store is open from 9 AM to 8 PM today.', 'outgoing')
+        (1, datetime(2024, 5, 15, 14, 30), 'Hello, can you help me with my order?', 'incoming', None, None),
+        (1, datetime(2024, 5, 15, 14, 31), 'Sure, I\'d be happy to assist. Could you please provide your order number?', 'outgoing', None, None),
+        (1, datetime(2024, 5, 15, 14, 32), 'It\'s 12345.', 'incoming', None, None),
+        (1, datetime(2024, 5, 15, 14, 33), 'Thank you. I\'ll check the status for you now.', 'outgoing', None, None),
+        (1, datetime(2024, 5, 15, 14, 35), None, 'outgoing', 'files/Facebook/1/User123/cat.jpg', 'image/jpeg'),
+        (1, datetime(2024, 5, 15, 14, 35, 10), 'Same image, but with caption', 'outgoing', 'files/Facebook/1/User123/cat.jpg', 'image/jpeg'),
+        (1, datetime(2024, 5, 15, 14, 35, 30), None, 'outgoing', 'files/Facebook/1/User123/cat.mp4', 'video/mp4'),
+        (1, datetime(2024, 5, 15, 14, 36), None, 'outgoing', 'files/Facebook/1/User123/cat.mp3', 'audio/mp3'),
+        (1, datetime(2024, 5, 15, 14, 36, 30), None, 'outgoing', 'files/Facebook/1/User123/cat.pdf', 'application/pdf'),
+        (1, datetime(2024, 5, 15, 14, 36, 45), None, 'outgoing', 'files/Facebook/1/User123/cat.txt', 'text/plain'),
+        (1, datetime(2024, 5, 15, 14, 36, 50), None, 'outgoing', 'files/Facebook/1/User123/cat.py', 'text/x-python'),
+        (1, datetime(2024, 5, 15, 14, 37), 'Why did you send me random cat stuff??', 'incoming', None, None),
+        (1, datetime(2024, 5, 15, 14, 37, 30), 'Hello? Are you there?', 'incoming', None, None),
+        (1, datetime(2024, 5, 15, 14, 38), 'OMG! I am so sorry, that was an accident', 'outgoing', None, None),
+        (2, datetime(2024, 5, 15, 15, 30), 'Hey Lim, do you know the store hours for today?', 'incoming', None, None),
+        (2, datetime(2024, 5, 15, 15, 31), 'Yes, the store is open from 9 AM to 8 PM today.', 'outgoing', None, None),
     ]
 
-    for conversation_id, timestamp, message, direction in facebook_messages_data:
-        facebook_message = FacebookMessage(conversation_id=conversation_id, timestamp=timestamp, message=message, direction=direction)
+    for conversation_id, timestamp, message, direction, file_path, file_type in facebook_messages_data:
+        facebook_message = FacebookMessage(
+            conversation_id=conversation_id,
+            timestamp=timestamp,
+            message=message,
+            direction=direction,
+            file_path=file_path,
+            file_type=file_type
+        )
         db.session.add(facebook_message)
     db.session.commit()
 
     # Insert WhatsApp messages
     whatsapp_messages_data = [
-        (3, datetime(2024, 5, 15, 14, 0), 'Hey Lim, can you recommend a good restaurant nearby?', 'incoming'),
-        (3, datetime(2024, 5, 15, 14, 1), 'Sure, how about trying \'The Fancy Feast\'? It\'s highly rated.', 'outgoing'),
-        (4, datetime(2024, 5, 15, 15, 0), 'Lim, do you know if the pharmacy is open today?', 'incoming'),
-        (4, datetime(2024, 5, 15, 15, 1), 'Yes, it\'s open until 6 PM today.', 'outgoing')
+        (3, datetime(2024, 5, 15, 14, 0), 'Hey Lim, can you recommend a good restaurant nearby?', 'incoming', None, None),
+        (3, datetime(2024, 5, 15, 14, 1), 'Sure, how about trying \'The Fancy Feast\'? It\'s highly rated.', 'outgoing', None, None),
+        (3, datetime(2024, 5, 15, 16, 0), 'What do you think of this restaurant? Look at this menu.', 'incoming', 'files/WhatsApp/1/User123/menu.jpg', 'image/jpeg'),
+        (4, datetime(2024, 5, 15, 15, 0), 'Lim, do you know if the pharmacy is open today?', 'incoming', None, None),
+        (4, datetime(2024, 5, 15, 15, 1), 'Yes, it\'s open until 6 PM today.', 'outgoing', None, None),
     ]
 
-    for conversation_id, timestamp, message, direction in whatsapp_messages_data:
-        whatsapp_message = WhatsappMessage(conversation_id=conversation_id, timestamp=timestamp, message=message, direction=direction)
+    for conversation_id, timestamp, message, direction, file_path, file_type in whatsapp_messages_data:
+        whatsapp_message = WhatsappMessage(
+            conversation_id=conversation_id,
+            timestamp=timestamp,
+            message=message,
+            direction=direction,
+            file_path=file_path,
+            file_type=file_type
+        )
         db.session.add(whatsapp_message)
     db.session.commit()
 
     # Insert Telegram messages
     telegram_messages_data = [
-        (5, datetime(2024, 5, 15, 14, 15), 'Hello Chua, can you help me find a good recipe for dinner?', 'incoming'),
-        (5, datetime(2024, 5, 15, 14, 16), 'Sure! How about trying a simple stir-fry with vegetables and chicken?', 'outgoing'),
-        (6, datetime(2024, 5, 15, 15, 45), 'Hi Chua, do you have any tips for meal prepping?', 'incoming'),
-        (6, datetime(2024, 5, 15, 15, 46), 'Yes! Start by planning your meals for the week and prepping ingredients in advance.', 'outgoing')
+        (5, datetime(2024, 5, 15, 14, 15), 'Hello Chua, can you help me find a good recipe for dinner?', 'incoming', None, None),
+        (5, datetime(2024, 5, 15, 14, 16), 'Sure! How about trying a simple stir-fry with vegetables and chicken?', 'outgoing', None, None),
+        (5, datetime(2024, 5, 15, 16, 0), 'Here is the recipe image.', 'outgoing', 'files/Telegram/2/User456/recipe.jpg', 'image/jpeg'),
+        (6, datetime(2024, 5, 15, 15, 45), 'Hi Chua, do you have any tips for meal prepping?', 'incoming', None, None),
+        (6, datetime(2024, 5, 15, 15, 46), 'Yes! Start by planning your meals for the week and prepping ingredients in advance.', 'outgoing', None, None),
     ]
 
-    for conversation_id, timestamp, message, direction in telegram_messages_data:
-        telegram_message = TelegramMessage(conversation_id=conversation_id, timestamp=timestamp, message=message, direction=direction)
+    for conversation_id, timestamp, message, direction, file_path, file_type in telegram_messages_data:
+        telegram_message = TelegramMessage(
+            conversation_id=conversation_id,
+            timestamp=timestamp,
+            message=message,
+            direction=direction,
+            file_path=file_path,
+            file_type=file_type
+        )
         db.session.add(telegram_message)
     db.session.commit()
 
