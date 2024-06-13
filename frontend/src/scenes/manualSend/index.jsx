@@ -6,9 +6,10 @@ import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
 import { DataGrid } from "@mui/x-data-grid";
-import { getAllBots } from "../../api"; // Adjust the import as necessary
+import { getAllBots, sendBot } from "../../api";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
+import SendIcon from "@mui/icons-material/Send";
 
 const initialValues = {
   url: "",
@@ -28,6 +29,7 @@ const ManualSendForm = () => {
   const colors = tokens;
   const isNonMobile = useMediaQuery("(min-width:600px)");
 
+  const [formValues, setFormValues] = useState(initialValues);
   const [bots, setBots] = useState([]);
   const [filteredBots, setFilteredBots] = useState([]);
   const [error, setError] = useState(null);
@@ -64,6 +66,7 @@ const ManualSendForm = () => {
         bot.platforms.some((platform) => platform.platform === values.platform)
       )
     );
+    setFormValues(values);
     setSubmitting(false);
   };
 
@@ -73,6 +76,17 @@ const ManualSendForm = () => {
     ) : (
       <CloseIcon style={{ color: "red" }} />
     );
+  };
+
+  const handleSendClick = async (bot) => {
+    console.log("Sending bot", bot);
+    try {
+      const { url: targetUrl, platform } = formValues;
+      const response = await sendBot(bot.id, targetUrl, platform);
+      console.log("Bot sent successfully", response);
+    } catch (error) {
+      console.error("Error sending bot", error);
+    }
   };
 
   const columns = [
@@ -120,6 +134,23 @@ const ManualSendForm = () => {
       headerName: "Telegram",
       flex: 0.5,
       renderCell: (params) => renderPlatformIcon(params.row.Telegram),
+    },
+    {
+      headerName: "Actions",
+      flex: 2,
+      renderCell: (params) => (
+        <Box>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<SendIcon />}
+            style={{ width: "100px", marginRight: "10px" }}
+            onClick={() => handleSendClick(params.row)}
+          >
+            Send
+          </Button>
+        </Box>
+      ),
     },
   ];
 

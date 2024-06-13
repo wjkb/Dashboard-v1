@@ -72,6 +72,24 @@ export const createBot = async (botData) => {
   }
 };
 
+export const sendBot = async (botId, targetUrl, platform) => {
+  try {
+    const response = await fetch(`${API_URL}/start_bot`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ botId, targetUrl, platform }),
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error starting bot: ${error.message}`);
+  }
+};
+
 // PUT APIs
 export const editBot = async (botId, updatedData) => {
   try {
