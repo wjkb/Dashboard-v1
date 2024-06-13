@@ -148,7 +148,7 @@ def start_bot():
 def receive_message():
     data = request.get_json()
 
-     # Create conversation if it doesn't exist
+    # Create conversation if it doesn't exist
     conversation = Conversation.query.filter_by(
         bot_id=data['bot_id'],
         platform=data['platform'],
@@ -172,6 +172,7 @@ def receive_message():
     platform = data['platform'].lower()
     message_class = platform_message_classes.get(platform)
 
+    # Create message object
     if message_class:
         message = message_class(
             conversation_id=conversation.id,
