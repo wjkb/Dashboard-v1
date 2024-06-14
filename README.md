@@ -1,3 +1,7 @@
+# Current Architecture
+
+![Software Architecture Diagram](architecture.drawio.svg)
+
 # Software Prerequisites
 
 1. **Install [RabbitMQ](https://www.rabbitmq.com/docs/download)**
