@@ -5,9 +5,9 @@ import "react-pro-sidebar/dist/css/styles.css";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { tokens } from "../../theme";
-import FacebookOutlinedIcon from "@mui/icons-material/FacebookOutlined";
-import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
-import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
+import FacebookIcon from "@mui/icons-material/Facebook";
+import WhatsappIcon from "@mui/icons-material/WhatsApp";
+import TelegramIcon from "@mui/icons-material/Telegram";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
@@ -107,21 +107,21 @@ const PlatformSidebar = () => {
             <Item
               title="Facebook"
               to="/platforms/facebook"
-              icon={<FacebookOutlinedIcon />}
+              icon={<FacebookIcon />}
               selected={selected}
               setSelected={setSelected}
             />
             <Item
               title="WhatsApp"
               to="/platforms/whatsapp"
-              icon={<ForumOutlinedIcon />}
+              icon={<WhatsappIcon />}
               selected={selected}
               setSelected={setSelected}
             />
             <Item
               title="Telegram"
               to="/platforms/telegram"
-              icon={<SendOutlinedIcon />}
+              icon={<TelegramIcon />}
               selected={selected}
               setSelected={setSelected}
             />

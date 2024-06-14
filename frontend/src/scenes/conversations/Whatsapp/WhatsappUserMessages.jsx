@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Box, Tabs, Tab } from "@mui/material";
+import { Box, Tabs, Tab, Button } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { getBotConversationMessages } from "../../../api";
 import Header from "../../../components/Header";
@@ -17,34 +17,39 @@ const WhatsappUserMessages = () => {
   const messageRefs = useRef({});
   const [highlightedMessage, setHighlightedMessage] = useState(null);
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const messagesData = await getBotConversationMessages(
-          "whatsapp",
-          botId,
-          userId
-        );
-        setMessages(messagesData);
-        setFiles(
-          messagesData
-            .filter((msg) => msg.file_path)
-            .map((msg) => ({
-              filePath: msg.file_path,
-              fileName: msg.file_path.split("/").pop(),
-              fileType: msg.file_type,
-              messageId: msg.id,
-            }))
-        );
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchMessages = async () => {
+    try {
+      const messagesData = await getBotConversationMessages(
+        "whatsapp",
+        botId,
+        userId
+      );
+      setMessages(messagesData);
+      setFiles(
+        messagesData
+          .filter((msg) => msg.file_path)
+          .map((msg) => ({
+            filePath: msg.file_path,
+            fileName: msg.file_path.split("/").pop(),
+            fileType: msg.file_type,
+            messageId: msg.id,
+          }))
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchMessages();
   }, [botId, userId]);
+
+  const handleRefresh = () => {
+    setLoading(true);
+    fetchMessages();
+  };
 
   const handleViewFile = (messageId) => {
     setTabValue(0); // Switch back to the messages tab
@@ -80,6 +85,14 @@ const WhatsappUserMessages = () => {
         title={`Messages with ${userId}`}
         subtitle="Conversation details"
       />
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleRefresh}
+        style={{ marginBottom: "10px" }}
+      >
+        Refresh Messages
+      </Button>
       <Box height="75vh" display="flex" flexDirection="column">
         <Tabs value={tabValue} onChange={handleChangeTab}>
           <Tab label="Messages" />

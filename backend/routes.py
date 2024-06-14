@@ -1,4 +1,6 @@
+import subprocess
 from flask import Blueprint, request, jsonify
+from datetime import datetime
 from backend.models import db, Bot, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage
 from backend.utils import save_file, create_zip
 
@@ -118,6 +120,71 @@ def create_bot():
     except Exception as e:
         print(f"Error occurred: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
+
+@api.route('/api/start_bot', methods=['POST'])
+def start_bot():
+    try:
+        data = request.json
+        bot_id = data.get('botId')
+        target_url = data.get('targetUrl')
+        platform = data.get('platform')
+
+        if not bot_id or not target_url or not platform:
+            return jsonify({'status': 'error', 'message': 'Missing required fields'}), 400
+
+        print(f"Starting bot {bot_id} for platform {platform} at {target_url}")
+
+        # Command to start the bot script
+        command = f"python bot.py {platform} {bot_id} {target_url}"
+        subprocess.Popen(command, shell=True)
+        print(f"Command run: {command}")
+
+        return jsonify({"status": "success","message": "Bot sent successfully"}), 200
+
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+    
+@api.route('/api/messages', methods=['POST'])
+def receive_message():
+    data = request.get_json()
+
+    # Create conversation if it doesn't exist
+    conversation = Conversation.query.filter_by(
+        bot_id=data['bot_id'],
+        platform=data['platform'],
+        user=data['user']
+    ).first()
+    if not conversation:
+        conversation = Conversation(
+            bot_id=data['bot_id'],
+            platform=data['platform'],
+            user=data['user']
+        )
+        db.session.add(conversation)
+        db.session.commit()
+
+    # Map platform to message class
+    platform_message_classes = {
+        'facebook': FacebookMessage,
+        'whatsapp': WhatsappMessage,
+        'telegram': TelegramMessage
+    }
+    platform = data['platform'].lower()
+    message_class = platform_message_classes.get(platform)
+
+    # Create message object
+    if message_class:
+        message = message_class(
+            conversation_id=conversation.id,
+            message=data['message'],
+            direction=data['direction'],
+            timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f')
+        )
+        db.session.add(message)
+        db.session.commit()
+        return jsonify({'status': 'success'}), 201
+    else:
+        return jsonify({'status': 'error', 'message': 'Unsupported platform'}), 400
     
 
 @api.route('/download/zip', methods=['POST'])

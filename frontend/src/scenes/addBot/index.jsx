@@ -42,7 +42,7 @@ const botScheme = yup.object().shape({
   platforms: yup.array().min(1, "required"),
 });
 
-const Form = () => {
+const AddBotForm = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false); // State for SuccessDialog
@@ -247,4 +247,4 @@ const Form = () => {
   );
 };
 
-export default Form;
+export default AddBotForm;
