@@ -1,3 +1,13 @@
+# Software Prerequisites
+
+1. **Install [RabbitMQ](https://www.rabbitmq.com/docs/download)**
+   - **Suggested way:**
+     1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) if haven't already
+     2. Run the following docker command:
+        ```sh
+        docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
+        ```
+
 # Starting the Backend Server
 
 1. **Navigate to the backend directory:**
