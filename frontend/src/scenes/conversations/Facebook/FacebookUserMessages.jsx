@@ -7,16 +7,28 @@ import FilesTab from "../FilesTab";
 import MessagesTab from "../MessagesTab";
 import { tokens } from "../../../theme";
 
+// Constants for tab values
+const TAB_MESSAGES = 0;
+const TAB_FILES = 1;
+
+/**
+ * Component to display messages and files of a Facebook bot conversation with a specific user.
+ *
+ * @returns {JSX.Element} The FacebookUserMessages component.
+ */
 const FacebookUserMessages = () => {
   const { botId, userId } = useParams();
   const [messages, setMessages] = useState([]);
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [tabValue, setTabValue] = useState(0);
+  const [tabValue, setTabValue] = useState(TAB_MESSAGES);
   const messageRefs = useRef({});
   const [highlightedMessage, setHighlightedMessage] = useState(null);
 
+  /**
+   * Fetches messages and files from the API for the current bot and user.
+   */
   const fetchMessages = async () => {
     try {
       const messagesData = await getBotConversationMessages(
@@ -24,6 +36,7 @@ const FacebookUserMessages = () => {
         botId,
         userId
       );
+      // Extract files from messages
       setMessages(messagesData);
       setFiles(
         messagesData
@@ -52,7 +65,7 @@ const FacebookUserMessages = () => {
   };
 
   const handleViewFile = (messageId) => {
-    setTabValue(0); // Switch back to the messages tab
+    setTabValue(TAB_MESSAGES); // Switch back to the messages tab
     setTimeout(() => {
       if (messageRefs.current[messageId]) {
         messageRefs.current[messageId].scrollIntoView({
@@ -98,7 +111,7 @@ const FacebookUserMessages = () => {
           <Tab label="Messages" />
           <Tab label="Files" />
         </Tabs>
-        {tabValue === 0 ? (
+        {tabValue === TAB_MESSAGES ? (
           <MessagesTab
             messages={messages}
             messageRefs={messageRefs}

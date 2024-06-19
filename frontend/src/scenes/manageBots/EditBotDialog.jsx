@@ -30,6 +30,16 @@ const botSchema = yup.object().shape({
   platforms: yup.array().min(1, "required"),
 });
 
+/**
+ * Dialog component for editing a bot.
+ *
+ * @param {Object} props - The component props.
+ * @param {boolean} props.open - Whether the dialog is open.
+ * @param {Function} props.onClose - Function to call when closing the dialog.
+ * @param {Object} props.bot - The bot to edit.
+ * @param {Function} props.onSave - Function to call when saving the edited bot.
+ * @returns {JSX.Element} The EditBotDialog component.
+ */
 const EditBotDialog = ({ open, onClose, bot, onSave }) => {
   const initialValues = {
     phone: bot ? bot.phone : "",
@@ -40,6 +50,11 @@ const EditBotDialog = ({ open, onClose, bot, onSave }) => {
     platforms: bot ? bot.platforms.map((platform) => platform.platform) : [],
   };
 
+  /**
+   * Handles saving the edited bot data.
+   *
+   * @param {Object} values - The values from the form.
+   */
   const handleSave = async (values) => {
     onSave(values);
   };

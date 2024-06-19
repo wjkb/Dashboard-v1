@@ -10,6 +10,17 @@ import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 
+/**
+ * Menu item component for the sidebar.
+ *
+ * @param {Object} props - The properties object.
+ * @param {string} props.title - The title of the menu item.
+ * @param {string} props.to - The route to navigate to when the item is clicked.
+ * @param {JSX.Element} props.icon - The icon to display in the menu item.
+ * @param {string} props.selected - The currently selected menu item.
+ * @param {Function} props.setSelected - Function to set the currently selected menu item.
+ * @returns {JSX.Element} The menu item component.
+ */
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
   const colors = tokens;
@@ -28,6 +39,11 @@ const Item = ({ title, to, icon, selected, setSelected }) => {
   );
 };
 
+/**
+ * Sidebar component for the application.
+ *
+ * @returns {JSX.Element} The sidebar component.
+ */
 const Sidebar = () => {
   const theme = useTheme();
   const colors = tokens;
@@ -35,7 +51,9 @@ const Sidebar = () => {
   const [selected, setSelected] = useState("Dashboard");
   const location = useLocation();
 
-  // Function to determine the selected item based on the current path
+  /**
+   * Effect to set the selected menu item based on the current path.
+   */
   useEffect(() => {
     const path = location.pathname;
     if (path === "/") {
@@ -51,8 +69,12 @@ const Sidebar = () => {
     }
   }, [location.pathname]);
 
+  /**
+   * Function to resolve the path to the profile image.
+   *
+   * @returns {string} The resolved image path.
+   */
   const resolveImagePath = () => {
-    const currentPath = location.pathname;
     return `${process.env.PUBLIC_URL}/assets/user.png`;
   };
 

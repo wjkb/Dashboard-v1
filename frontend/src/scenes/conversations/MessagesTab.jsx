@@ -17,6 +17,17 @@ import {
 } from "@mui/icons-material";
 import { tokens } from "../../theme";
 
+/**
+ * Renders a tab displaying messages with various media types and file attachments.
+ *
+ * @component
+ * @param {Object} props - Component props.
+ * @param {Array<Object>} props.messages - Array of message objects to display.
+ * @param {Object} props.messageRefs - Refs to messages for scrolling.
+ * @param {string | number | null} props.highlightedMessage - ID of the highlighted message.
+ * @param {Function} props.handleViewFile - Function to handle viewing a file.
+ * @returns {JSX.Element} - MessagesTab component.
+ */
 const MessagesTab = ({
   messages,
   messageRefs,
@@ -26,6 +37,7 @@ const MessagesTab = ({
   const theme = useTheme();
   const colors = tokens;
 
+  // Styles for message types
   const messageStyles = {
     incoming: {
       backgroundColor: colors.grey[100],
@@ -39,12 +51,26 @@ const MessagesTab = ({
     },
   };
 
+  /**
+   * Formats timestamp to a readable date and time format.
+   *
+   * @param {number} timestamp - Unix timestamp.
+   * @returns {string} - Formatted date and time string.
+   */
   const formatDateTime = (timestamp) => {
     const date = new Date(timestamp);
     const formattedDateTime = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
     return formattedDateTime;
   };
 
+  /**
+   * Renders different file types based on their MIME type.
+   *
+   * @param {string} filePath - Path to the file.
+   * @param {string} fileType - MIME type of the file.
+   * @param {boolean} [download=false] - Indicates if the file should be downloadable.
+   * @returns {JSX.Element} - File preview or download link.
+   */
   const renderFile = (filePath, fileType, download = false) => {
     const fullPath = `http://localhost:5000/${filePath}?download=${download}`;
     const fileName = filePath.split("/").pop();

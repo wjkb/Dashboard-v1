@@ -6,7 +6,7 @@
 
 1. **Install [RabbitMQ](https://www.rabbitmq.com/docs/download)**
    - **Suggested way:**
-     1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) if haven't already
+     1. (If haven't already done so) Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
      2. Run the following docker command:
         ```sh
         docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
@@ -101,3 +101,19 @@ You should see "Data inserted successfully" printed in your terminal.
    ```
 
 **Note: You may need to move the node_modules folder to inside the frontend directory. The root folder should only contain 2 folders, titled 'backend' and 'frontend'.**
+
+# Read Frontend Code Documentation
+
+1. **Navigate to the frontend directory:**
+   ```sh
+   cd frontend
+   ```
+2. **(If haven't already done so) Install JSDoc globally using npm**
+   ```sh
+   npm install -g jsdoc
+   ```
+3. **Generate JSDoc**
+   ```sh
+   jsdoc -c jsdoc.json
+   ```
+4. **Navigate to the newly created docs/ folder and open index.html**

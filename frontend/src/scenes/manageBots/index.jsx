@@ -10,6 +10,11 @@ import { getAllBots, editBot, deleteBot } from "../../api";
 import EditBotDialog from "./EditBotDialog";
 import DeleteConfirmationDialog from "./DeleteConfirmationDialog";
 
+/**
+ * Manages the display and operations for bots including editing and deleting.
+ *
+ * @returns {JSX.Element} The ManageBots component.
+ */
 const ManageBots = () => {
   const theme = useTheme();
   const colors = tokens;
@@ -21,6 +26,9 @@ const ManageBots = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
+    /**
+     * Fetches all bots from the API and sets the state.
+     */
     const fetchBots = async () => {
       try {
         const botsData = await getAllBots();
@@ -47,16 +55,29 @@ const ManageBots = () => {
     fetchBots();
   }, []);
 
+  /**
+   * Handles the click event for editing a bot.
+   *
+   * @param {Object} bot - The bot to be edited.
+   */
   const handleEditClick = (bot) => {
     setSelectedBot(bot);
     setEditDialogOpen(true);
   };
 
+  /**
+   * Closes the edit dialog.
+   */
   const handleDialogClose = () => {
     setEditDialogOpen(false);
     setSelectedBot(null);
   };
 
+  /**
+   * Handles saving the updated bot data.
+   *
+   * @param {Object} updatedData - The updated bot data.
+   */
   const handleSave = async (updatedData) => {
     try {
       await editBot(selectedBot.id, updatedData);
@@ -81,16 +102,27 @@ const ManageBots = () => {
     }
   };
 
+  /**
+   * Handles the click event for deleting a bot.
+   *
+   * @param {Object} bot - The bot to be deleted.
+   */
   const handleDeleteClick = (bot) => {
     setSelectedBot(bot);
     setDeleteDialogOpen(true);
   };
 
+  /**
+   * Closes the delete confirmation dialog.
+   */
   const handleDeleteDialogClose = () => {
     setDeleteDialogOpen(false);
     setSelectedBot(null);
   };
 
+  /**
+   * Confirms the deletion of a bot.
+   */
   const handleDeleteConfirm = async () => {
     try {
       await deleteBot(selectedBot.id);
@@ -101,6 +133,12 @@ const ManageBots = () => {
     }
   };
 
+  /**
+   * Renders platform icon based on the presence of the platform.
+   *
+   * @param {boolean} value - Whether the platform is present or not.
+   * @returns {JSX.Element} Green check icon if present, red close icon if not.
+   */
   const renderPlatformIcon = (value) => {
     return value ? (
       <CheckIcon style={{ color: "green" }} />

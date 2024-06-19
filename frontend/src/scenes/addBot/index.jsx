@@ -42,6 +42,13 @@ const botScheme = yup.object().shape({
   platforms: yup.array().min(1, "required"),
 });
 
+/**
+ * Renders a form for adding a new bot, handling validation, submission,
+ * and confirmation dialogs.
+ *
+ * @component
+ * @returns {JSX.Element} - AddBotForm component.
+ */
 const AddBotForm = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -49,6 +56,13 @@ const AddBotForm = () => {
   const [formValues, setFormValues] = useState(initialValues);
   const [submitFormFn, setSubmitFormFn] = useState(() => () => {});
 
+  /**
+   * Handles form submission, validates the form, and triggers
+   * the creation of a new bot.
+   *
+   * @param {Object} values - Form values.
+   * @param {Function} resetForm - Formik resetForm function.
+   */
   const handleFormSubmit = async (values, { resetForm }) => {
     try {
       const response = await createBot(values);
@@ -61,6 +75,14 @@ const AddBotForm = () => {
     }
   };
 
+  /**
+   * Opens the confirmation dialog if form validation passes,
+   * otherwise shows validation errors.
+   *
+   * @param {Object} values - Form values.
+   * @param {Function} submitForm - Formik submitForm function.
+   * @param {Function} validateForm - Formik validateForm function.
+   */
   const handleOpenDialog = async (values, submitForm, validateForm) => {
     const errors = await validateForm();
     if (Object.keys(errors).length === 0) {
