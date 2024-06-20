@@ -94,13 +94,13 @@ def create_bot():
         print(f"Received data: {data}")
 
         # Check if all required fields are present
-        required_fields = ['phoneNumber', 'name', 'persona', 'model', 'platforms']
+        required_fields = ['phone', 'name', 'persona', 'model', 'platforms']
         for field in required_fields:
             if field not in data:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
 
         new_bot = Bot(
-            phone=data['phoneNumber'],
+            phone=data['phone'],
             name=data['name'],
             email=data.get('email', ''),  # Optional field
             persona=data['persona'],

@@ -18,7 +18,7 @@ import SuccessDialog from "./SuccessDialog";
 import { createBot } from "../../api";
 
 const initialValues = {
-  phoneNumber: "",
+  phone: "",
   name: "",
   email: "",
   persona: "",
@@ -31,7 +31,7 @@ const phoneRegExp = /^(6|8|9)\d{7}$/;
 const platformNames = ["Facebook", "WhatsApp", "Telegram"];
 
 const botScheme = yup.object().shape({
-  phoneNumber: yup
+  phone: yup
     .string()
     .required("required")
     .matches(phoneRegExp, "Invalid phone number"),
@@ -150,10 +150,10 @@ const AddBotForm = () => {
                   placeholder="e.g. 91234567"
                   onBlur={handleBlur}
                   onChange={handleChange}
-                  value={values.phoneNumber}
-                  name="phoneNumber"
-                  error={!!touched.phoneNumber && !!errors.phoneNumber}
-                  helperText={touched.phoneNumber && errors.phoneNumber}
+                  value={values.phone}
+                  name="phone"
+                  error={!!touched.phone && !!errors.phone}
+                  helperText={touched.phone && errors.phone}
                   sx={{ gridColumn: "span 4" }}
                 />
                 {/* Name field */}
