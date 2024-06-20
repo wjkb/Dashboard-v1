@@ -49,15 +49,9 @@ const ManualSendForm = () => {
         const botsData = await getAllBots();
         const transformedData = botsData.map((bot) => ({
           ...bot,
-          Facebook: bot.platforms.some(
-            (platform) => platform.platform === "Facebook"
-          ),
-          WhatsApp: bot.platforms.some(
-            (platform) => platform.platform === "WhatsApp"
-          ),
-          Telegram: bot.platforms.some(
-            (platform) => platform.platform === "Telegram"
-          ),
+          Facebook: bot.platforms.includes("Facebook"),
+          WhatsApp: bot.platforms.includes("WhatsApp"),
+          Telegram: bot.platforms.includes("Telegram"),
         }));
         setBots(transformedData);
       } catch (err) {
@@ -77,9 +71,7 @@ const ManualSendForm = () => {
   const handleFormSubmit = (values, { setSubmitting }) => {
     // handle form submission
     setFilteredBots(
-      bots.filter((bot) =>
-        bot.platforms.some((platform) => platform.platform === values.platform)
-      )
+      bots.filter((bot) => bot.platforms.includes(values.platform))
     );
     setFormValues(values);
     setSubmitting(false);

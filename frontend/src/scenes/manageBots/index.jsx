@@ -34,15 +34,9 @@ const ManageBots = () => {
         const botsData = await getAllBots();
         const transformedData = botsData.map((bot) => ({
           ...bot,
-          Facebook: bot.platforms.some(
-            (platform) => platform.platform === "Facebook"
-          ),
-          WhatsApp: bot.platforms.some(
-            (platform) => platform.platform === "WhatsApp"
-          ),
-          Telegram: bot.platforms.some(
-            (platform) => platform.platform === "Telegram"
-          ),
+          Facebook: bot.platforms.includes("Facebook"),
+          WhatsApp: bot.platforms.includes("WhatsApp"),
+          Telegram: bot.platforms.includes("Telegram"),
         }));
         setBots(transformedData);
       } catch (err) {
