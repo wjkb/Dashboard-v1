@@ -47,7 +47,7 @@ const EditBotDialog = ({ open, onClose, bot, onSave }) => {
     email: bot ? bot.email : "",
     persona: bot ? bot.persona : "",
     model: bot ? bot.model : "",
-    platforms: bot ? bot.platforms.map((platform) => platform.platform) : [],
+    platforms: bot ? bot.platforms : [],
   };
 
   /**
