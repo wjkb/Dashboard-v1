@@ -7,6 +7,16 @@ import {
   Button,
 } from "@mui/material";
 
+/**
+ * Dialog component for confirming the deletion of a bot.
+ *
+ * @param {Object} props - The component props.
+ * @param {boolean} props.open - Whether the dialog is open.
+ * @param {Function} props.onClose - Function to call when closing the dialog.
+ * @param {Function} props.onConfirm - Function to call when confirming the deletion.
+ * @param {Object} props.bot - The bot to delete.
+ * @returns {JSX.Element} The DeleteConfirmationDialog component.
+ */
 const DeleteConfirmationDialog = ({ open, onClose, onConfirm, bot }) => {
   return (
     <Dialog open={open} onClose={onClose}>

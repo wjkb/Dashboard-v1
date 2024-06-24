@@ -7,6 +7,11 @@ import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import { useNavigate, Outlet } from "react-router-dom";
 import { getPlatformBots } from "../../api";
 
+/**
+ * Component to manage and display Facebook bots.
+ *
+ * @returns {JSX.Element} The FacebookBots component.
+ */
 const FacebookBots = () => {
   const theme = useTheme();
   const colors = tokens;

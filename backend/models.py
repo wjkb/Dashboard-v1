@@ -20,7 +20,7 @@ class Bot(db.Model):
             'email': self.email,
             'persona': self.persona,
             'model': self.model,
-            'platforms': [platform.serialize() for platform in self.platforms],
+            'platforms': [platform.platform for platform in self.platforms],
             'conversations': [conv.id for conv in self.conversations]
         }
 

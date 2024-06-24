@@ -6,6 +6,11 @@ import { useParams, useNavigate, Outlet } from "react-router-dom";
 import { getBotConversations } from "../../../api";
 import Header from "../../../components/Header";
 
+/**
+ * Component to display conversations of a Facebook bot.
+ *
+ * @returns {JSX.Element} The FacebookBotConversations component.
+ */
 const FacebookBotConversations = () => {
   const { botId } = useParams();
   const navigate = useNavigate();

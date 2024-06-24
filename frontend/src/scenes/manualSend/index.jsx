@@ -25,6 +25,12 @@ const botScheme = yup.object().shape({
   platform: yup.string().required("required"),
 });
 
+/**
+ * Component for manually sending a bot to a given link.
+ *
+ * @component
+ * @returns {JSX.Element} - ManualSendForm component.
+ */
 const ManualSendForm = () => {
   const colors = tokens;
   const isNonMobile = useMediaQuery("(min-width:600px)");
@@ -35,20 +41,17 @@ const ManualSendForm = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    /**
+     * Fetches all bots from the server and transforms the data.
+     */
     const fetchBots = async () => {
       try {
         const botsData = await getAllBots();
         const transformedData = botsData.map((bot) => ({
           ...bot,
-          Facebook: bot.platforms.some(
-            (platform) => platform.platform === "Facebook"
-          ),
-          WhatsApp: bot.platforms.some(
-            (platform) => platform.platform === "WhatsApp"
-          ),
-          Telegram: bot.platforms.some(
-            (platform) => platform.platform === "Telegram"
-          ),
+          Facebook: bot.platforms.includes("Facebook"),
+          WhatsApp: bot.platforms.includes("WhatsApp"),
+          Telegram: bot.platforms.includes("Telegram"),
         }));
         setBots(transformedData);
       } catch (err) {
@@ -59,17 +62,27 @@ const ManualSendForm = () => {
     fetchBots();
   }, []);
 
+  /**
+   * Handles form submission and filters bots based on selected platform.
+   *
+   * @param {Object} values - Form values (url, platform).
+   * @param {Function} param1.setSubmitting - Function to set form submission state.
+   */
   const handleFormSubmit = (values, { setSubmitting }) => {
     // handle form submission
     setFilteredBots(
-      bots.filter((bot) =>
-        bot.platforms.some((platform) => platform.platform === values.platform)
-      )
+      bots.filter((bot) => bot.platforms.includes(values.platform))
     );
     setFormValues(values);
     setSubmitting(false);
   };
 
+  /**
+   * Renders platform icon based on boolean value.
+   *
+   * @param {boolean} value - Boolean value indicating platform availability.
+   * @returns {JSX.Element} - Green check icon if true, red close icon if false.
+   */
   const renderPlatformIcon = (value) => {
     return value ? (
       <CheckIcon style={{ color: "green" }} />
@@ -78,6 +91,11 @@ const ManualSendForm = () => {
     );
   };
 
+  /**
+   * Handles sending bot to the selected link.
+   *
+   * @param {Object} bot - Bot object to send.
+   */
   const handleSendClick = async (bot) => {
     console.log("Sending bot", bot);
     try {
@@ -89,6 +107,9 @@ const ManualSendForm = () => {
     }
   };
 
+  /**
+   * Columns configuration for the DataGrid displaying bot information.
+   */
   const columns = [
     { field: "id", headerName: "ID", flex: 0.5 },
     {

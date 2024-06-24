@@ -6,19 +6,19 @@ import json
 import pika
 import threading
 import requests
-from backend.config import Config
+from backend.config import config
 from backend.models import db
-from backend.routes import api
+from backend.routes import api_bp
 
-def create_app():
+def create_app(config_name='default'):
     app = Flask(__name__)
     CORS(app)
-    app.config.from_object(Config)
+    app.config.from_object(config[config_name])
     app.config['UPLOAD_FOLDER'] = 'files/'
 
     db.init_app(app)
 
-    app.register_blueprint(api)
+    app.register_blueprint(api_bp)
 
     with app.app_context():
         db.create_all()
@@ -65,7 +65,8 @@ def create_app():
 
     return app
 
-app = create_app()
+config_name = os.getenv('FLASK_CONFIG') or 'default'
+app = create_app(config_name)
 
 if __name__ == '__main__':
     app.run(debug=True)

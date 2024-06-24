@@ -7,6 +7,15 @@ import {
   Button,
 } from "@mui/material";
 
+/**
+ * Renders a dialog component indicating successful creation of a bot.
+ *
+ * @component
+ * @param {Object} props - Component props.
+ * @param {boolean} props.open - Determines whether the dialog is open.
+ * @param {Function} props.onClose - Callback function to close the dialog.
+ * @returns {JSX.Element} - SuccessDialog component.
+ */
 const SuccessDialog = ({ open, onClose }) => {
   return (
     <Dialog open={open} onClose={onClose}>

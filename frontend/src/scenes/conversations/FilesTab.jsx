@@ -20,9 +20,24 @@ import {
   InsertDriveFile as InsertDriveFileIcon,
 } from "@mui/icons-material";
 
+/**
+ * Renders a tab displaying files related to a conversation, with options for download and preview.
+ *
+ * @component
+ * @param {Object} props - Component props.
+ * @param {Array<Object>} props.files - Array of file objects to display.
+ * @param {Function} props.onViewFile - Function to handle viewing a file.
+ * @param {boolean} props.downloadable - Indicates if files are downloadable.
+ * @returns {JSX.Element} - FilesTab component.
+ */
 const FilesTab = ({ files, onViewFile, downloadable }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
 
+  /**
+   * Handles checkbox change for selecting files.
+   *
+   * @param {Object} file - File object.
+   */
   const handleCheckboxChange = (file) => {
     const selectedIndex = selectedFiles.indexOf(file);
     let newSelected = [];
@@ -43,8 +58,19 @@ const FilesTab = ({ files, onViewFile, downloadable }) => {
     setSelectedFiles(newSelected);
   };
 
+  /**
+   * Checks if a file is selected.
+   *
+   * @param {Object} file - File object.
+   * @returns {boolean} - True if file is selected, false otherwise.
+   */
   const isSelected = (file) => selectedFiles.indexOf(file) !== -1;
 
+  /**
+   * Initiates download of a file.
+   *
+   * @param {string} filePath - Path to the file.
+   */
   const onDownloadFile = (filePath) => {
     const link = document.createElement("a");
     link.href = `http://localhost:5000/${filePath}?download=${downloadable}`;
@@ -52,16 +78,27 @@ const FilesTab = ({ files, onViewFile, downloadable }) => {
     link.click();
   };
 
+  /**
+   * Handles download of selected files.
+   */
   const handleDownloadSelected = async () => {
     const selectedFilePaths = selectedFiles.map((file) => file.filePath);
     await downloadFiles(selectedFilePaths);
   };
 
+  /**
+   * Handles download of all files in the conversation.
+   */
   const handleDownloadAll = async () => {
     const allFilePaths = files.map((file) => file.filePath);
     await downloadFiles(allFilePaths);
   };
 
+  /**
+   * Downloads files by sending a POST request to the server.
+   *
+   * @param {Array<string>} filePaths - Array of file paths to download.
+   */
   const downloadFiles = async (filePaths) => {
     try {
       const response = await fetch(`http://localhost:5000/download/zip`, {
@@ -86,6 +123,13 @@ const FilesTab = ({ files, onViewFile, downloadable }) => {
     }
   };
 
+  /**
+   * Renders a preview icon based on file type.
+   *
+   * @param {string} filePath - Path to the file.
+   * @param {string} fileType - MIME type of the file.
+   * @returns {JSX.Element} - Preview icon.
+   */
   const renderFilePreview = (filePath, fileType) => {
     const fullPath = `http://localhost:5000/${filePath}`;
 

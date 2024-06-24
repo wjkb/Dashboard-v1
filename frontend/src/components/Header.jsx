@@ -1,6 +1,14 @@
 import { Typography, Box, useTheme } from "@mui/material";
 import { tokens } from "../theme";
 
+/**
+ * Header component for displaying a title and a subtitle.
+ *
+ * @param {Object} props - The properties object.
+ * @param {string} props.title - The title to display.
+ * @param {string} props.subtitle - The subtitle to display.
+ * @returns {JSX.Element} The header component.
+ */
 const Header = ({ title, subtitle }) => {
   // const theme = useTheme();
   const colors = tokens;

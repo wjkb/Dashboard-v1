@@ -10,6 +10,17 @@ import WhatsappIcon from "@mui/icons-material/WhatsApp";
 import TelegramIcon from "@mui/icons-material/Telegram";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 
+/**
+ * Menu item component for the sidebar.
+ *
+ * @param {Object} props - The properties object.
+ * @param {string} props.title - The title of the menu item.
+ * @param {string} props.to - The route to navigate to when the item is clicked.
+ * @param {JSX.Element} props.icon - The icon to display in the menu item.
+ * @param {string} props.selected - The currently selected menu item.
+ * @param {Function} props.setSelected - Function to set the currently selected menu item.
+ * @returns {JSX.Element} The menu item component.
+ */
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
   const colors = tokens;
@@ -28,6 +39,11 @@ const Item = ({ title, to, icon, selected, setSelected }) => {
   );
 };
 
+/**
+ * Sidebar component for selecting a platform.
+ *
+ * @returns {JSX.Element} The PlatformSidebar component.
+ */
 const PlatformSidebar = () => {
   const theme = useTheme();
   const colors = tokens;
