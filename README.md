@@ -102,7 +102,14 @@ You should see "Data inserted successfully" printed in your terminal.
 
 **Note: You may need to move the node_modules folder to inside the frontend directory. The root folder should only contain 2 folders, titled 'backend' and 'frontend'.**
 
-# Read Frontend Code Documentation
+# Documentation
+
+## Read Backend API Documentation (and easily test APIs as well)
+
+1. **Start the Backend server as mentioned before**
+2. **Go to [http://localhost:5000/api/docs](http://localhost:5000/api/docs)**
+
+## Read Frontend Code Documentation
 
 1. **Navigate to the frontend directory:**
    ```sh
