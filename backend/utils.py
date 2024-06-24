@@ -26,5 +26,7 @@ def create_zip(file_path_list):
         for file_path in file_path_list:
             if os.path.exists(file_path):
                 zipf.write(file_path, os.path.basename(file_path))
+            else:
+                print(f"File {file_path} does not exist")
     
     return zip_filename

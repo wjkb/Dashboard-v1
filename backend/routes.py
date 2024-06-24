@@ -17,6 +17,47 @@ ns_messages = api.namespace('messages', description='Message operations', path='
 ns_utils = api.namespace('utils', description='Utility operations', path='/')
 
 # Define models for Swagger documentation
+start_bot_script_model = ns_utils.model('StartBotScript', {
+    'botId': fields.Integer(required=True, description='The bot unique identifier', example=1),
+    'targetUrl': fields.String(required=True, description='The URL to send the bot messages to', example='facebook.com/xyz'),
+    'platform': fields.String(required=True, description='The platform the bot is talking on', example='Facebook'),
+})
+
+download_zip_model = ns_utils.model('DownloadZip', {
+    'filePaths': fields.List(fields.String, required=True, description='The list of file paths to include in the zip file', example=['files/Facebook/1/User123/cat.jpg', 'files/Facebook/1/User123/cat.pdf', 'files/Facebook/1/User123/cat.txt']),
+})
+
+receive_message_model = ns_messages.model('ReceiveMessage', {
+    'bot_id': fields.Integer(required=True, description='The bot unique identifier', example=1),
+    'platform': fields.String(required=True, description='The platform the bot is talking on', example='Facebook'),
+    'user': fields.String(required=True, description='User name or phone number the bot is talking to', example='User123'),
+    'timestamp': fields.String(required=True, example='2024-07-02T12:30:44.123456'),
+    'message': fields.String(required=True, description='The message content', example='This is a test message using the API in flask-restx'),
+    'direction': fields.String(required=True, description='The direction of the message, either incoming or outgoing', example='incoming'),
+    'file_path': fields.String(description='The path to the file if the message contains a file', example='files/Facebook/1/User123/test.jpg'),
+    'file_type': fields.String(description='The MIME type of the file if the message contains a file', example='image/jpeg'),
+})
+
+message_model = ns_messages.model('Message', {
+    'id': fields.Integer(readOnly=True, description='The message unique identifier'),
+    'conversation_id': fields.Integer(required=True),
+    'timestamp': fields.String(required=True),
+    'message': fields.String(required=True),
+    'direction': fields.String(required=True),
+    'file_path': fields.String(),
+    'file_type': fields.String(),
+})
+
+conversation_model = ns_conversations.model('Conversation', {
+    'id': fields.Integer(readOnly=True, description='The conversation unique identifier'),
+    'bot_id': fields.Integer(required=True),
+    'platform': fields.String(required=True),
+    'user': fields.String(required=True),
+    'facebook_messages': fields.List(fields.Nested(message_model)),
+    'whatsapp_messages': fields.List(fields.Nested(message_model)),
+    'telegram_messages': fields.List(fields.Nested(message_model)),
+})
+
 bot_model_1 = ns_bots.model('Bot1', {
     'id': fields.Integer(readOnly=True, description='The bot unique identifier'),
     'phone': fields.String(required=True),
@@ -25,17 +66,22 @@ bot_model_1 = ns_bots.model('Bot1', {
     'persona': fields.String(required=True),
     'model': fields.String(required=True),
     'platforms': fields.List(fields.String, required=True),
-    'conversations': fields.List(fields.Integer)
+    'conversations': fields.List(fields.Integer),
 })
 
 bot_model_2 = ns_bots.model('Bot2', {
-    'phone': fields.String(required=True),
-    'name': fields.String(required=True),
-    'email': fields.String(),
-    'persona': fields.String(required=True),
-    'model': fields.String(required=True),
-    'platforms': fields.List(fields.String, required=True),
+    'phone': fields.String(required=True, example='90217777'),
+    'name': fields.String(required=True, example='John Doe'),
+    'email': fields.String(example='johndoe@gmail.com'),
+    'persona': fields.String(required=True, example='Middle-aged man'),
+    'model': fields.String(required=True, example='Llama 3'),
+    'platforms': fields.List(fields.String, required=True, example=['Facebook', 'WhatsApp']),
 })
+
+
+##################################################
+# Below are the routes for all the API endpoints #
+##################################################
 
 @ns_bots.route('/api/bots')
 class CreateOrReadBots(Resource):
@@ -158,17 +204,21 @@ class UpdateOrDeleteBot(Resource):
 
 @ns_platform_bots.route('/api/<platform>/bots')
 class PlatformBots(Resource):
+    @ns_platform_bots.doc('list_platform_bots')
+    @ns_platform_bots.marshal_list_with(bot_model_1)
     def get(self, platform):
         try:
-            if platform == 'facebook':
-                bots = Bot.query.join(Platform).filter(Platform.platform == 'Facebook').all()
-            elif platform == 'whatsapp':
-                bots = Bot.query.join(Platform).filter(Platform.platform == 'WhatsApp').all()
-            elif platform == 'telegram':
-                bots = Bot.query.join(Platform).filter(Platform.platform == 'Telegram').all()
-            else:
-                return {'error': 'Invalid platform'}, 400
+            platform_mapping = {
+                'facebook': 'Facebook',
+                'whatsapp': 'WhatsApp',
+                'telegram': 'Telegram'
+            }
 
+            platform_name = platform_mapping.get(platform.lower())
+            if not platform_name:
+                return {'error': 'Invalid platform'}, 400
+            
+            bots = Bot.query.join(Platform).filter(Platform.platform == platform_name).all()
             return [bot.serialize() for bot in bots]
         except Exception as e:
             print(f"Error occurred: {e}")
@@ -176,6 +226,8 @@ class PlatformBots(Resource):
 
 @ns_conversations.route('/api/<platform>/bots/<int:bot_id>/conversations')
 class BotConversations(Resource):
+    @ns_conversations.doc('list_conversations')
+    @ns_conversations.marshal_list_with(conversation_model)
     def get(self, platform, bot_id):
         try:
             platform_mapping = {
@@ -196,6 +248,8 @@ class BotConversations(Resource):
 
 @ns_messages.route('/api/<platform>/bots/<int:bot_id>/conversations/<user>')
 class BotConversationMessages(Resource):
+    @ns_messages.doc('list_messages')
+    @ns_messages.marshal_list_with(message_model)
     def get(self, platform, bot_id, user):
         try:
             platform_mapping = {
@@ -203,7 +257,6 @@ class BotConversationMessages(Resource):
                 'whatsapp': 'WhatsApp',
                 'telegram': 'Telegram'
             }
-            
             platform_name = platform_mapping.get(platform.lower())
             if not platform_name:
                 return {'error': 'Invalid platform'}, 400
@@ -212,14 +265,16 @@ class BotConversationMessages(Resource):
             if not conversation:
                 return {"error": "Conversation not found"}, 404
             
-            messages = []
-            if platform_name == "Facebook":
-                messages = FacebookMessage.query.filter_by(conversation_id=conversation.id).all()
-            elif platform_name == "WhatsApp":
-                messages = WhatsappMessage.query.filter_by(conversation_id=conversation.id).all()
-            elif platform_name == "Telegram":
-                messages = TelegramMessage.query.filter_by(conversation_id=conversation.id).all()
+            platform_message_classes = {
+                'facebook': FacebookMessage,
+                'whatsapp': WhatsappMessage,
+                'telegram': TelegramMessage
+            }
+            message_class = platform_message_classes.get(platform.lower())
+            if not message_class:
+                return {"error": "Unsupported platform"}, 400
             
+            messages = message_class.query.filter_by(conversation_id=conversation.id).all()      
             return [msg.serialize() for msg in messages]
         except Exception as e:
             print(f"Error occurred: {e}")
@@ -227,19 +282,29 @@ class BotConversationMessages(Resource):
 
 @ns_messages.route('/api/messages')
 class ReceiveMessage(Resource):
+    @ns_messages.expect(receive_message_model)
     def post(self):
+        platform_mapping = {
+            'facebook': 'Facebook',
+            'whatsapp': 'WhatsApp',
+            'telegram': 'Telegram'
+        }
+            
         data = request.get_json()
-
+        platform = platform_mapping.get(data['platform'].lower())
+        if not platform:
+            return {'status': 'error', 'message': 'Unsupported platform'}, 400
+        
         # Create conversation if it doesn't exist
         conversation = Conversation.query.filter_by(
             bot_id=data['bot_id'],
-            platform=data['platform'],
+            platform=platform,
             user=data['user']
         ).first()
         if not conversation:
             conversation = Conversation(
                 bot_id=data['bot_id'],
-                platform=data['platform'],
+                platform=platform,
                 user=data['user']
             )
             db.session.add(conversation)
@@ -258,9 +323,11 @@ class ReceiveMessage(Resource):
         if message_class:
             message = message_class(
                 conversation_id=conversation.id,
+                timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
                 message=data['message'],
                 direction=data['direction'],
-                timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f')
+                file_path=data.get('file_path', None),
+                file_type=data.get('file_type', None)
             )
             db.session.add(message)
             db.session.commit()
@@ -270,6 +337,7 @@ class ReceiveMessage(Resource):
 
 @ns_utils.route('/api/start_bot')
 class StartBot(Resource):
+    @ns_utils.expect(start_bot_script_model)
     def post(self):
         try:
             data = request.json
@@ -294,6 +362,7 @@ class StartBot(Resource):
     
 @ns_utils.route('/download/zip')
 class DownloadZip(Resource):
+    @ns_utils.expect(download_zip_model)
     def post(self):
         data = request.get_json()
         file_paths = data.get('filePaths', [])
