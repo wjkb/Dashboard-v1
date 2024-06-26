@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+import json
 
 db = SQLAlchemy()
 
@@ -10,6 +11,7 @@ class Bot(db.Model):
     persona = db.Column(db.String(255), nullable=False)
     model = db.Column(db.String(255), nullable=False)
     platforms = db.relationship('Platform', backref='bot', lazy=True)
+    health_status = db.Column(db.Text, nullable=False, default='{}')
     conversations = db.relationship('Conversation', backref='bot', lazy=True)
 
     def serialize(self):
@@ -21,8 +23,12 @@ class Bot(db.Model):
             'persona': self.persona,
             'model': self.model,
             'platforms': [platform.platform for platform in self.platforms],
-            'conversations': [conv.id for conv in self.conversations]
+            'health_status': json.loads(self.health_status),
+            'conversations': [conv.id for conv in self.conversations],
         }
+    
+    def set_health_status(self, health_dict):
+        self.health_status = json.dumps(health_dict)
 
 class Platform(db.Model):
     id = db.Column(db.Integer, primary_key=True)

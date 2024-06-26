@@ -37,6 +37,7 @@ const ManageBots = () => {
           Facebook: bot.platforms.includes("Facebook"),
           WhatsApp: bot.platforms.includes("WhatsApp"),
           Telegram: bot.platforms.includes("Telegram"),
+          health: bot.health_status,
         }));
         setBots(transformedData);
       } catch (err) {
@@ -130,15 +131,23 @@ const ManageBots = () => {
   /**
    * Renders platform icon based on the presence of the platform.
    *
-   * @param {boolean} value - Whether the platform is present or not.
+   * @param {string} platform - The platform to be checked.
+   * @param {Object} health - The health status of the bot.
    * @returns {JSX.Element} Green check icon if present, red close icon if not.
    */
-  const renderPlatformIcon = (value) => {
-    return value ? (
-      <CheckIcon style={{ color: "green" }} />
-    ) : (
-      <CloseIcon style={{ color: "red" }} />
-    );
+  const renderHealthIcon = (platform, health) => {
+    const status = health[platform];
+    switch (status) {
+      case "running":
+        return <CheckIcon style={{ color: "green" }} />;
+      case "idle":
+        return <CheckIcon style={{ color: "orange" }} />;
+      case "not_running":
+        return <CloseIcon style={{ color: "red" }} />;
+      case "not_exist":
+      default:
+        return <CloseIcon style={{ color: "grey" }} />;
+    }
   };
 
   const columns = [
@@ -173,19 +182,19 @@ const ManageBots = () => {
       field: "Facebook",
       headerName: "Facebook",
       flex: 0.5,
-      renderCell: (params) => renderPlatformIcon(params.row.Facebook),
+      renderCell: (params) => renderHealthIcon("Facebook", params.row.health),
     },
     {
       field: "WhatsApp",
       headerName: "WhatsApp",
       flex: 0.5,
-      renderCell: (params) => renderPlatformIcon(params.row.WhatsApp),
+      renderCell: (params) => renderHealthIcon("WhatsApp", params.row.health),
     },
     {
       field: "Telegram",
       headerName: "Telegram",
       flex: 0.5,
-      renderCell: (params) => renderPlatformIcon(params.row.Telegram),
+      renderCell: (params) => renderHealthIcon("Telegram", params.row.health),
     },
     {
       headerName: "Actions",
