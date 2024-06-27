@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Box, useTheme, Button } from "@mui/material";
+import { Box, useTheme, Button, Typography } from "@mui/material";
 import { tokens } from "../../theme";
 import { DataGrid } from "@mui/x-data-grid";
 import Header from "../../components/Header";
-import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
+import Circle from "@mui/icons-material/Circle";
 import EditIcon from "@mui/icons-material/Edit";
 import { getAllBots, editBot, deleteBot } from "../../api";
 import EditBotDialog from "./EditBotDialog";
@@ -37,7 +37,6 @@ const ManageBots = () => {
           Facebook: bot.platforms.includes("Facebook"),
           WhatsApp: bot.platforms.includes("WhatsApp"),
           Telegram: bot.platforms.includes("Telegram"),
-          health: bot.health_status,
         }));
         setBots(transformedData);
       } catch (err) {
@@ -132,22 +131,31 @@ const ManageBots = () => {
    * Renders platform icon based on the presence of the platform.
    *
    * @param {string} platform - The platform to be checked.
+   * @param {boolean} isRegisteredOnPlatform - The presence of the platform.
    * @param {Object} health - The health status of the bot.
    * @returns {JSX.Element} Green check icon if present, red close icon if not.
    */
-  const renderHealthIcon = (platform, health) => {
+  const renderHealthIcon = (platform, isRegisteredOnPlatform, health) => {
+    if (!isRegisteredOnPlatform) {
+      return <CloseIcon style={{ color: "grey" }} />;
+    }
+
     const status = health[platform];
+    let color;
     switch (status) {
       case "running":
-        return <CheckIcon style={{ color: "green" }} />;
+        color = "green";
+        break;
       case "idle":
-        return <CheckIcon style={{ color: "orange" }} />;
+        color = "orange";
+        break;
       case "not_running":
-        return <CloseIcon style={{ color: "red" }} />;
-      case "not_exist":
       default:
-        return <CloseIcon style={{ color: "grey" }} />;
+        color = "red";
+        break;
     }
+
+    return <Circle style={{ color }} fontSize="small" />;
   };
 
   const columns = [
@@ -182,19 +190,34 @@ const ManageBots = () => {
       field: "Facebook",
       headerName: "Facebook",
       flex: 0.5,
-      renderCell: (params) => renderHealthIcon("Facebook", params.row.health),
+      renderCell: (params) =>
+        renderHealthIcon(
+          "Facebook",
+          params.row.Facebook,
+          params.row.health_status
+        ),
     },
     {
       field: "WhatsApp",
       headerName: "WhatsApp",
       flex: 0.5,
-      renderCell: (params) => renderHealthIcon("WhatsApp", params.row.health),
+      renderCell: (params) =>
+        renderHealthIcon(
+          "WhatsApp",
+          params.row.WhatsApp,
+          params.row.health_status
+        ),
     },
     {
       field: "Telegram",
       headerName: "Telegram",
       flex: 0.5,
-      renderCell: (params) => renderHealthIcon("Telegram", params.row.health),
+      renderCell: (params) =>
+        renderHealthIcon(
+          "Telegram",
+          params.row.Telegram,
+          params.row.health_status
+        ),
     },
     {
       headerName: "Actions",
@@ -235,8 +258,10 @@ const ManageBots = () => {
   return (
     <Box margin="20px" width="auto">
       <Header title="All Bots" subtitle="Managing All Bots" />
+
+      {/* DataGrid for displaying all bots */}
       <Box
-        height="75vh"
+        height="60vh"
         sx={{
           "& .MuiDataGrid-root": {
             border: "none",
@@ -264,6 +289,42 @@ const ManageBots = () => {
         }}
       >
         <DataGrid rows={bots} columns={columns} />
+      </Box>
+
+      {/* Legend for Status Icons */}
+      <Box mt={2}>
+        <Typography variant="h6" gutterBottom>
+          Legend for Status Icons:
+        </Typography>
+        <Box display="flex" alignItems="center" mb={1}>
+          <span className="closeicon grey" style={{ marginRight: 8 }}></span>
+          <CloseIcon style={{ color: "grey" }} fontSize="small" />
+          <Typography variant="body1">
+            Not Registered: Bot is not registered on this platform
+          </Typography>
+        </Box>
+        <Box display="flex" alignItems="center" mb={1}>
+          <span className="circle green" style={{ marginRight: 8 }}></span>
+          <Circle style={{ color: "green" }} fontSize="small" />
+          <Typography variant="body1">
+            Running: Bot is currently active and running
+          </Typography>
+        </Box>
+        <Box display="flex" alignItems="center" mb={1}>
+          <span className="circle orange" style={{ marginRight: 8 }}></span>
+          <Circle style={{ color: "orange" }} fontSize="small" />
+          <Typography variant="body1">
+            Idle: Bot is currently active but idle (no recent messages
+            exchanged)
+          </Typography>
+        </Box>
+        <Box display="flex" alignItems="center" mb={1}>
+          <span className="circle red" style={{ marginRight: 8 }}></span>
+          <Circle style={{ color: "red" }} fontSize="small" />
+          <Typography variant="body1">
+            Not Running: Bot is currently not running.
+          </Typography>
+        </Box>
       </Box>
 
       {/* Conditional rendering of EditBotDialog */}
