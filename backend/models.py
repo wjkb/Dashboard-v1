@@ -5,6 +5,7 @@ db = SQLAlchemy()
 
 class Bot(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    active = db.Column(db.Boolean, nullable=False, default=True)
     phone = db.Column(db.String(15), nullable=False)
     name = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(255), nullable=False)
@@ -17,6 +18,7 @@ class Bot(db.Model):
     def serialize(self):
         return {
             'id': self.id,
+            'active': self.active,
             'phone': self.phone,
             'name': self.name,
             'email': self.email,

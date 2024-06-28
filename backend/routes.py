@@ -70,6 +70,7 @@ bot_model_2 = ns_bots.model('Bot2', {
 
 bot_model_1 = ns_bots.model('Bot1', {
     'id': fields.Integer(readOnly=True, description='The bot unique identifier'),
+    'active': fields.Boolean(required=True, default=True),
     'phone': fields.String(required=True),
     'name': fields.String(required=True),
     'email': fields.String(),

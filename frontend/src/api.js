@@ -109,6 +109,21 @@ export const editBot = async (botId, updatedData) => {
   }
 };
 
+export const deactivateBot = async (botId) => {
+  console.log("deactivateBot");
+  // try {
+  //   const response = await fetch(`${API_URL}/bots/${botId}/deactivate`, {
+  //     method: "PUT",
+  //   });
+  //   if (!response.ok) {
+  //     throw new Error("Network response was not ok");
+  //   }
+  //   return await response.json();
+  // } catch (error) {
+  //   throw new Error(`Error deactivating bot: ${error.message}`);
+  // }
+};
+
 // DELETE APIs
 export const deleteBot = async (botId) => {
   try {
