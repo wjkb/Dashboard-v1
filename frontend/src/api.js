@@ -112,7 +112,7 @@ export const editBot = async (botId, updatedData) => {
 export const deactivateBot = async (botId) => {
   console.log("deactivateBot");
   try {
-    const response = await fetch(`${API_URL}/bots/${botId}`, {
+    const response = await fetch(`${API_URL}/bots/${botId}/deactivate`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -130,7 +130,7 @@ export const deactivateBot = async (botId) => {
 
 export const activateBot = async (botId) => {
   try {
-    const response = await fetch(`${API_URL}/bots/${botId}`, {
+    const response = await fetch(`${API_URL}/bots/${botId}/activate`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

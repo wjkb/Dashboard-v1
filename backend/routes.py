@@ -60,7 +60,6 @@ conversation_model = ns_conversations.model('Conversation', {
 })
 
 bot_model_2 = ns_bots.model('Bot2', {
-    'active': fields.Boolean(default=True),
     'phone': fields.String(required=True, example='90217777'),
     'name': fields.String(required=True, example='John Doe'),
     'email': fields.String(example='johndoe@gmail.com'),
@@ -146,37 +145,31 @@ class UpdateOrDeleteBot(Resource):
 
             data = request.json
 
-            # If deactivate or activate bot request:
-            if 'active' in data:
-                bot.active = data['active']
-                db.session.commit()
-                return bot.serialize(), 200
-            # If edit bot request:
-            else:
-                bot.phone = data.get('phone', bot.phone)
-                bot.name = data.get('name', bot.name)
-                bot.email = data.get('email', bot.email)
-                bot.persona = data.get('persona', bot.persona)
-                bot.model = data.get('model', bot.model)
+            # Update bot details
+            bot.phone = data.get('phone', bot.phone)
+            bot.name = data.get('name', bot.name)
+            bot.email = data.get('email', bot.email)
+            bot.persona = data.get('persona', bot.persona)
+            bot.model = data.get('model', bot.model)
 
-                # Update platforms
-                new_platforms = data.get('platforms', [])
-                existing_platforms = {platform.platform for platform in bot.platforms}
+            # Update platforms
+            new_platforms = data.get('platforms', [])
+            existing_platforms = {platform.platform for platform in bot.platforms}
 
-                # Add new platforms
-                for platform_name in new_platforms:
-                    if platform_name not in existing_platforms:
-                        new_platform = Platform(bot_id=bot.id, platform=platform_name)
-                        db.session.add(new_platform)
+            # Add new platforms
+            for platform_name in new_platforms:
+                if platform_name not in existing_platforms:
+                    new_platform = Platform(bot_id=bot.id, platform=platform_name)
+                    db.session.add(new_platform)
 
-                # Remove platforms that are no longer selected
-                for platform in bot.platforms:
-                    if platform.platform not in new_platforms:
-                        db.session.delete(platform)
+            # Remove platforms that are no longer selected
+            for platform in bot.platforms:
+                if platform.platform not in new_platforms:
+                    db.session.delete(platform)
 
-                db.session.commit()
+            db.session.commit()
 
-                return {"message": "Bot updated successfully"}, 200
+            return {"message": "Bot updated successfully"}, 200
         except Exception as e:
             print(f"Error occurred: {e}")
             return {"error": "Internal Server Error"}, 500
@@ -210,6 +203,36 @@ class UpdateOrDeleteBot(Resource):
             return {"message": "Bot and related data deleted successfully"}, 200
         except Exception as e:
             print(f"Error occurred: {e}")
+            return {"error": "Internal Server Error"}, 500
+        
+@ns_bots.route('/api/bots/<int:bot_id>/deactivate')
+class DeactivateBot(Resource):
+    @ns_bots.doc('deactivate_bot')
+    def put(self, bot_id):
+        try:
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {"error": "Bot not found"}, 404
+            
+            bot.active = False
+            db.session.commit()
+            return {"message": "Bot deactivated successfully"}, 200
+        except Exception as e:
+            return {"error": "Internal Server Error"}, 500
+        
+@ns_bots.route('/api/bots/<int:bot_id>/activate')
+class ActivateBot(Resource):
+    @ns_bots.doc('activate_bot')
+    def put(self, bot_id):
+        try:
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {"error": "Bot not found"}, 404
+            
+            bot.active = True
+            db.session.commit()
+            return {"message": "Bot activated successfully"}, 200
+        except Exception as e:
             return {"error": "Internal Server Error"}, 500
 
 
