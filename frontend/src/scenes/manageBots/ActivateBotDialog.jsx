@@ -8,21 +8,21 @@ import {
 } from "@mui/material";
 
 /**
- * Dialog component for confirming the deactivation of a bot.
+ * Dialog component for confirming the activation of a bot.
  *
  * @param {Object} props - The component props.
  * @param {boolean} props.open - Whether the dialog is open.
  * @param {Function} props.onClose - Function to call when closing the dialog.
- * @param {Function} props.onConfirm - Function to call when confirming the deactivation.
- * @param {Object} props.bot - The bot to deactivate.
- * @returns {JSX.Element} The DeactivateBotDialog component.
+ * @param {Function} props.onConfirm - Function to call when confirming the activation.
+ * @param {Object} props.bot - The bot to activate.
+ * @returns {JSX.Element} The ActivateBotDialog component.
  */
-const DeactivateBotDialog = ({ bot, open, onClose, onConfirm }) => {
+const ActivateBotDialog = ({ bot, open, onClose, onConfirm }) => {
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Deactivate Bot</DialogTitle>
+      <DialogTitle>Activate Bot</DialogTitle>
       <DialogContent>
-        Are you sure you want to deactivate the bot with the following details?:
+        Are you sure you want to activate the bot with the following details?:
         <br />
         Phone Number: {bot.phone}
         <br />
@@ -39,11 +39,11 @@ const DeactivateBotDialog = ({ bot, open, onClose, onConfirm }) => {
           Cancel
         </Button>
         <Button onClick={onConfirm} color="warning">
-          Deactivate
+          Activate
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default DeactivateBotDialog;
+export default ActivateBotDialog;

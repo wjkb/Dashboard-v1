@@ -4,11 +4,19 @@ import { tokens } from "../../theme";
 import { DataGrid } from "@mui/x-data-grid";
 import Header from "../../components/Header";
 import CloseIcon from "@mui/icons-material/Close";
+import CheckIcon from "@mui/icons-material/Check";
 import Circle from "@mui/icons-material/Circle";
 import EditIcon from "@mui/icons-material/Edit";
-import { getAllBots, editBot, deactivateBot, deleteBot } from "../../api";
+import {
+  getAllBots,
+  editBot,
+  deactivateBot,
+  activateBot,
+  deleteBot,
+} from "../../api";
 import EditBotDialog from "./EditBotDialog";
 import DeactivateBotDialog from "./DeactivateBotDialog";
+import ActivateBotDialog from "./ActivateBotDialog";
 import DeleteBotDialog from "./DeleteBotDialog";
 
 /**
@@ -35,6 +43,7 @@ const ManageBots = () => {
   // Dialog states
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
+  const [activateDialogOpen, setActivateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -134,6 +143,9 @@ const ManageBots = () => {
     setSelectedBot(null);
   };
 
+  /**
+   * Confirms the deactivation of a bot.
+   */
   const handleDeactivateConfirm = async () => {
     try {
       await deactivateBot(selectedBot.id);
@@ -146,6 +158,44 @@ const ManageBots = () => {
       setActiveBots(activeBots);
       setDeactiveBots(deactiveBots);
       handleDeactivateDialogClose();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  /**
+   * Handles the click event for activating a bot.
+   *
+   * @param {Object} bot - The bot to be edited.
+   */
+  const handleActivateClick = (bot) => {
+    setSelectedBot(bot);
+    setActivateDialogOpen(true);
+  };
+
+  /**
+   * Closes the activate confirmation dialog.
+   */
+  const handleActivateDialogClose = () => {
+    setActivateDialogOpen(false);
+    setSelectedBot(null);
+  };
+
+  /**
+   * Confirms the activation of a bot.
+   */
+  const handleActivateConfirm = async () => {
+    try {
+      await activateBot(selectedBot.id);
+      const updatedBots = bots.map((bot) =>
+        bot.id === selectedBot.id ? { ...bot, active: true } : bot
+      );
+      const activeBots = updatedBots.filter((bot) => bot.active);
+      const deactiveBots = updatedBots.filter((bot) => !bot.active);
+      setBots(updatedBots);
+      setActiveBots(activeBots);
+      setDeactiveBots(deactiveBots);
+      handleActivateDialogClose();
     } catch (err) {
       setError(err.message);
     }
@@ -383,6 +433,17 @@ const ManageBots = () => {
             Edit
           </Button>
 
+          {/* Activate button */}
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<CheckIcon />}
+            style={{ width: "100px", marginRight: "10px" }}
+            onClick={() => handleActivateClick(params.row)}
+          >
+            Activate
+          </Button>
+
           {/* Delete button */}
           <Button
             variant="contained"
@@ -531,6 +592,16 @@ const ManageBots = () => {
           open={deactivateDialogOpen}
           onClose={handleDeactivateDialogClose}
           onConfirm={handleDeactivateConfirm}
+        />
+      )}
+
+      {/* Conditional rendering of ActivateBotDialog */}
+      {selectedBot && (
+        <ActivateBotDialog
+          bot={selectedBot}
+          open={activateDialogOpen}
+          onClose={handleActivateDialogClose}
+          onConfirm={handleActivateConfirm}
         />
       )}
 
