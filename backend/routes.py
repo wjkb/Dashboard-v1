@@ -60,6 +60,7 @@ conversation_model = ns_conversations.model('Conversation', {
 })
 
 bot_model_2 = ns_bots.model('Bot2', {
+    'active': fields.Boolean(default=True),
     'phone': fields.String(required=True, example='90217777'),
     'name': fields.String(required=True, example='John Doe'),
     'email': fields.String(example='johndoe@gmail.com'),
@@ -145,30 +146,37 @@ class UpdateOrDeleteBot(Resource):
 
             data = request.json
 
-            bot.phone = data.get('phone', bot.phone)
-            bot.name = data.get('name', bot.name)
-            bot.email = data.get('email', bot.email)
-            bot.persona = data.get('persona', bot.persona)
-            bot.model = data.get('model', bot.model)
+            # If deactivate or activate bot request:
+            if 'active' in data:
+                bot.active = data['active']
+                db.session.commit()
+                return bot.serialize(), 200
+            # If edit bot request:
+            else:
+                bot.phone = data.get('phone', bot.phone)
+                bot.name = data.get('name', bot.name)
+                bot.email = data.get('email', bot.email)
+                bot.persona = data.get('persona', bot.persona)
+                bot.model = data.get('model', bot.model)
 
-            # Update platforms
-            new_platforms = data.get('platforms', [])
-            existing_platforms = {platform.platform for platform in bot.platforms}
+                # Update platforms
+                new_platforms = data.get('platforms', [])
+                existing_platforms = {platform.platform for platform in bot.platforms}
 
-            # Add new platforms
-            for platform_name in new_platforms:
-                if platform_name not in existing_platforms:
-                    new_platform = Platform(bot_id=bot.id, platform=platform_name)
-                    db.session.add(new_platform)
+                # Add new platforms
+                for platform_name in new_platforms:
+                    if platform_name not in existing_platforms:
+                        new_platform = Platform(bot_id=bot.id, platform=platform_name)
+                        db.session.add(new_platform)
 
-            # Remove platforms that are no longer selected
-            for platform in bot.platforms:
-                if platform.platform not in new_platforms:
-                    db.session.delete(platform)
+                # Remove platforms that are no longer selected
+                for platform in bot.platforms:
+                    if platform.platform not in new_platforms:
+                        db.session.delete(platform)
 
-            db.session.commit()
+                db.session.commit()
 
-            return {"message": "Bot updated successfully"}, 200
+                return {"message": "Bot updated successfully"}, 200
         except Exception as e:
             print(f"Error occurred: {e}")
             return {"error": "Internal Server Error"}, 500

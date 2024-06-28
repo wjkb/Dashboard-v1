@@ -88,7 +88,7 @@ const ManageBots = () => {
    *
    * @param {Object} updatedData - The updated bot data.
    */
-  const handleSave = async (updatedData) => {
+  const handleEditConfirm = async (updatedData) => {
     try {
       await editBot(selectedBot.id, updatedData);
       const updatedBots = bots.map((bot) =>
@@ -438,7 +438,7 @@ const ManageBots = () => {
           },
         }}
       >
-        <DataGrid rows={bots} columns={columnsActive} />
+        <DataGrid rows={activeBots} columns={columnsActive} />
       </Box>
 
       {/* Conditional rendering of DataGrid for displaying deactivated bots */}
@@ -520,7 +520,7 @@ const ManageBots = () => {
           bot={selectedBot}
           open={editDialogOpen}
           onClose={handleEditDialogClose}
-          onSave={handleSave}
+          onSave={handleEditConfirm}
         />
       )}
 
