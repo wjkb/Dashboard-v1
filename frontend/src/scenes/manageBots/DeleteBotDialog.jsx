@@ -15,9 +15,9 @@ import {
  * @param {Function} props.onClose - Function to call when closing the dialog.
  * @param {Function} props.onConfirm - Function to call when confirming the deletion.
  * @param {Object} props.bot - The bot to delete.
- * @returns {JSX.Element} The DeleteConfirmationDialog component.
+ * @returns {JSX.Element} The DeleteBotDialog component.
  */
-const DeleteConfirmationDialog = ({ open, onClose, onConfirm, bot }) => {
+const DeleteBotDialog = ({ bot, open, onClose, onConfirm }) => {
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>Delete Bot</DialogTitle>
@@ -46,4 +46,4 @@ const DeleteConfirmationDialog = ({ open, onClose, onConfirm, bot }) => {
   );
 };
 
-export default DeleteConfirmationDialog;
+export default DeleteBotDialog;

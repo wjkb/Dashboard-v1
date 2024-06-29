@@ -17,6 +17,8 @@ const TelegramBots = () => {
   const colors = tokens;
   const navigate = useNavigate();
   const [bots, setBots] = useState([]);
+  const [activeBots, setActiveBots] = useState([]);
+  const [deactiveBots, setDeactiveBots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -25,7 +27,11 @@ const TelegramBots = () => {
       try {
         const botsData = await getPlatformBots("telegram");
         console.log("Bots data:", botsData);
+        const activeBotsData = botsData.filter((bot) => bot.active);
+        const deactiveBotsData = botsData.filter((bot) => !bot.active);
         setBots(botsData);
+        setActiveBots(activeBotsData);
+        setDeactiveBots(deactiveBotsData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -95,9 +101,9 @@ const TelegramBots = () => {
   return (
     <Box display="flex">
       <Box margin="20px" width="40%">
-        <Header title="Telegram Bots" subtitle="Managing Telegram Bots" />
+        <Header title="Telegram Bots" subtitle="Active Telegram Bots" />
         <Box
-          height="75vh"
+          height="55vh"
           sx={{
             "& .MuiDataGrid-root": {
               border: "none",
@@ -124,7 +130,38 @@ const TelegramBots = () => {
             },
           }}
         >
-          <DataGrid rows={bots} columns={columns} />
+          <DataGrid rows={activeBots} columns={columns} />
+        </Box>
+        <Header title="" subtitle="Deactive Telegram Bots" />
+        <Box
+          height="20vh"
+          sx={{
+            "& .MuiDataGrid-root": {
+              border: "none",
+            },
+            "& .MuiDataGrid-cell": {
+              borderBottom: "none",
+            },
+            "& .phone-column--cell": {
+              color: colors.greenAccent,
+            },
+            "& .MuiDataGrid-columnHeader": {
+              backgroundColor: "#28231d",
+              borderBottom: "none",
+            },
+            "& .MuiDataGrid-virtualScroller": {
+              backgroundColor: "#0c0908",
+            },
+            "& .MuiDataGrid-footerContainer": {
+              borderTop: "none",
+              backgroundColor: "#28231d",
+            },
+            "& .MuiCheckbox-root": {
+              color: `${colors.greenAccent} !important`,
+            },
+          }}
+        >
+          <DataGrid rows={deactiveBots} columns={columns} />
         </Box>
       </Box>
       <Box flex={1} height="100%">

@@ -8,15 +8,17 @@ import { useNavigate, Outlet } from "react-router-dom";
 import { getPlatformBots } from "../../api";
 
 /**
- * Component to manage and display WhatsApp bots.
+ * Component to manage and display Whatsapp bots.
  *
- * @returns {JSX.Element} The WhatsAppBots component.
+ * @returns {JSX.Element} The WhatsappBots component.
  */
 const WhatsappBots = () => {
   const theme = useTheme();
   const colors = tokens;
   const navigate = useNavigate();
   const [bots, setBots] = useState([]);
+  const [activeBots, setActiveBots] = useState([]);
+  const [deactiveBots, setDeactiveBots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -25,7 +27,11 @@ const WhatsappBots = () => {
       try {
         const botsData = await getPlatformBots("whatsapp");
         console.log("Bots data:", botsData);
+        const activeBotsData = botsData.filter((bot) => bot.active);
+        const deactiveBotsData = botsData.filter((bot) => !bot.active);
         setBots(botsData);
+        setActiveBots(activeBotsData);
+        setDeactiveBots(deactiveBotsData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -95,9 +101,9 @@ const WhatsappBots = () => {
   return (
     <Box display="flex">
       <Box margin="20px" width="40%">
-        <Header title="WhatsApp Bots" subtitle="Managing WhatsApp Bots" />
+        <Header title="WhatsApp Bots" subtitle="Active WhatsApp Bots" />
         <Box
-          height="75vh"
+          height="55vh"
           sx={{
             "& .MuiDataGrid-root": {
               border: "none",
@@ -124,7 +130,38 @@ const WhatsappBots = () => {
             },
           }}
         >
-          <DataGrid rows={bots} columns={columns} />
+          <DataGrid rows={activeBots} columns={columns} />
+        </Box>
+        <Header title="" subtitle="Deactive WhatsApp Bots" />
+        <Box
+          height="20vh"
+          sx={{
+            "& .MuiDataGrid-root": {
+              border: "none",
+            },
+            "& .MuiDataGrid-cell": {
+              borderBottom: "none",
+            },
+            "& .phone-column--cell": {
+              color: colors.greenAccent,
+            },
+            "& .MuiDataGrid-columnHeader": {
+              backgroundColor: "#28231d",
+              borderBottom: "none",
+            },
+            "& .MuiDataGrid-virtualScroller": {
+              backgroundColor: "#0c0908",
+            },
+            "& .MuiDataGrid-footerContainer": {
+              borderTop: "none",
+              backgroundColor: "#28231d",
+            },
+            "& .MuiCheckbox-root": {
+              color: `${colors.greenAccent} !important`,
+            },
+          }}
+        >
+          <DataGrid rows={deactiveBots} columns={columns} />
         </Box>
       </Box>
       <Box flex={1} height="100%">

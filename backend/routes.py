@@ -2,6 +2,7 @@ import subprocess
 from flask import Blueprint, request
 from flask_restx import Api, Resource, fields
 from datetime import datetime
+import json
 from backend.models import db, Bot, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage
 from backend.utils import save_file, create_zip
 
@@ -58,17 +59,6 @@ conversation_model = ns_conversations.model('Conversation', {
     'telegram_messages': fields.List(fields.Nested(message_model)),
 })
 
-bot_model_1 = ns_bots.model('Bot1', {
-    'id': fields.Integer(readOnly=True, description='The bot unique identifier'),
-    'phone': fields.String(required=True),
-    'name': fields.String(required=True),
-    'email': fields.String(),
-    'persona': fields.String(required=True),
-    'model': fields.String(required=True),
-    'platforms': fields.List(fields.String, required=True),
-    'conversations': fields.List(fields.Integer),
-})
-
 bot_model_2 = ns_bots.model('Bot2', {
     'phone': fields.String(required=True, example='90217777'),
     'name': fields.String(required=True, example='John Doe'),
@@ -76,6 +66,19 @@ bot_model_2 = ns_bots.model('Bot2', {
     'persona': fields.String(required=True, example='Middle-aged man'),
     'model': fields.String(required=True, example='Llama 3'),
     'platforms': fields.List(fields.String, required=True, example=['Facebook', 'WhatsApp']),
+})
+
+bot_model_1 = ns_bots.model('Bot1', {
+    'id': fields.Integer(readOnly=True, description='The bot unique identifier'),
+    'active': fields.Boolean(required=True, default=True),
+    'phone': fields.String(required=True),
+    'name': fields.String(required=True),
+    'email': fields.String(),
+    'persona': fields.String(required=True),
+    'model': fields.String(required=True),
+    'platforms': fields.List(fields.String, required=True),
+    'health_status': fields.Raw(default={}, description='Health status of the bot on each platform'),
+    'conversations': fields.List(fields.Integer),
 })
 
 
@@ -142,6 +145,7 @@ class UpdateOrDeleteBot(Resource):
 
             data = request.json
 
+            # Update bot details
             bot.phone = data.get('phone', bot.phone)
             bot.name = data.get('name', bot.name)
             bot.email = data.get('email', bot.email)
@@ -199,6 +203,36 @@ class UpdateOrDeleteBot(Resource):
             return {"message": "Bot and related data deleted successfully"}, 200
         except Exception as e:
             print(f"Error occurred: {e}")
+            return {"error": "Internal Server Error"}, 500
+        
+@ns_bots.route('/api/bots/<int:bot_id>/deactivate')
+class DeactivateBot(Resource):
+    @ns_bots.doc('deactivate_bot')
+    def put(self, bot_id):
+        try:
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {"error": "Bot not found"}, 404
+            
+            bot.active = False
+            db.session.commit()
+            return {"message": "Bot deactivated successfully"}, 200
+        except Exception as e:
+            return {"error": "Internal Server Error"}, 500
+        
+@ns_bots.route('/api/bots/<int:bot_id>/activate')
+class ActivateBot(Resource):
+    @ns_bots.doc('activate_bot')
+    def put(self, bot_id):
+        try:
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {"error": "Bot not found"}, 404
+            
+            bot.active = True
+            db.session.commit()
+            return {"message": "Bot activated successfully"}, 200
+        except Exception as e:
             return {"error": "Internal Server Error"}, 500
 
 
@@ -335,6 +369,7 @@ class ReceiveMessage(Resource):
         else:
             return {'status': 'error', 'message': 'Unsupported platform'}, 400
 
+# TODO: This is just a route to simulate starting a bot script with fake messages. Replace with actual bot script execution
 @ns_utils.route('/api/start_bot')
 class StartBot(Resource):
     @ns_utils.expect(start_bot_script_model)
@@ -347,6 +382,18 @@ class StartBot(Resource):
 
             if not bot_id or not target_url or not platform:
                 return {'status': 'error', 'message': 'Missing required fields'}, 400
+            
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {'status': 'error', 'message': 'Bot not found'}, 404
+            
+            # Update health status to running
+            new_health_status = json.loads(bot.health_status)
+            print(new_health_status)
+            new_health_status[platform] = 'running'
+            print(new_health_status)
+            bot.set_health_status(new_health_status)
+            db.session.commit()
 
             print(f"Starting bot {bot_id} for platform {platform} at {target_url}")
 

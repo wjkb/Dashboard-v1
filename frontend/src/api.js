@@ -109,6 +109,43 @@ export const editBot = async (botId, updatedData) => {
   }
 };
 
+export const deactivateBot = async (botId) => {
+  console.log("deactivateBot");
+  try {
+    const response = await fetch(`${API_URL}/bots/${botId}/deactivate`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ active: false }),
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error deactivating bot: ${error.message}`);
+  }
+};
+
+export const activateBot = async (botId) => {
+  try {
+    const response = await fetch(`${API_URL}/bots/${botId}/activate`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ active: true }),
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error activating bot: ${error.message}`);
+  }
+};
+
 // DELETE APIs
 export const deleteBot = async (botId) => {
   try {
