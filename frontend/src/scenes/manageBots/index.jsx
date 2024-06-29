@@ -472,7 +472,7 @@ const ManageBots = () => {
       <Header title="All Bots" subtitle="Managing Active Bots" />
       {/* DataGrid for displaying active bots */}
       <Box
-        height="50vh"
+        height={deactiveBots.length > 0 ? "50vh" : "65vh"}
         sx={{
           "& .MuiDataGrid-root": {
             border: "none",
