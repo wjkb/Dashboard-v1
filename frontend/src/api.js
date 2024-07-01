@@ -53,6 +53,24 @@ export const getBotConversationMessages = async (platform, botId, userId) => {
   }
 };
 
+export const getBotConversationExtractedInformation = async (
+  platform,
+  botId,
+  userId
+) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/${platform}/bots/${botId}/conversations/${userId}/extracted_information`
+    );
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error fetching data: ${error.message}`);
+  }
+};
+
 // POST APIs
 export const createBot = async (botData) => {
   try {

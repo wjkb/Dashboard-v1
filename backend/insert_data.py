@@ -1,12 +1,14 @@
 from datetime import datetime
 from backend import create_app
-from backend.models import db, Bot, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage
+from backend.models import db, Bot, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, ExtractedInformation
 
 app = create_app()
 
 with app.app_context():
     
     # Delete existing data
+
+    db.session.query(ExtractedInformation).delete()
     db.session.query(FacebookMessage).delete()
     db.session.query(WhatsappMessage).delete()
     db.session.query(TelegramMessage).delete()
@@ -136,5 +138,21 @@ with app.app_context():
         )
         db.session.add(telegram_message)
     db.session.commit()
+
+    # Insert extracted information
+    extracted_information_data = [
+        (1, 'Bank Account Number', '09-912-123456'),
+        (1, 'NRIC Number', 'S1234567A'),
+    ]
+
+    for conversation_id, key, value in extracted_information_data:
+        extracted_information = ExtractedInformation(
+            conversation_id=conversation_id,
+            key=key,
+            value=value
+        )
+        db.session.add(extracted_information)
+    db.session.commit()
+
 
 print("Data inserted successfully")

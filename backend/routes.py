@@ -3,7 +3,7 @@ from flask import Blueprint, request
 from flask_restx import Api, Resource, fields
 from datetime import datetime
 import json
-from backend.models import db, Bot, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage
+from backend.models import db, Bot, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, ExtractedInformation
 from backend.utils import save_file, create_zip
 
 # Initialize Flask-RESTx Api
@@ -310,6 +310,30 @@ class BotConversationMessages(Resource):
             
             messages = message_class.query.filter_by(conversation_id=conversation.id).all()      
             return [msg.serialize() for msg in messages]
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return {"error": "Internal Server Error"}, 500
+        
+@ns_messages.route('/api/<platform>/bots/<int:bot_id>/conversations/<user>/extracted_information')
+class BotConversationInformation(Resource):
+    @ns_messages.doc('get_conversation_info')
+    def get(self, platform, bot_id, user):
+        try:
+            platform_mapping = {
+                'facebook': 'Facebook',
+                'whatsapp': 'WhatsApp',
+                'telegram': 'Telegram'
+            }
+            platform_name = platform_mapping.get(platform.lower())
+            if not platform_name:
+                return {'error': 'Invalid platform'}, 400
+            
+            conversation_id = Conversation.query.filter_by(bot_id=bot_id, platform=platform_name, user=user).first().id
+            if not conversation_id:
+                return {"error": "Conversation not found"}, 404
+            
+            extracted_information = ExtractedInformation.query.filter_by(conversation_id=conversation_id).all()
+            return [info.serialize() for info in extracted_information]
         except Exception as e:
             print(f"Error occurred: {e}")
             return {"error": "Internal Server Error"}, 500

@@ -123,3 +123,17 @@ class TelegramMessage(db.Model):
             'file_path': self.file_path,
             'file_type': self.file_type
         }
+    
+class ExtractedInformation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
+    key = db.Column(db.String(255), nullable=False)
+    value = db.Column(db.Text, nullable=False)
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'conversation_id': self.conversation_id,
+            'key': self.key,
+            'value': self.value
+        }

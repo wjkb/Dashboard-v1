@@ -1,15 +1,20 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Box, Tabs, Tab, Button } from "@mui/material";
 import { useParams } from "react-router-dom";
-import { getBotConversationMessages } from "../../../api";
+import {
+  getBotConversationMessages,
+  getBotConversationExtractedInformation,
+} from "../../../api";
 import Header from "../../../components/Header";
-import FilesTab from "../FilesTab";
 import MessagesTab from "../MessagesTab";
+import FilesTab from "../FilesTab";
+import ExtractedInformationTab from "../ExtractedInformationTab";
 import { tokens } from "../../../theme";
 
 // Constants for tab values
 const TAB_MESSAGES = 0;
 const TAB_FILES = 1;
+const TAB_EXTRACTED_INFORMATION = 2;
 
 /**
  * Component to display messages and files of a Facebook bot conversation with a specific user.
@@ -20,6 +25,7 @@ const FacebookUserMessages = () => {
   const { botId, userId } = useParams();
   const [messages, setMessages] = useState([]);
   const [files, setFiles] = useState([]);
+  const [extractedInformation, setExtractedInformation] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tabValue, setTabValue] = useState(TAB_MESSAGES);
@@ -27,7 +33,7 @@ const FacebookUserMessages = () => {
   const [highlightedMessage, setHighlightedMessage] = useState(null);
 
   /**
-   * Fetches messages and files from the API for the current bot and user.
+   * Fetches messages (includes text + files) from the API for the current bot and user.
    */
   const fetchMessages = async () => {
     try {
@@ -36,8 +42,9 @@ const FacebookUserMessages = () => {
         botId,
         userId
       );
-      // Extract files from messages
+      // Set messages state
       setMessages(messagesData);
+      // Set files state
       setFiles(
         messagesData
           .filter((msg) => msg.file_path)
@@ -55,8 +62,29 @@ const FacebookUserMessages = () => {
     }
   };
 
+  /**
+   * Fetches extracted information from the API for the current bot and user.
+   */
+  const fetchExtractedInformation = async () => {
+    try {
+      const extractedInformation = await getBotConversationExtractedInformation(
+        "facebook",
+        botId,
+        userId
+      );
+      // Set extracted information state
+      setExtractedInformation(extractedInformation);
+      console.log(extractedInformation);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchMessages();
+    fetchExtractedInformation();
   }, [botId, userId]);
 
   const handleRefresh = () => {
@@ -92,6 +120,19 @@ const FacebookUserMessages = () => {
     return <div>Error: {error}</div>;
   }
 
+  var shownTab =
+    tabValue === TAB_MESSAGES ? (
+      <MessagesTab
+        messages={messages}
+        messageRefs={messageRefs}
+        highlightedMessage={highlightedMessage}
+      />
+    ) : tabValue === TAB_FILES ? (
+      <FilesTab files={files} onViewFile={handleViewFile} downloadable />
+    ) : (
+      <ExtractedInformationTab extractedInformation={extractedInformation} />
+    );
+
   return (
     <Box margin="20px" width="80%">
       <Header
@@ -110,17 +151,9 @@ const FacebookUserMessages = () => {
         <Tabs value={tabValue} onChange={handleChangeTab}>
           <Tab label="Messages" />
           <Tab label="Files" />
+          <Tab label="Extracted Information" />
         </Tabs>
-        {tabValue === TAB_MESSAGES ? (
-          <MessagesTab
-            messages={messages}
-            messageRefs={messageRefs}
-            highlightedMessage={highlightedMessage}
-            handleViewFile={handleViewFile}
-          />
-        ) : (
-          <FilesTab files={files} onViewFile={handleViewFile} downloadable />
-        )}
+        {shownTab}
       </Box>
     </Box>
   );
