@@ -25,15 +25,9 @@ import { tokens } from "../../theme";
  * @param {Array<Object>} props.messages - Array of message objects to display.
  * @param {Object} props.messageRefs - Refs to messages for scrolling.
  * @param {string | number | null} props.highlightedMessage - ID of the highlighted message.
- * @param {Function} props.handleViewFile - Function to handle viewing a file.
  * @returns {JSX.Element} - MessagesTab component.
  */
-const MessagesTab = ({
-  messages,
-  messageRefs,
-  highlightedMessage,
-  handleViewFile,
-}) => {
+const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
   const theme = useTheme();
   const colors = tokens;
 

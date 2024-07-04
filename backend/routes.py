@@ -3,7 +3,7 @@ from flask import Blueprint, request
 from flask_restx import Api, Resource, fields
 from datetime import datetime
 import json
-from backend.models import db, Bot, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage
+from backend.models import db, Bot, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, ExtractedInformation
 from backend.utils import save_file, create_zip
 
 # Initialize Flask-RESTx Api
@@ -26,6 +26,14 @@ start_bot_script_model = ns_utils.model('StartBotScript', {
 
 download_zip_model = ns_utils.model('DownloadZip', {
     'filePaths': fields.List(fields.String, required=True, description='The list of file paths to include in the zip file', example=['files/Facebook/1/User123/cat.jpg', 'files/Facebook/1/User123/cat.pdf', 'files/Facebook/1/User123/cat.txt']),
+})
+
+receive_extracted_information_model = ns_messages.model('ReceiveExtractedInformation', {
+    'bot_id': fields.Integer(required=True, description='The bot unique identifier', example=1),
+    'platform': fields.String(required=True, description='The platform the bot is talking on', example='Facebook'),
+    'user': fields.String(required=True, description='User name or phone number the bot is talking to', example='User123'),
+    'key': fields.String(required=True, description='The key of the extracted information', example='Name'),
+    'value': fields.String(required=True, description='The value of the extracted information', example='John Doe'),
 })
 
 receive_message_model = ns_messages.model('ReceiveMessage', {
@@ -313,6 +321,30 @@ class BotConversationMessages(Resource):
         except Exception as e:
             print(f"Error occurred: {e}")
             return {"error": "Internal Server Error"}, 500
+        
+@ns_messages.route('/api/<platform>/bots/<int:bot_id>/conversations/<user>/extracted_information')
+class BotConversationInformation(Resource):
+    @ns_messages.doc('get_conversation_info')
+    def get(self, platform, bot_id, user):
+        try:
+            platform_mapping = {
+                'facebook': 'Facebook',
+                'whatsapp': 'WhatsApp',
+                'telegram': 'Telegram'
+            }
+            platform_name = platform_mapping.get(platform.lower())
+            if not platform_name:
+                return {'error': 'Invalid platform'}, 400
+            
+            conversation_id = Conversation.query.filter_by(bot_id=bot_id, platform=platform_name, user=user).first().id
+            if not conversation_id:
+                return {"error": "Conversation not found"}, 404
+            
+            extracted_information = ExtractedInformation.query.filter_by(conversation_id=conversation_id).all()
+            return [info.serialize() for info in extracted_information]
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return {"error": "Internal Server Error"}, 500
 
 @ns_messages.route('/api/messages')
 class ReceiveMessage(Resource):
@@ -368,6 +400,41 @@ class ReceiveMessage(Resource):
             return {'status': 'success'}, 201
         else:
             return {'status': 'error', 'message': 'Unsupported platform'}, 400
+
+@ns_messages.route('/api/extracted_information')
+class ReceiveExtractedInformation(Resource):
+    @ns_messages.doc('add_conversation_info')
+    @ns_messages.expect(receive_extracted_information_model)
+    def post(self):
+        platform_mapping = {
+            'facebook': 'Facebook',
+            'whatsapp': 'WhatsApp',
+            'telegram': 'Telegram'
+        }
+            
+        data = request.get_json()
+        platform = platform_mapping.get(data['platform'].lower())
+        if not platform:
+            return {'status': 'error', 'message': 'Unsupported platform'}, 400
+        
+        bot_id = data['bot_id']
+        platform = data['platform']
+        user = data['user']
+        key = data['key']
+        value = data['value']
+        
+        conversation_id = Conversation.query.filter_by(bot_id=bot_id, platform=platform, user=user).first().id
+        if not conversation_id:
+            return {'status': 'error', 'message': 'Conversation not found'}, 404
+        
+        new_info = ExtractedInformation(
+            conversation_id=conversation_id,
+            key=key,
+            value=value
+        )
+        db.session.add(new_info)
+        db.session.commit()
+        return {'status': 'success'}, 201
 
 # TODO: This is just a route to simulate starting a bot script with fake messages. Replace with actual bot script execution
 @ns_utils.route('/api/start_bot')
