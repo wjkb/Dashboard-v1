@@ -1,7 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Box, Tabs, Tab, Button } from "@mui/material";
 import { useParams } from "react-router-dom";
-import { getBotConversationMessages } from "../../../api";
+import {
+  getBotConversationMessages,
+  getBotConversationExtractedInformation,
+} from "../../../api";
 import Header from "../../../components/Header";
 import MessagesTab from "../MessagesTab";
 import FilesTab from "../FilesTab";
