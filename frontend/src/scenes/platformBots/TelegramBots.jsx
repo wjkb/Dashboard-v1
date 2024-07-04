@@ -18,7 +18,7 @@ const TelegramBots = () => {
   const navigate = useNavigate();
   const [bots, setBots] = useState([]);
   const [activeBots, setActiveBots] = useState([]);
-  const [deactiveBots, setDeactiveBots] = useState([]);
+  const [deactivatedBots, setDeactivatedBots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -28,10 +28,10 @@ const TelegramBots = () => {
         const botsData = await getPlatformBots("telegram");
         console.log("Bots data:", botsData);
         const activeBotsData = botsData.filter((bot) => bot.active);
-        const deactiveBotsData = botsData.filter((bot) => !bot.active);
+        const deactivatedBotsData = botsData.filter((bot) => !bot.active);
         setBots(botsData);
         setActiveBots(activeBotsData);
-        setDeactiveBots(deactiveBotsData);
+        setDeactivatedBots(deactivatedBotsData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -103,7 +103,7 @@ const TelegramBots = () => {
       <Box margin="20px" width="40%">
         <Header title="Telegram Bots" subtitle="Active Telegram Bots" />
         <Box
-          height="55vh"
+          height={deactivatedBots.length > 0 ? "55vh" : "75vh"}
           sx={{
             "& .MuiDataGrid-root": {
               border: "none",
@@ -132,37 +132,41 @@ const TelegramBots = () => {
         >
           <DataGrid rows={activeBots} columns={columns} />
         </Box>
-        <Header title="" subtitle="Deactive Telegram Bots" />
-        <Box
-          height="20vh"
-          sx={{
-            "& .MuiDataGrid-root": {
-              border: "none",
-            },
-            "& .MuiDataGrid-cell": {
-              borderBottom: "none",
-            },
-            "& .phone-column--cell": {
-              color: colors.greenAccent,
-            },
-            "& .MuiDataGrid-columnHeader": {
-              backgroundColor: "#28231d",
-              borderBottom: "none",
-            },
-            "& .MuiDataGrid-virtualScroller": {
-              backgroundColor: "#0c0908",
-            },
-            "& .MuiDataGrid-footerContainer": {
-              borderTop: "none",
-              backgroundColor: "#28231d",
-            },
-            "& .MuiCheckbox-root": {
-              color: `${colors.greenAccent} !important`,
-            },
-          }}
-        >
-          <DataGrid rows={deactiveBots} columns={columns} />
-        </Box>
+        {deactivatedBots.length > 0 && (
+          <>
+            <Header title="" subtitle="Deactivated Telegram Bots" />
+            <Box
+              height="20vh"
+              sx={{
+                "& .MuiDataGrid-root": {
+                  border: "none",
+                },
+                "& .MuiDataGrid-cell": {
+                  borderBottom: "none",
+                },
+                "& .phone-column--cell": {
+                  color: colors.greenAccent,
+                },
+                "& .MuiDataGrid-columnHeader": {
+                  backgroundColor: "#28231d",
+                  borderBottom: "none",
+                },
+                "& .MuiDataGrid-virtualScroller": {
+                  backgroundColor: "#0c0908",
+                },
+                "& .MuiDataGrid-footerContainer": {
+                  borderTop: "none",
+                  backgroundColor: "#28231d",
+                },
+                "& .MuiCheckbox-root": {
+                  color: `${colors.greenAccent} !important`,
+                },
+              }}
+            >
+              <DataGrid rows={deactivatedBots} columns={columns} />
+            </Box>
+          </>
+        )}
       </Box>
       <Box flex={1} height="100%">
         <Outlet />
