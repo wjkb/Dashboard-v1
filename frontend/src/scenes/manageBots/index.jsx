@@ -105,9 +105,6 @@ const ManageBots = () => {
           ? {
               ...bot,
               ...updatedData,
-              platforms: updatedData.platforms.map((platform) => ({
-                platform,
-              })),
               Facebook: updatedData.platforms.includes("Facebook"),
               WhatsApp: updatedData.platforms.includes("WhatsApp"),
               Telegram: updatedData.platforms.includes("Telegram"),

@@ -7,7 +7,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
 import { DataGrid } from "@mui/x-data-grid";
 import { getAllBots, sendBot } from "../../api";
-import CheckIcon from "@mui/icons-material/Check";
+import Circle from "@mui/icons-material/Circle";
 import CloseIcon from "@mui/icons-material/Close";
 import SendIcon from "@mui/icons-material/Send";
 
@@ -36,7 +36,7 @@ const ManualSendForm = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
 
   const [formValues, setFormValues] = useState(initialValues);
-  const [bots, setBots] = useState([]);
+  const [activeBots, setActiveBots] = useState([]);
   const [filteredBots, setFilteredBots] = useState([]);
   const [error, setError] = useState(null);
 
@@ -47,13 +47,15 @@ const ManualSendForm = () => {
     const fetchBots = async () => {
       try {
         const botsData = await getAllBots();
-        const transformedData = botsData.map((bot) => ({
-          ...bot,
-          Facebook: bot.platforms.includes("Facebook"),
-          WhatsApp: bot.platforms.includes("WhatsApp"),
-          Telegram: bot.platforms.includes("Telegram"),
-        }));
-        setBots(transformedData);
+        const transformedData = botsData
+          .filter((bot) => bot.active)
+          .map((bot) => ({
+            ...bot,
+            Facebook: bot.platforms.includes("Facebook"),
+            WhatsApp: bot.platforms.includes("WhatsApp"),
+            Telegram: bot.platforms.includes("Telegram"),
+          }));
+        setActiveBots(transformedData);
       } catch (err) {
         setError(err.message);
       }
@@ -71,24 +73,10 @@ const ManualSendForm = () => {
   const handleFormSubmit = (values, { setSubmitting }) => {
     // handle form submission
     setFilteredBots(
-      bots.filter((bot) => bot.platforms.includes(values.platform))
+      activeBots.filter((bot) => bot.platforms.includes(values.platform))
     );
     setFormValues(values);
     setSubmitting(false);
-  };
-
-  /**
-   * Renders platform icon based on boolean value.
-   *
-   * @param {boolean} value - Boolean value indicating platform availability.
-   * @returns {JSX.Element} - Green check icon if true, red close icon if false.
-   */
-  const renderPlatformIcon = (value) => {
-    return value ? (
-      <CheckIcon style={{ color: "green" }} />
-    ) : (
-      <CloseIcon style={{ color: "red" }} />
-    );
   };
 
   /**
@@ -105,6 +93,37 @@ const ManualSendForm = () => {
     } catch (error) {
       console.error("Error sending bot", error);
     }
+  };
+
+  /**
+   * Renders platform icon based on the presence of the platform.
+   *
+   * @param {string} platform - The platform to be checked.
+   * @param {boolean} isRegisteredOnPlatform - The presence of the platform.
+   * @param {Object} health - The health status of the bot.
+   * @returns {JSX.Element} Green check icon if present, red close icon if not.
+   */
+  const renderHealthIcon = (platform, isRegisteredOnPlatform, health) => {
+    if (!isRegisteredOnPlatform) {
+      return <CloseIcon style={{ color: "grey" }} />;
+    }
+
+    const status = health[platform];
+    let color;
+    switch (status) {
+      case "running":
+        color = "green";
+        break;
+      case "idle":
+        color = "orange";
+        break;
+      case "not_running":
+      default:
+        color = "red";
+        break;
+    }
+
+    return <Circle style={{ color }} fontSize="small" />;
   };
 
   /**
@@ -142,19 +161,34 @@ const ManualSendForm = () => {
       field: "Facebook",
       headerName: "Facebook",
       flex: 0.5,
-      renderCell: (params) => renderPlatformIcon(params.row.Facebook),
+      renderCell: (params) =>
+        renderHealthIcon(
+          "Facebook",
+          params.row.Facebook,
+          params.row.health_status
+        ),
     },
     {
       field: "WhatsApp",
       headerName: "WhatsApp",
       flex: 0.5,
-      renderCell: (params) => renderPlatformIcon(params.row.WhatsApp),
+      renderCell: (params) =>
+        renderHealthIcon(
+          "WhatsApp",
+          params.row.WhatsApp,
+          params.row.health_status
+        ),
     },
     {
       field: "Telegram",
       headerName: "Telegram",
       flex: 0.5,
-      renderCell: (params) => renderPlatformIcon(params.row.Telegram),
+      renderCell: (params) =>
+        renderHealthIcon(
+          "Telegram",
+          params.row.Telegram,
+          params.row.health_status
+        ),
     },
     {
       headerName: "Actions",
