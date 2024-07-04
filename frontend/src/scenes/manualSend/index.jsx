@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Box, Button, TextField, MenuItem, useTheme } from "@mui/material";
 import { tokens } from "../../theme";
 import { Formik } from "formik";
@@ -40,56 +40,44 @@ const ManualSendForm = () => {
   const [filteredBots, setFilteredBots] = useState([]);
   const [error, setError] = useState(null);
 
+  const fetchBots = useCallback(async () => {
+    try {
+      const botsData = await getAllBots();
+      const transformedData = botsData
+        .filter((bot) => bot.active)
+        .map((bot) => ({
+          ...bot,
+          Facebook: bot.platforms.includes("Facebook"),
+          WhatsApp: bot.platforms.includes("WhatsApp"),
+          Telegram: bot.platforms.includes("Telegram"),
+        }));
+      setActiveBots(transformedData);
+      // Immediately filter the bots to update the DataGrid
+      setFilteredBots(
+        transformedData.filter((bot) =>
+          bot.platforms.includes(formValues.platform)
+        )
+      );
+    } catch (err) {
+      setError(err.message);
+    }
+  }, [formValues.platform]);
+
   useEffect(() => {
-    /**
-     * Fetches all bots from the server and transforms the data.
-     */
-    const fetchBots = async () => {
-      try {
-        const botsData = await getAllBots();
-        const transformedData = botsData
-          .filter((bot) => bot.active)
-          .map((bot) => ({
-            ...bot,
-            Facebook: bot.platforms.includes("Facebook"),
-            WhatsApp: bot.platforms.includes("WhatsApp"),
-            Telegram: bot.platforms.includes("Telegram"),
-          }));
-        setActiveBots(transformedData);
-      } catch (err) {
-        setError(err.message);
-      }
-    };
-
     fetchBots();
-  }, []);
+  }, [fetchBots]);
 
-  /**
-   * Handles form submission and filters bots based on selected platform.
-   *
-   * @param {Object} values - Form values (url, platform).
-   * @param {Function} param1.setSubmitting - Function to set form submission state.
-   */
   const handleFormSubmit = (values, { setSubmitting }) => {
-    // handle form submission
-    setFilteredBots(
-      activeBots.filter((bot) => bot.platforms.includes(values.platform))
-    );
     setFormValues(values);
     setSubmitting(false);
   };
 
-  /**
-   * Handles sending bot to the selected link.
-   *
-   * @param {Object} bot - Bot object to send.
-   */
   const handleSendClick = async (bot) => {
-    console.log("Sending bot", bot);
     try {
       const { url: targetUrl, platform } = formValues;
-      const response = await sendBot(bot.id, targetUrl, platform);
-      console.log("Bot sent successfully", response);
+      await sendBot(bot.id, targetUrl, platform);
+      // Fetch updated bot list after sending
+      await fetchBots();
     } catch (error) {
       console.error("Error sending bot", error);
     }
