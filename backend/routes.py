@@ -16,6 +16,7 @@ ns_platform_bots = api.namespace('platform_bots', description='Platform Bot oper
 ns_conversations = api.namespace('conversations', description='Conversation operations', path='/')
 ns_messages = api.namespace('messages', description='Message operations', path='/')
 ns_utils = api.namespace('utils', description='Utility operations', path='/')
+ns_graph_insights = api.namespace('graph_insights', description='Graph Insights operations', path='/')
 
 # Define models for Swagger documentation
 start_bot_script_model = ns_utils.model('StartBotScript', {
@@ -348,6 +349,7 @@ class BotConversationInformation(Resource):
 
 @ns_messages.route('/api/messages')
 class ReceiveMessage(Resource):
+    @ns_messages.doc('add_message')
     @ns_messages.expect(receive_message_model)
     def post(self):
         platform_mapping = {
@@ -485,6 +487,79 @@ class DownloadZip(Resource):
             return {'zipFileUrl': f'http://localhost:5000/{zip_file_path}'}
         except Exception as e:
             return {'error': str(e)}, 500
-    
+        
+
+@ns_graph_insights.route('/api/conversation_count')
+class ConversationCount(Resource):
+    def get(self):
+        try:
+            facebook_conversations = Conversation.query.filter_by(platform='Facebook').all()
+            whatsapp_conversations = Conversation.query.filter_by(platform='WhatsApp').all()
+            telegram_conversations = Conversation.query.filter_by(platform='Telegram').all()
+            return {
+                'facebook': len(facebook_conversations),
+                'whatsapp': len(whatsapp_conversations),
+                'telegram': len(telegram_conversations)
+            }
+        except Exception as e:
+            return {'error': str(e)}, 500
+
+@ns_graph_insights.route('/api/message_count')
+class MessageCount(Resource):
+    def get(self):
+        try:
+            facebook_messages = FacebookMessage.query.all()
+            whatsapp_messages = WhatsappMessage.query.all()
+            telegram_messages = TelegramMessage.query.all()
+            return {
+                'facebook': len(facebook_messages),
+                'whatsapp': len(whatsapp_messages),
+                'telegram': len(telegram_messages)
+            }
+        except Exception as e:
+            return {'error': str(e)}, 500
+
+@ns_graph_insights.route('/api/recent_messages/<platform>')
+class RecentMessages(Resource):
+    def get(self, platform):
+        try:
+            platform_mapping = {
+                'facebook': FacebookMessage,
+                'whatsapp': WhatsappMessage,
+                'telegram': TelegramMessage
+            }
+            platform_class = platform_mapping.get(platform.lower())
+            if not platform_class:
+                return {'error': 'Unsupported platform'}, 400
+            
+            # Join the platform-specific messages with conversations
+            messages = (
+                db.session.query(platform_class)
+                .join(Conversation, Conversation.id == platform_class.conversation_id)
+                .order_by(platform_class.timestamp.desc())
+                .limit(5)
+                .all()
+            )
+            
+            # Serialize the messages along with conversation details
+            response = []
+            for msg in messages:
+                # Get the conversation related to the message
+                conversation = Conversation.query.get(msg.conversation_id)
+                if conversation:
+                    # Add conversation details to the message serialization
+                    message_data = msg.serialize()
+                    message_data.update({
+                        'bot_id': conversation.bot_id,
+                        'platform': conversation.platform,
+                        'user': conversation.user
+                    })
+                    response.append(message_data)
+            
+            return response
+        
+        except Exception as e:
+            return {'error': str(e)}, 500
+
 
     
