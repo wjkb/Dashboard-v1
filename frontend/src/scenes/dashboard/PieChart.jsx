@@ -14,7 +14,7 @@ const PieChart = () => {
 
         const chartData = [
           { id: "Active", label: "Active", value: activeBots },
-          { id: "Inactive", label: "Inactive", value: inactiveBots },
+          { id: "Deactivated", label: "Deactivated", value: inactiveBots },
         ];
 
         // Filter out the data points with a value of 0

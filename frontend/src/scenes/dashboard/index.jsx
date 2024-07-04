@@ -22,7 +22,7 @@ const Dashboard = () => {
         gridAutoRows="140px"
         gap="20px"
       >
-        {/* Pie Chart for Active vs. Inactive (Deactivated) Bots */}
+        {/* Pie Chart for Active vs. Deactivated Bots */}
         <Box
           gridColumn="span 4"
           gridRow="span 3"
@@ -33,7 +33,7 @@ const Dashboard = () => {
             fontWeight="600"
             sx={{ padding: "30px 30px 0 30px" }}
           >
-            Active vs. Inactive (Deactivated) Bots
+            Bots
           </Typography>
           <Box height="250px" mt="-20px">
             <PieChart />
