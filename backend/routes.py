@@ -532,8 +532,32 @@ class RecentMessages(Resource):
             if not platform_class:
                 return {'error': 'Unsupported platform'}, 400
             
-            messages = platform_class.query.order_by(platform_class.timestamp.desc()).limit(5).all()
-            return [msg.serialize() for msg in messages]
+            # Join the platform-specific messages with conversations
+            messages = (
+                db.session.query(platform_class)
+                .join(Conversation, Conversation.id == platform_class.conversation_id)
+                .order_by(platform_class.timestamp.desc())
+                .limit(5)
+                .all()
+            )
+            
+            # Serialize the messages along with conversation details
+            response = []
+            for msg in messages:
+                # Get the conversation related to the message
+                conversation = Conversation.query.get(msg.conversation_id)
+                if conversation:
+                    # Add conversation details to the message serialization
+                    message_data = msg.serialize()
+                    message_data.update({
+                        'bot_id': conversation.bot_id,
+                        'platform': conversation.platform,
+                        'user': conversation.user
+                    })
+                    response.append(message_data)
+            
+            return response
+        
         except Exception as e:
             return {'error': str(e)}, 500
 
