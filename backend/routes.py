@@ -20,7 +20,7 @@ ns_graph_insights = api.namespace('graph_insights', description='Graph Insights 
 
 # Define models for Swagger documentation
 start_bot_script_model = ns_utils.model('StartBotScript', {
-    'botId': fields.Integer(required=True, description='The bot unique identifier', example=1),
+    'botPhone': fields.String(required=True, description='The bot phone number', example='90217777'),
     'targetUrl': fields.String(required=True, description='The URL to send the bot messages to', example='facebook.com/xyz'),
     'platform': fields.String(required=True, description='The platform the bot is talking on', example='Facebook'),
 })
@@ -489,14 +489,14 @@ class StartBot(Resource):
     def post(self):
         try:
             data = request.json
-            bot_id = data.get('botId')
+            bot_phone_number = data.get('botPhone')
             target_url = data.get('targetUrl')
             platform = data.get('platform')
 
-            if not bot_id or not target_url or not platform:
+            if not bot_phone_number or not target_url or not platform:
                 return {'status': 'error', 'message': 'Missing required fields'}, 400
             
-            bot = Bot.query.get(bot_id)
+            bot = Bot.query.filter_by(phone=bot_phone_number).first()
             if not bot:
                 return {'status': 'error', 'message': 'Bot not found'}, 404
             
@@ -508,10 +508,10 @@ class StartBot(Resource):
             bot.set_health_status(new_health_status)
             db.session.commit()
 
-            print(f"Starting bot {bot_id} for platform {platform} at {target_url}")
+            print(f"Starting bot {bot_phone_number} for platform {platform} at {target_url}")
 
             # Command to start the bot script
-            command = f"python bot.py {platform} {bot_id} {target_url}"
+            command = f"python bot.py {platform} {bot_phone_number} {target_url}"
             subprocess.Popen(command, shell=True)
             print(f"Command run: {command}")
 
@@ -596,7 +596,7 @@ class RecentMessages(Resource):
                     message_data.update({
                         'bot_id': conversation.bot_id,
                         'platform': conversation.platform,
-                        'user': conversation.user
+                        'scammer_id': conversation.scammer_id
                     })
                     response.append(message_data)
             

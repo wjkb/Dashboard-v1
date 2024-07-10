@@ -75,7 +75,7 @@ const ManualSendForm = () => {
   const handleSendClick = async (bot) => {
     try {
       const { url: targetUrl, platform } = formValues;
-      await sendBot(bot.id, targetUrl, platform);
+      await sendBot(bot.phone, targetUrl, platform);
       // Fetch updated bot list after sending
       await fetchBots();
     } catch (error) {

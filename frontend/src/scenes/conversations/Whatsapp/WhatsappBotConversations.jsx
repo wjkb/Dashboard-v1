@@ -46,7 +46,7 @@ const WhatsappBotConversations = () => {
           variant="contained"
           color="primary"
           onClick={() =>
-            navigate(`/platforms/whatsapp/${botId}/${params.row.user}`)
+            navigate(`/platforms/whatsapp/${botId}/${params.row.id}`)
           }
         >
           View
@@ -56,8 +56,8 @@ const WhatsappBotConversations = () => {
   ];
 
   const rows = conversations.map((conv, index) => ({
-    id: index + 1,
-    user: conv.user,
+    id: conv.scammer_id,
+    user: conv.scammer_phone_number,
   }));
 
   if (loading) {

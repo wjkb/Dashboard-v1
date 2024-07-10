@@ -46,7 +46,7 @@ const TelegramBotConversations = () => {
           variant="contained"
           color="primary"
           onClick={() =>
-            navigate(`/platforms/telegram/${botId}/${params.row.user}`)
+            navigate(`/platforms/telegram/${botId}/${params.row.id}`)
           }
         >
           View
@@ -56,8 +56,8 @@ const TelegramBotConversations = () => {
   ];
 
   const rows = conversations.map((conv, index) => ({
-    id: index + 1,
-    user: conv.user,
+    id: conv.scammer_id,
+    user: conv.scammer_phone_number,
   }));
 
   if (loading) {

@@ -39,10 +39,14 @@ export const getBotConversations = async (platform, botId) => {
   }
 };
 
-export const getBotConversationMessages = async (platform, botId, userId) => {
+export const getBotConversationMessages = async (
+  platform,
+  botId,
+  scammerId
+) => {
   try {
     const response = await fetch(
-      `${API_URL}/${platform}/bots/${botId}/conversations/${userId}`
+      `${API_URL}/${platform}/bots/${botId}/conversations/${scammerId}`
     );
     if (!response.ok) {
       throw new Error("Network response was not ok");
@@ -56,11 +60,11 @@ export const getBotConversationMessages = async (platform, botId, userId) => {
 export const getBotConversationExtractedInformation = async (
   platform,
   botId,
-  userId
+  scammerId
 ) => {
   try {
     const response = await fetch(
-      `${API_URL}/${platform}/bots/${botId}/conversations/${userId}/extracted_information`
+      `${API_URL}/${platform}/bots/${botId}/conversations/${scammerId}/extracted_information`
     );
     if (!response.ok) {
       throw new Error("Network response was not ok");
@@ -90,14 +94,14 @@ export const createBot = async (botData) => {
   }
 };
 
-export const sendBot = async (botId, targetUrl, platform) => {
+export const sendBot = async (botPhone, targetUrl, platform) => {
   try {
     const response = await fetch(`${API_URL}/start_bot`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ botId, targetUrl, platform }),
+      body: JSON.stringify({ botPhone, targetUrl, platform }),
     });
     if (!response.ok) {
       throw new Error("Network response was not ok");
