@@ -32,6 +32,20 @@ class Bot(db.Model):
     def set_health_status(self, health_dict):
         self.health_status = json.dumps(health_dict)
 
+class Scammer(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    phone = db.Column(db.String(15), nullable=True)
+    platform = db.Column(db.String(50), nullable=False)
+    conversations = db.relationship('Conversation', backref='scammer', lazy=True)
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'phone': self.phone,
+            'platform': self.platform,
+            'conversations': [conv.id for conv in self.conversations],
+        }
+
 class Platform(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     bot_id = db.Column(db.Integer, db.ForeignKey('bot.id'), nullable=False)
@@ -47,8 +61,8 @@ class Platform(db.Model):
 class Conversation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     bot_id = db.Column(db.Integer, db.ForeignKey('bot.id'), nullable=False)
+    scammer_id = db.Column(db.Integer, db.ForeignKey('scammer.id'), nullable=False)
     platform = db.Column(db.String(50), nullable=False)
-    user = db.Column(db.String(255), nullable=False)
     facebook_messages = db.relationship('FacebookMessage', backref='conversation', lazy=True)
     whatsapp_messages = db.relationship('WhatsappMessage', backref='conversation', lazy=True)
     telegram_messages = db.relationship('TelegramMessage', backref='conversation', lazy=True)
@@ -57,8 +71,8 @@ class Conversation(db.Model):
         return {
             'id': self.id,
             'bot_id': self.bot_id,
+            'scammer_id': self.scammer_id,
             'platform': self.platform,
-            'user': self.user,
             'facebook_messages': [msg.serialize() for msg in self.facebook_messages],
             'whatsapp_messages': [msg.serialize() for msg in self.whatsapp_messages],
             'telegram_messages': [msg.serialize() for msg in self.telegram_messages]

@@ -1,6 +1,6 @@
 from datetime import datetime
 from backend import create_app
-from backend.models import db, Bot, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, ExtractedInformation
+from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, ExtractedInformation
 
 app = create_app()
 
@@ -14,6 +14,7 @@ with app.app_context():
     db.session.query(TelegramMessage).delete()
     db.session.query(Conversation).delete()
     db.session.query(Platform).delete()
+    db.session.query(Scammer).delete()
     db.session.query(Bot).delete()
     db.session.commit()
 
@@ -35,7 +36,7 @@ with app.app_context():
         db.session.add(bot)
     db.session.commit()
 
-    # Insert platforms
+    # Insert bot platforms
     platforms_data = [
         (1, 'Facebook'), (1, 'WhatsApp'),
         (2, 'WhatsApp'), (2, 'Telegram'),
@@ -53,15 +54,29 @@ with app.app_context():
         db.session.add(platform_entry)
     db.session.commit()
 
-    # Insert conversations
-    conversations_data = [
-        (1, 'Facebook', 'User123'), (1, 'Facebook', 'User789'),
-        (1, 'WhatsApp', 'User123'), (1, 'WhatsApp', 'User456'),
-        (2, 'Telegram', 'User123'), (2, 'Telegram', 'User456'),
+    # Insert scammers
+    scammers_data = [
+        ('90000010', 'Facebook'),
+        ('90000011', 'Facebook'),
+        ('90000012', 'WhatsApp'),
+        ('90000013', 'WhatsApp'),
+        ('90000014', 'Telegram'),
+        ('90000015', 'Telegram')
     ]
 
-    for bot_id, platform, user in conversations_data:
-        conversation = Conversation(bot_id=bot_id, platform=platform, user=user)
+    for phone, platform in scammers_data:
+        scammer = Scammer(phone=phone, platform=platform)
+        db.session.add(scammer)
+
+    # Insert conversations
+    conversations_data = [
+        (1, 'Facebook', 1), (1, 'Facebook', 2),
+        (1, 'WhatsApp', 3), (1, 'WhatsApp', 4),
+        (2, 'Telegram', 5), (2, 'Telegram', 6),
+    ]
+
+    for bot_id, platform, scammer_id in conversations_data:
+        conversation = Conversation(bot_id=bot_id, platform=platform, scammer_id=scammer_id)
         db.session.add(conversation)
     db.session.commit()
 
@@ -71,13 +86,13 @@ with app.app_context():
         (1, datetime(2024, 5, 15, 14, 31), 'Sure, I\'d be happy to assist. Could you please provide your order number?', 'outgoing', None, None),
         (1, datetime(2024, 5, 15, 14, 32), 'It\'s 12345.', 'incoming', None, None),
         (1, datetime(2024, 5, 15, 14, 33), 'Thank you. I\'ll check the status for you now.', 'outgoing', None, None),
-        (1, datetime(2024, 5, 15, 14, 35), None, 'outgoing', 'files/Facebook/1/User123/cat.jpg', 'image/jpeg'),
-        (1, datetime(2024, 5, 15, 14, 35, 10), 'Same image, but with caption', 'outgoing', 'files/Facebook/1/User123/cat.jpg', 'image/jpeg'),
-        (1, datetime(2024, 5, 15, 14, 35, 30), None, 'outgoing', 'files/Facebook/1/User123/cat.mp4', 'video/mp4'),
-        (1, datetime(2024, 5, 15, 14, 36), None, 'outgoing', 'files/Facebook/1/User123/cat.mp3', 'audio/mp3'),
-        (1, datetime(2024, 5, 15, 14, 36, 30), None, 'outgoing', 'files/Facebook/1/User123/cat.pdf', 'application/pdf'),
-        (1, datetime(2024, 5, 15, 14, 36, 45), None, 'outgoing', 'files/Facebook/1/User123/cat.txt', 'text/plain'),
-        (1, datetime(2024, 5, 15, 14, 36, 50), None, 'outgoing', 'files/Facebook/1/User123/cat.py', 'text/x-python'),
+        (1, datetime(2024, 5, 15, 14, 35), None, 'outgoing', 'files/Facebook/1/1/cat.jpg', 'image/jpeg'),
+        (1, datetime(2024, 5, 15, 14, 35, 10), 'Same image, but with caption', 'outgoing', 'files/Facebook/1/1/cat.jpg', 'image/jpeg'),
+        (1, datetime(2024, 5, 15, 14, 35, 30), None, 'outgoing', 'files/Facebook/1/1/cat.mp4', 'video/mp4'),
+        (1, datetime(2024, 5, 15, 14, 36), None, 'outgoing', 'files/Facebook/1/1/cat.mp3', 'audio/mp3'),
+        (1, datetime(2024, 5, 15, 14, 36, 30), None, 'outgoing', 'files/Facebook/1/1/cat.pdf', 'application/pdf'),
+        (1, datetime(2024, 5, 15, 14, 36, 45), None, 'outgoing', 'files/Facebook/1/1/cat.txt', 'text/plain'),
+        (1, datetime(2024, 5, 15, 14, 36, 50), None, 'outgoing', 'files/Facebook/1/1/cat.py', 'text/x-python'),
         (1, datetime(2024, 5, 15, 14, 37), 'Why did you send me random cat stuff??', 'incoming', None, None),
         (1, datetime(2024, 5, 15, 14, 37, 30), 'Hello? Are you there?', 'incoming', None, None),
         (1, datetime(2024, 5, 15, 14, 38), 'OMG! I am so sorry, that was an accident', 'outgoing', None, None),
@@ -101,7 +116,7 @@ with app.app_context():
     whatsapp_messages_data = [
         (3, datetime(2024, 5, 15, 14, 0), 'Hey Lim, can you recommend a good restaurant nearby?', 'incoming', None, None),
         (3, datetime(2024, 5, 15, 14, 1), 'Sure, how about trying \'The Fancy Feast\'? It\'s highly rated.', 'outgoing', None, None),
-        (3, datetime(2024, 5, 15, 16, 0), 'What do you think of this restaurant? Look at this menu.', 'incoming', 'files/WhatsApp/1/User123/menu.jpg', 'image/jpeg'),
+        (3, datetime(2024, 5, 15, 16, 0), 'What do you think of this restaurant? Look at this menu.', 'incoming', 'files/WhatsApp/1/3/menu.jpg', 'image/jpeg'),
         (4, datetime(2024, 5, 15, 15, 0), 'Lim, do you know if the pharmacy is open today?', 'incoming', None, None),
         (4, datetime(2024, 5, 15, 15, 1), 'Yes, it\'s open until 6 PM today.', 'outgoing', None, None),
     ]
@@ -122,7 +137,7 @@ with app.app_context():
     telegram_messages_data = [
         (5, datetime(2024, 5, 15, 14, 15), 'Hello Chua, can you help me find a good recipe for dinner?', 'incoming', None, None),
         (5, datetime(2024, 5, 15, 14, 16), 'Sure! How about trying a simple stir-fry with vegetables and chicken?', 'outgoing', None, None),
-        (5, datetime(2024, 5, 15, 16, 0), 'Here is the recipe image.', 'outgoing', 'files/Telegram/2/User456/recipe.jpg', 'image/jpeg'),
+        (5, datetime(2024, 5, 15, 16, 0), 'Here is the recipe image.', 'outgoing', 'files/Telegram/2/5/recipe.jpg', 'image/jpeg'),
         (6, datetime(2024, 5, 15, 15, 45), 'Hi Chua, do you have any tips for meal prepping?', 'incoming', None, None),
         (6, datetime(2024, 5, 15, 15, 46), 'Yes! Start by planning your meals for the week and prepping ingredients in advance.', 'outgoing', None, None),
     ]
