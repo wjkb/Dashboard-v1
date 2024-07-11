@@ -186,11 +186,11 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
               }}
             >
               {msg.file_path && renderFile(msg.file_path, msg.file_type)}
-              {msg.message && (
-                <Typography variant="body1">{msg.message}</Typography>
+              {msg.message_text && (
+                <Typography variant="body1">{msg.message_text}</Typography>
               )}
               <Typography variant="caption" color={colors.grey[500]}>
-                {formatDateTime(msg.timestamp)}
+                {formatDateTime(msg.message_timestamp)}
               </Typography>
             </Paper>
           </ListItem>

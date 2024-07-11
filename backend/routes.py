@@ -38,22 +38,31 @@ receive_extracted_information_model = ns_messages.model('ReceiveExtractedInforma
 })
 
 receive_message_model = ns_messages.model('ReceiveMessage', {
+    'platform': fields.String(required=True, description='The platform the bot is talking on', example='Facebook'),
     'bot_phone_number': fields.String(required=True, description='The bot phone number', example='90217777'),
     'scammer_phone_number': fields.String(required=True, description='The scammer phone number', example='80216666'),
-    'platform': fields.String(required=True, description='The platform the bot is talking on', example='Facebook'),
-    'timestamp': fields.String(required=True, example='2024-07-02T12:30:44.123456'),
-    'message': fields.String(required=True, description='The message content', example='This is a test message using the API in flask-restx'),
     'direction': fields.String(required=True, description='The direction of the message, either incoming or outgoing', example='incoming'),
-    'file_path': fields.String(description='The path to the file if the message contains a file', example='files/Facebook/1/User123/test.jpg'),
-    'file_type': fields.String(description='The MIME type of the file if the message contains a file', example='image/jpeg'),
+    'message_id': fields.List(fields.String(description='The unique identifier of the message', example='12345')),
+    'message_text': fields.List(fields.String(description='The message content', example='This is a test message using the API in flask-restx')),
+    'message_timestamp': fields.List(fields.String(example='2024-07-02T12:30:44.123456')),
+
+    'file_path': fields.List(fields.String(description='The path to the file if the message contains a file', example='files/Facebook/1/1/cat.jpg')),
+    'file_type': fields.List(fields.String(description='The MIME type of the file if the message contains a file', example='image/jpeg')),
+
+    'response_id': fields.String(description='The unique identifier of the response message', example='12345'),
+    'response_text': fields.String(description='The response message content', example='This is a test response message using the API in flask-restx'),
+    'response_bef_generation_timestamp': fields.String(description='The timestamp before the response is generated', example='2024-07-02T12:30:44.123456'),
+    'response_aft_generation_timestamp': fields.String(description='The timestamp after the response is generated', example='2024-07-02T12:30:44.123456'),
+    'response_timestamp': fields.String(description='The timestamp when the response is sent', example='2024-07-02T12:30:44.123456'),
+    'response_status': fields.String(description='The status of the response, either Sending, Sent or Failed', example='Sent'),
 })
 
 message_model = ns_messages.model('Message', {
     'id': fields.Integer(readOnly=True, description='The message unique identifier'),
     'conversation_id': fields.Integer(required=True),
-    'timestamp': fields.String(required=True),
-    'message': fields.String(required=True),
     'direction': fields.String(required=True),
+    'message_text': fields.String(required=True),
+    'message_timestamp': fields.String(required=True),
     'file_path': fields.String(),
     'file_type': fields.String(),
 })
@@ -381,6 +390,19 @@ class ReceiveMessage(Resource):
 
         bot_phone_number = data['bot_phone_number']
         scammer_phone_number = data['scammer_phone_number']
+        direction = data['direction']
+        message_ids = data.get('message_id', [])
+        message_texts = data.get('message_text', [])
+        message_timestamps = data.get('message_timestamp', [])
+        file_paths = data.get('file_path', [])
+        file_types = data.get('file_type', [])
+
+        response_id = data.get('response_id', None)
+        response_text = data.get('response_text', None)
+        response_bef_generation_timestamp = data.get('response_bef_generation_timestamp', None)
+        response_aft_generation_timestamp = data.get('response_aft_generation_timestamp', None)
+        response_timestamp = data.get('response_timestamp', None)
+        response_status = data.get('response_status', None)
 
         # Check if bot exists, if not return an error
         bot = Bot.query.filter_by(phone=bot_phone_number).first()
@@ -394,7 +416,7 @@ class ReceiveMessage(Resource):
             db.session.add(scammer)
             db.session.commit()
 
-        # Create conversation if it doesn't exist
+        # Check if conversation exists, if not create a new conversation
         conversation = Conversation.query.filter_by(
             bot_id=bot.id,
             platform=platform,
@@ -415,24 +437,39 @@ class ReceiveMessage(Resource):
             'whatsapp': WhatsappMessage,
             'telegram': TelegramMessage
         }
-        platform = data['platform'].lower()
-        message_class = platform_message_classes.get(platform)
+        message_class = platform_message_classes.get(platform.lower())
 
         # Create message object
-        if message_class:
+        if direction == 'incoming':
+            for i in range(len(message_ids)):
+                message = message_class(
+                    conversation_id=conversation.id,
+                    direction=direction,
+                    message_id=message_ids[i],
+                    message_text=message_texts[i],
+                    message_timestamp=datetime.strptime(message_timestamps[i], '%Y-%m-%dT%H:%M:%S.%f'),
+
+                    file_path=file_paths[i] if file_paths else None,
+                    file_type=file_types[i] if file_types else None
+                )
+                db.session.add(message)
+        elif direction == 'outgoing':
             message = message_class(
                 conversation_id=conversation.id,
-                timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
-                message=data['message'],
-                direction=data['direction'],
-                file_path=data.get('file_path', None),
-                file_type=data.get('file_type', None)
+                direction=direction,
+                message_id=response_id,
+                message_text=response_text,
+                message_timestamp=datetime.strptime(response_timestamp, '%Y-%m-%dT%H:%M:%S.%f'),
+                
+                message_ids_responded_to="" if not message_ids else ", ".join(message_ids),
+                response_bef_generation_timestamp=datetime.strptime(response_bef_generation_timestamp, '%Y-%m-%dT%H:%M:%S.%f'),
+                response_aft_generation_timestamp=datetime.strptime(response_aft_generation_timestamp, '%Y-%m-%dT%H:%M:%S.%f'),
+                response_status=response_status
             )
             db.session.add(message)
-            db.session.commit()
-            return {'status': 'success'}, 201
-        else:
-            return {'status': 'error', 'message': 'Unsupported platform'}, 400
+        
+        db.session.commit()
+        return {'status': 'success'}, 201
 
 @ns_messages.route('/api/extracted_information')
 class ReceiveExtractedInformation(Resource):

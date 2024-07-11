@@ -112,26 +112,26 @@ with app.app_context():
         db.session.add(facebook_message)
     db.session.commit()
 
-    # Insert WhatsApp messages
-    whatsapp_messages_data = [
-        (3, datetime(2024, 5, 15, 14, 0), 'Hey Lim, can you recommend a good restaurant nearby?', 'incoming', None, None),
-        (3, datetime(2024, 5, 15, 14, 1), 'Sure, how about trying \'The Fancy Feast\'? It\'s highly rated.', 'outgoing', None, None),
-        (3, datetime(2024, 5, 15, 16, 0), 'What do you think of this restaurant? Look at this menu.', 'incoming', 'files/WhatsApp/1/3/menu.jpg', 'image/jpeg'),
-        (4, datetime(2024, 5, 15, 15, 0), 'Lim, do you know if the pharmacy is open today?', 'incoming', None, None),
-        (4, datetime(2024, 5, 15, 15, 1), 'Yes, it\'s open until 6 PM today.', 'outgoing', None, None),
-    ]
+    # # Insert WhatsApp messages
+    # whatsapp_messages_data = [
+    #     (3, datetime(2024, 5, 15, 14, 0), 'Hey Lim, can you recommend a good restaurant nearby?', 'incoming', None, None),
+    #     (3, datetime(2024, 5, 15, 14, 1), 'Sure, how about trying \'The Fancy Feast\'? It\'s highly rated.', 'outgoing', None, None),
+    #     (3, datetime(2024, 5, 15, 16, 0), 'What do you think of this restaurant? Look at this menu.', 'incoming', 'files/WhatsApp/1/3/menu.jpg', 'image/jpeg'),
+    #     (4, datetime(2024, 5, 15, 15, 0), 'Lim, do you know if the pharmacy is open today?', 'incoming', None, None),
+    #     (4, datetime(2024, 5, 15, 15, 1), 'Yes, it\'s open until 6 PM today.', 'outgoing', None, None),
+    # ]
 
-    for conversation_id, timestamp, message, direction, file_path, file_type in whatsapp_messages_data:
-        whatsapp_message = WhatsappMessage(
-            conversation_id=conversation_id,
-            timestamp=timestamp,
-            message=message,
-            direction=direction,
-            file_path=file_path,
-            file_type=file_type
-        )
-        db.session.add(whatsapp_message)
-    db.session.commit()
+    # for conversation_id, timestamp, message, direction, file_path, file_type in whatsapp_messages_data:
+    #     whatsapp_message = WhatsappMessage(
+    #         conversation_id=conversation_id,
+    #         timestamp=timestamp,
+    #         message=message,
+    #         direction=direction,
+    #         file_path=file_path,
+    #         file_type=file_type
+    #     )
+    #     db.session.add(whatsapp_message)
+    # db.session.commit()
 
     # Insert Telegram messages
     telegram_messages_data = [
