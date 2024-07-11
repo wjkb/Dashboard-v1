@@ -38,22 +38,22 @@ receive_extracted_information_model = ns_messages.model('ReceiveExtractedInforma
 })
 
 receive_message_model = ns_messages.model('ReceiveMessage', {
-    'platform': fields.String(required=True, description='The platform the bot is talking on', example='Facebook'),
+    'platform': fields.String(required=True, description='The platform the bot is talking on', example='WhatsApp'),
     'bot_phone_number': fields.String(required=True, description='The bot phone number', example='90217777'),
     'scammer_phone_number': fields.String(required=True, description='The scammer phone number', example='80216666'),
-    'direction': fields.String(required=True, description='The direction of the message, either incoming or outgoing', example='incoming'),
-    'message_id': fields.List(fields.String(description='The unique identifier of the message', example='12345')),
+    'direction': fields.String(required=True, description='The direction of the message, either incoming or outgoing', example='outgoing'),
+    'message_id': fields.List(fields.String(description='The unique identifier of the message', example='1')),
     'message_text': fields.List(fields.String(description='The message content', example='This is a test message using the API in flask-restx')),
     'message_timestamp': fields.List(fields.String(example='2024-07-02T12:30:44.123456')),
 
     'file_path': fields.List(fields.String(description='The path to the file if the message contains a file', example='files/Facebook/1/1/cat.jpg')),
     'file_type': fields.List(fields.String(description='The MIME type of the file if the message contains a file', example='image/jpeg')),
 
-    'response_id': fields.String(description='The unique identifier of the response message', example='12345'),
+    'response_id': fields.String(description='The unique identifier of the response message', example='2'),
     'response_text': fields.String(description='The response message content', example='This is a test response message using the API in flask-restx'),
-    'response_bef_generation_timestamp': fields.String(description='The timestamp before the response is generated', example='2024-07-02T12:30:44.123456'),
-    'response_aft_generation_timestamp': fields.String(description='The timestamp after the response is generated', example='2024-07-02T12:30:44.123456'),
-    'response_timestamp': fields.String(description='The timestamp when the response is sent', example='2024-07-02T12:30:44.123456'),
+    'response_bef_generation_timestamp': fields.String(description='The timestamp before the response is generated', example='2024-07-02T12:31:44.123456'),
+    'response_aft_generation_timestamp': fields.String(description='The timestamp after the response is generated', example='2024-07-02T12:32:44.123456'),
+    'response_timestamp': fields.String(description='The timestamp when the response is sent', example='2024-07-02T12:33:44.123456'),
     'response_status': fields.String(description='The status of the response, either Sending, Sent or Failed', example='Sent'),
 })
 
