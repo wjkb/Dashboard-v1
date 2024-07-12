@@ -42,11 +42,11 @@ export const getBotConversations = async (platform, botId) => {
 export const getBotConversationMessages = async (
   platform,
   botId,
-  scammerId
+  scammerUniqueId
 ) => {
   try {
     const response = await fetch(
-      `${API_URL}/${platform}/bots/${botId}/conversations/${scammerId}`
+      `${API_URL}/${platform}/bots/${botId}/conversations/${scammerUniqueId}`
     );
     if (!response.ok) {
       throw new Error("Network response was not ok");
@@ -60,11 +60,11 @@ export const getBotConversationMessages = async (
 export const getBotConversationExtractedInformation = async (
   platform,
   botId,
-  scammerId
+  scammerUniqueId
 ) => {
   try {
     const response = await fetch(
-      `${API_URL}/${platform}/bots/${botId}/conversations/${scammerId}/extracted_information`
+      `${API_URL}/${platform}/bots/${botId}/conversations/${scammerUniqueId}/extracted_information`
     );
     if (!response.ok) {
       throw new Error("Network response was not ok");

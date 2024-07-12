@@ -22,7 +22,7 @@ const TAB_EXTRACTED_INFORMATION = 2;
  * @returns {JSX.Element} The FacebookUserMessages component.
  */
 const FacebookUserMessages = () => {
-  const { botId, userId } = useParams();
+  const { botId, scammerUniqueId } = useParams();
   const [messages, setMessages] = useState([]);
   const [files, setFiles] = useState([]);
   const [extractedInformation, setExtractedInformation] = useState([]);
@@ -33,18 +33,17 @@ const FacebookUserMessages = () => {
   const [highlightedMessage, setHighlightedMessage] = useState(null);
 
   /**
-   * Fetches messages (includes text + files) from the API for the current bot and user.
+   * Fetches messages and files from the API for the current bot and user.
    */
   const fetchMessages = async () => {
     try {
       const messagesData = await getBotConversationMessages(
         "facebook",
         botId,
-        userId
+        scammerUniqueId
       );
-      // Set messages state
+      // Extract files from messages
       setMessages(messagesData);
-      // Set files state
       setFiles(
         messagesData
           .filter((msg) => msg.file_path)
@@ -70,7 +69,7 @@ const FacebookUserMessages = () => {
       const extractedInformation = await getBotConversationExtractedInformation(
         "facebook",
         botId,
-        userId
+        scammerUniqueId
       );
       // Set extracted information state
       setExtractedInformation(extractedInformation);
@@ -85,7 +84,7 @@ const FacebookUserMessages = () => {
   useEffect(() => {
     fetchMessages();
     fetchExtractedInformation();
-  }, [botId, userId]);
+  }, [botId, scammerUniqueId]);
 
   const handleRefresh = () => {
     setLoading(true);
@@ -136,7 +135,7 @@ const FacebookUserMessages = () => {
   return (
     <Box margin="20px" width="80%">
       <Header
-        title={`Messages with ${userId}`}
+        title={`Messages with ${scammerUniqueId}`}
         subtitle="Conversation details"
       />
       <Button

@@ -32,8 +32,8 @@ const TelegramBotConversations = () => {
 
   const columns = [
     {
-      field: "user",
-      headerName: "User",
+      field: "scammerUniqueID",
+      headerName: "Scammer Unique ID",
       flex: 1,
       cellClassName: "userid-column--cell",
     },
@@ -46,7 +46,9 @@ const TelegramBotConversations = () => {
           variant="contained"
           color="primary"
           onClick={() =>
-            navigate(`/platforms/telegram/${botId}/${params.row.id}`)
+            navigate(
+              `/platforms/telegram/${botId}/${params.row.scammerUniqueID}`
+            )
           }
         >
           View
@@ -57,7 +59,7 @@ const TelegramBotConversations = () => {
 
   const rows = conversations.map((conv, index) => ({
     id: conv.scammer_id,
-    user: conv.scammer_phone_number,
+    scammerUniqueID: conv.scammer_unique_id,
   }));
 
   if (loading) {

@@ -55,10 +55,10 @@ const RecentMessagesChart = ({ platform }) => {
           }}
         >
           <Typography variant="body2" color={colors.grey[500]} gutterBottom>
-            {new Date(message.timestamp).toLocaleString()}
+            {new Date(message.message_timestamp).toLocaleString()}
           </Typography>
           <Typography variant="body1" gutterBottom>
-            {message.message}
+            {message.message_text}
           </Typography>
           <Box
             sx={{
@@ -89,7 +89,7 @@ const RecentMessagesChart = ({ platform }) => {
                   message.direction === "incoming" ? "red" : "transparent",
               }}
             >
-              User: {message.user}
+              User: {message.scammer_unique_id}
             </Typography>
             <Typography variant="caption" color={colors.grey[500]}>
               {message.direction}

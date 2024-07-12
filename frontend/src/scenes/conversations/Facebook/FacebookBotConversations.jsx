@@ -6,11 +6,6 @@ import { useParams, useNavigate, Outlet } from "react-router-dom";
 import { getBotConversations } from "../../../api";
 import Header from "../../../components/Header";
 
-/**
- * Component to display conversations of a Facebook bot.
- *
- * @returns {JSX.Element} The FacebookBotConversations component.
- */
 const FacebookBotConversations = () => {
   const { botId } = useParams();
   const navigate = useNavigate();
@@ -37,8 +32,8 @@ const FacebookBotConversations = () => {
 
   const columns = [
     {
-      field: "user",
-      headerName: "User",
+      field: "scammerUniqueID",
+      headerName: "Scammer Unique ID",
       flex: 1,
       cellClassName: "userid-column--cell",
     },
@@ -51,7 +46,9 @@ const FacebookBotConversations = () => {
           variant="contained"
           color="primary"
           onClick={() =>
-            navigate(`/platforms/facebook/${botId}/${params.row.id}`)
+            navigate(
+              `/platforms/facebook/${botId}/${params.row.scammerUniqueID}`
+            )
           }
         >
           View
@@ -62,7 +59,7 @@ const FacebookBotConversations = () => {
 
   const rows = conversations.map((conv, index) => ({
     id: conv.scammer_id,
-    user: conv.scammer_phone_number,
+    scammerUniqueID: conv.scammer_unique_id,
   }));
 
   if (loading) {

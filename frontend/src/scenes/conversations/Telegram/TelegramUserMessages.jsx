@@ -22,7 +22,7 @@ const TAB_EXTRACTED_INFORMATION = 2;
  * @returns {JSX.Element} The TelegramUserMessages component.
  */
 const TelegramUserMessages = () => {
-  const { botId, userId } = useParams();
+  const { botId, scammerUniqueId } = useParams();
   const [messages, setMessages] = useState([]);
   const [files, setFiles] = useState([]);
   const [extractedInformation, setExtractedInformation] = useState([]);
@@ -40,7 +40,7 @@ const TelegramUserMessages = () => {
       const messagesData = await getBotConversationMessages(
         "telegram",
         botId,
-        userId
+        scammerUniqueId
       );
       // Extract files from messages
       setMessages(messagesData);
@@ -69,7 +69,7 @@ const TelegramUserMessages = () => {
       const extractedInformation = await getBotConversationExtractedInformation(
         "telegram",
         botId,
-        userId
+        scammerUniqueId
       );
       // Set extracted information state
       setExtractedInformation(extractedInformation);
@@ -84,7 +84,7 @@ const TelegramUserMessages = () => {
   useEffect(() => {
     fetchMessages();
     fetchExtractedInformation();
-  }, [botId, userId]);
+  }, [botId, scammerUniqueId]);
 
   const handleRefresh = () => {
     setLoading(true);
@@ -135,7 +135,7 @@ const TelegramUserMessages = () => {
   return (
     <Box margin="20px" width="80%">
       <Header
-        title={`Messages with ${userId}`}
+        title={`Messages with ${scammerUniqueId}`}
         subtitle="Conversation details"
       />
       <Button

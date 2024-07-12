@@ -318,11 +318,11 @@ class BotConversations(Resource):
             print(f"Error occurred: {e}")
             return {"error": "Internal Server Error"}, 500
 
-@ns_messages.route('/api/<platform>/bots/<bot_id>/conversations/<scammer_id>')
+@ns_messages.route('/api/<platform>/bots/<bot_id>/conversations/<scammer_unique_id>')
 class BotConversationMessages(Resource):
     @ns_messages.doc('list_messages')
     @ns_messages.marshal_list_with(message_model)
-    def get(self, platform, bot_id, scammer_id):
+    def get(self, platform, bot_id, scammer_unique_id):
         try:
             platform_mapping = {
                 'facebook': 'Facebook',
@@ -333,7 +333,12 @@ class BotConversationMessages(Resource):
             if not platform_name:
                 return {'error': 'Invalid platform'}, 400
 
-            conversation = Conversation.query.filter_by(bot_id=bot_id, platform=platform_name, scammer_id=scammer_id).first()
+            conversation = (
+                db.session.query(Conversation)
+                .join(Scammer, Conversation.scammer_id == Scammer.id)
+                .filter(Conversation.bot_id == bot_id, Conversation.platform == platform_name, Scammer.unique_id == scammer_unique_id)
+                .first()
+            )
             if not conversation:
                 return {"error": "Conversation not found"}, 404
             
@@ -352,10 +357,10 @@ class BotConversationMessages(Resource):
             print(f"Error occurred: {e}")
             return {"error": "Internal Server Error"}, 500
         
-@ns_messages.route('/api/<platform>/bots/<bot_id>/conversations/<scammer_id>/extracted_information')
+@ns_messages.route('/api/<platform>/bots/<bot_id>/conversations/<scammer_unique_id>/extracted_information')
 class BotConversationInformation(Resource):
     @ns_messages.doc('get_conversation_info')
-    def get(self, platform, bot_id, scammer_id):
+    def get(self, platform, bot_id, scammer_unique_id):
         try:
             platform_mapping = {
                 'facebook': 'Facebook',
@@ -366,11 +371,16 @@ class BotConversationInformation(Resource):
             if not platform_name:
                 return {'error': 'Invalid platform'}, 400
             
-            conversation_id = Conversation.query.filter_by(bot_id=bot_id, platform=platform_name, scammer_id=scammer_id).first().id
-            if not conversation_id:
+            conversation = (
+                db.session.query(Conversation)
+                .join(Scammer, Conversation.scammer_id == Scammer.id)
+                .filter(Conversation.bot_id == bot_id, Conversation.platform == platform_name, Scammer.unique_id == scammer_unique_id)
+                .first()
+            )
+            if not conversation:
                 return {"error": "Conversation not found"}, 404
             
-            extracted_information = ExtractedInformation.query.filter_by(conversation_id=conversation_id).all()
+            extracted_information = ExtractedInformation.query.filter_by(conversation_id=conversation.id).all()
             return [info.serialize() for info in extracted_information]
         except Exception as e:
             print(f"Error occurred: {e}")
@@ -508,15 +518,15 @@ class ReceiveExtractedInformation(Resource):
         if not scammer:
             return {'status': 'error', 'message': 'Scammer not found'}, 404
         
-        conversation_id = Conversation.query.filter_by(
+        conversation = Conversation.query.filter_by(
             bot_id=bot.id,
             platform=platform,
-            scammer_id=scammer.id).first().id
-        if not conversation_id:
+            scammer_id=scammer.id).first()
+        if not conversation:
             return {'status': 'error', 'message': 'Conversation not found'}, 404
         
         new_info = ExtractedInformation(
-            conversation_id=conversation_id,
+            conversation_id=conversation.id,
             key=key,
             value=value
         )
@@ -618,27 +628,33 @@ class RecentMessages(Resource):
             if not platform_class:
                 return {'error': 'Unsupported platform'}, 400
             
-            # Join the platform-specific messages with conversations
+            # Join the platform-specific messages with conversations and scammer
             messages = (
                 db.session.query(platform_class)
                 .join(Conversation, Conversation.id == platform_class.conversation_id)
+                .join(Scammer, Scammer.id == Conversation.scammer_id)
                 .order_by(platform_class.message_timestamp.desc())
                 .limit(5)
                 .all()
             )
+
+            
             
             # Serialize the messages along with conversation details
             response = []
             for msg in messages:
                 # Get the conversation related to the message
                 conversation = Conversation.query.get(msg.conversation_id)
+                # Get the scammer related to the conversation
+                scammer = Scammer.query.get(conversation.scammer_id)
                 if conversation:
                     # Add conversation details to the message serialization
                     message_data = msg.serialize()
                     message_data.update({
                         'bot_id': conversation.bot_id,
                         'platform': conversation.platform,
-                        'scammer_id': conversation.scammer_id
+                        'scammer_id': conversation.scammer_id,
+                        'scammer_unique_id': scammer.unique_id
                     })
                     response.append(message_data)
             
