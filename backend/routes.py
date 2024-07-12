@@ -44,16 +44,16 @@ receive_message_model = ns_messages.model('ReceiveMessage', {
     'direction': fields.String(required=True, description='The direction of the message, either incoming or outgoing', example='outgoing'),
     'message_id': fields.List(fields.String(description='The unique identifier of the message', example='1')),
     'message_text': fields.List(fields.String(description='The message content', example='This is a test message using the API in flask-restx')),
-    'message_timestamp': fields.List(fields.String(example='2024-07-02T12:30:44.123456')),
+    'message_timestamp': fields.List(fields.String(example='2024-07-02T12:30:44')),
 
     'file_path': fields.List(fields.String(description='The path to the file if the message contains a file', example='files/Facebook/1/1/cat.jpg')),
     'file_type': fields.List(fields.String(description='The MIME type of the file if the message contains a file', example='image/jpeg')),
 
     'response_id': fields.String(description='The unique identifier of the response message', example='2'),
     'response_text': fields.String(description='The response message content', example='This is a test response message using the API in flask-restx'),
-    'response_bef_generation_timestamp': fields.String(description='The timestamp before the response is generated', example='2024-07-02T12:31:44.123456'),
-    'response_aft_generation_timestamp': fields.String(description='The timestamp after the response is generated', example='2024-07-02T12:32:44.123456'),
-    'response_timestamp': fields.String(description='The timestamp when the response is sent', example='2024-07-02T12:33:44.123456'),
+    'response_bef_generation_timestamp': fields.String(description='The timestamp before the response is generated', example='2024-07-02T12:31:44'),
+    'response_aft_generation_timestamp': fields.String(description='The timestamp after the response is generated', example='2024-07-02T12:32:25'),
+    'response_timestamp': fields.String(description='The timestamp when the response is sent', example='2024-07-02T12:33:56'),
     'response_status': fields.String(description='The status of the response, either Sending, Sent or Failed', example='Sent'),
 })
 
@@ -462,7 +462,7 @@ class ReceiveMessage(Resource):
                     direction=direction,
                     message_id=message_ids[i],
                     message_text=message_texts[i],
-                    message_timestamp=datetime.strptime(message_timestamps[i], '%Y-%m-%dT%H:%M:%S.%f'),
+                    message_timestamp=datetime.strptime(message_timestamps[i], '%Y-%m-%dT%H:%M:%S'),
 
                     file_path=file_paths[i] if file_paths else None,
                     file_type=file_types[i] if file_types else None
@@ -474,11 +474,11 @@ class ReceiveMessage(Resource):
                 direction=direction,
                 message_id=response_id,
                 message_text=response_text,
-                message_timestamp=datetime.strptime(response_timestamp, '%Y-%m-%dT%H:%M:%S.%f'),
+                message_timestamp=datetime.strptime(response_timestamp, '%Y-%m-%dT%H:%M:%S'),
                 
                 message_ids_responded_to="" if not message_ids else ", ".join(message_ids),
-                response_bef_generation_timestamp=datetime.strptime(response_bef_generation_timestamp, '%Y-%m-%dT%H:%M:%S.%f'),
-                response_aft_generation_timestamp=datetime.strptime(response_aft_generation_timestamp, '%Y-%m-%dT%H:%M:%S.%f'),
+                response_bef_generation_timestamp=datetime.strptime(response_bef_generation_timestamp, '%Y-%m-%dT%H:%M:%S'),
+                response_aft_generation_timestamp=datetime.strptime(response_aft_generation_timestamp, '%Y-%m-%dT%H:%M:%S'),
                 response_status=response_status
             )
             db.session.add(message)
