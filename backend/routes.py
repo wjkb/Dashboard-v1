@@ -30,8 +30,8 @@ download_zip_model = ns_utils.model('DownloadZip', {
 })
 
 receive_extracted_information_model = ns_messages.model('ReceiveExtractedInformation', {
-    'bot_phone_number': fields.String(required=True, description='The bot phone number', example='90217777'),
-    'scammer_phone_number': fields.String(required=True, description='The scammer phone number', example='80216666'),
+    'bot_id': fields.String(required=True, description='The bot phone number', example='90217777'),
+    'scammer_id': fields.String(required=True, description='The scammer phone number', example='80216666'),
     'platform': fields.String(required=True, description='The platform the bot is talking on', example='Facebook'),
     'key': fields.String(required=True, description='The key of the extracted information', example='Name'),
     'value': fields.String(required=True, description='The value of the extracted information', example='John Doe'),
@@ -39,8 +39,8 @@ receive_extracted_information_model = ns_messages.model('ReceiveExtractedInforma
 
 receive_message_model = ns_messages.model('ReceiveMessage', {
     'platform': fields.String(required=True, description='The platform the bot is talking on', example='WhatsApp'),
-    'bot_phone_number': fields.String(required=True, description='The bot phone number', example='90217777'),
-    'scammer_phone_number': fields.String(required=True, description='The scammer phone number', example='80216666'),
+    'bot_id': fields.String(required=True, description='The bot phone number', example='90217777'),
+    'scammer_id': fields.String(required=True, description='The scammer phone number', example='80216666'),
     'direction': fields.String(required=True, description='The direction of the message, either incoming or outgoing', example='outgoing'),
     'message_id': fields.List(fields.String(description='The unique identifier of the message', example='1')),
     'message_text': fields.List(fields.String(description='The message content', example='This is a test message using the API in flask-restx')),
@@ -69,9 +69,9 @@ message_model = ns_messages.model('Message', {
 
 conversation_model = ns_conversations.model('Conversation', {
     'id': fields.Integer(readOnly=True, description='The conversation unique identifier'),
-    'bot_id': fields.Integer(required=True),
+    'bot_id': fields.String(required=True),
     'scammer_id': fields.Integer(required=True),
-    'scammer_phone_number': fields.String(required=True),
+    'scammer_unique_id': fields.String(required=True),
     'platform': fields.String(required=True),
     'facebook_messages': fields.List(fields.Nested(message_model)),
     'whatsapp_messages': fields.List(fields.Nested(message_model)),
@@ -79,7 +79,7 @@ conversation_model = ns_conversations.model('Conversation', {
 })
 
 bot_model_2 = ns_bots.model('Bot2', {
-    'phone': fields.String(required=True, example='90217777'),
+    'id': fields.String(required=True, example='90217777'),
     'name': fields.String(required=True, example='John Doe'),
     'email': fields.String(example='johndoe@gmail.com'),
     'persona': fields.String(required=True, example='Middle-aged man'),
@@ -88,9 +88,8 @@ bot_model_2 = ns_bots.model('Bot2', {
 })
 
 bot_model_1 = ns_bots.model('Bot1', {
-    'id': fields.Integer(readOnly=True, description='The bot unique identifier'),
+    'id': fields.String(required=True, description='The bot phone number is used as the unique identifier'),
     'active': fields.Boolean(required=True, default=True),
-    'phone': fields.String(required=True),
     'name': fields.String(required=True),
     'email': fields.String(),
     'persona': fields.String(required=True),
@@ -130,7 +129,7 @@ class CreateOrReadBots(Resource):
                     return {"error": f"Missing required field: {field}"}, 400
 
             new_bot = Bot(
-                phone=data['phone'],
+                id=data['phone'],
                 name=data['name'],
                 email=data.get('email', ''),  # Optional field
                 persona=data['persona'],
@@ -151,7 +150,7 @@ class CreateOrReadBots(Resource):
             print(f"Error occurred: {e}")
             return {"error": "Internal Server Error"}, 500
 
-@ns_bots.route('/api/bots/<int:bot_id>')
+@ns_bots.route('/api/bots/<bot_id>')
 class UpdateOrDeleteBot(Resource):
     @ns_bots.doc('update_bot')
     @ns_bots.expect(bot_model_2)
@@ -165,7 +164,7 @@ class UpdateOrDeleteBot(Resource):
             data = request.json
 
             # Update bot details
-            bot.phone = data.get('phone', bot.phone)
+            bot.id = data.get('phone', bot.id)
             bot.name = data.get('name', bot.name)
             bot.email = data.get('email', bot.email)
             bot.persona = data.get('persona', bot.persona)
@@ -224,7 +223,7 @@ class UpdateOrDeleteBot(Resource):
             print(f"Error occurred: {e}")
             return {"error": "Internal Server Error"}, 500
         
-@ns_bots.route('/api/bots/<int:bot_id>/deactivate')
+@ns_bots.route('/api/bots/<bot_id>/deactivate')
 class DeactivateBot(Resource):
     @ns_bots.doc('deactivate_bot')
     def put(self, bot_id):
@@ -239,7 +238,7 @@ class DeactivateBot(Resource):
         except Exception as e:
             return {"error": "Internal Server Error"}, 500
         
-@ns_bots.route('/api/bots/<int:bot_id>/activate')
+@ns_bots.route('/api/bots/<bot_id>/activate')
 class ActivateBot(Resource):
     @ns_bots.doc('activate_bot')
     def put(self, bot_id):
@@ -271,13 +270,19 @@ class PlatformBots(Resource):
             if not platform_name:
                 return {'error': 'Invalid platform'}, 400
             
-            bots = Bot.query.join(Platform).filter(Platform.platform == platform_name).all()
+            bots = (
+                db.session.query(Bot)
+                .join(Platform, Platform.bot_id == Bot.id)
+                .filter(Platform.platform == platform_name)
+                .all()
+            )
+
             return [bot.serialize() for bot in bots]
         except Exception as e:
             print(f"Error occurred: {e}")
             return {"error": "Internal Server Error"}, 500
 
-@ns_conversations.route('/api/<platform>/bots/<int:bot_id>/conversations')
+@ns_conversations.route('/api/<platform>/bots/<bot_id>/conversations')
 class BotConversations(Resource):
     @ns_conversations.doc('list_conversations')
     @ns_conversations.marshal_list_with(conversation_model)
@@ -295,16 +300,16 @@ class BotConversations(Resource):
 
             # Get all conversations related to the bot, and join scammer phone number to the response
             conversations = (
-                db.session.query(Conversation, Scammer.phone)
+                db.session.query(Conversation, Scammer.unique_id)
                 .join(Scammer, Conversation.scammer_id == Scammer.id)
                 .filter(Conversation.bot_id == bot_id, Conversation.platform == platform_name)
                 .all()
             )
 
             response = []
-            for conv, scammer_phone in conversations:
+            for conv, scammer_unique_id in conversations:
                 conv_data = conv.serialize()
-                conv_data['scammer_phone_number'] = scammer_phone
+                conv_data['scammer_unique_id'] = scammer_unique_id
                 response.append(conv_data)
 
             return response
@@ -313,7 +318,7 @@ class BotConversations(Resource):
             print(f"Error occurred: {e}")
             return {"error": "Internal Server Error"}, 500
 
-@ns_messages.route('/api/<platform>/bots/<int:bot_id>/conversations/<int:scammer_id>')
+@ns_messages.route('/api/<platform>/bots/<bot_id>/conversations/<scammer_id>')
 class BotConversationMessages(Resource):
     @ns_messages.doc('list_messages')
     @ns_messages.marshal_list_with(message_model)
@@ -347,7 +352,7 @@ class BotConversationMessages(Resource):
             print(f"Error occurred: {e}")
             return {"error": "Internal Server Error"}, 500
         
-@ns_messages.route('/api/<platform>/bots/<int:bot_id>/conversations/<int:scammer_id>/extracted_information')
+@ns_messages.route('/api/<platform>/bots/<bot_id>/conversations/<scammer_id>/extracted_information')
 class BotConversationInformation(Resource):
     @ns_messages.doc('get_conversation_info')
     def get(self, platform, bot_id, scammer_id):
@@ -388,8 +393,8 @@ class ReceiveMessage(Resource):
         if not platform:
             return {'status': 'error', 'message': 'Unsupported platform'}, 400
 
-        bot_phone_number = data['bot_phone_number']
-        scammer_phone_number = data['scammer_phone_number']
+        bot_id = data['bot_id']
+        scammer_unique_id = data['scammer_id']
         direction = data['direction']
         message_ids = data.get('message_id', [])
         message_texts = data.get('message_text', [])
@@ -405,14 +410,14 @@ class ReceiveMessage(Resource):
         response_status = data.get('response_status', None)
 
         # Check if bot exists, if not return an error
-        bot = Bot.query.filter_by(phone=bot_phone_number).first()
+        bot = Bot.query.get(bot_id)
         if not bot:
             return {'status': 'error', 'message': 'Bot not found'}, 404
         
         # Check if scammer exists, if not create a new scammer
-        scammer = Scammer.query.filter_by(phone=scammer_phone_number, platform=platform).first()
+        scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform).first()
         if not scammer:
-            scammer = Scammer(phone=scammer_phone_number, platform=platform)
+            scammer = Scammer(unique_id=scammer_unique_id, platform=platform)
             db.session.add(scammer)
             db.session.commit()
 
@@ -488,18 +493,18 @@ class ReceiveExtractedInformation(Resource):
         if not platform:
             return {'status': 'error', 'message': 'Unsupported platform'}, 400
         
-        bot_phone_number = data['bot_phone_number']
-        scammer_phone_number = data['scammer_phone_number']
+        bot_id = data['bot_id']
+        scammer_unique_id = data['scammer_id']
         key = data['key']
         value = data['value']
 
         # Check if bot exists, if not return an error
-        bot = Bot.query.filter_by(phone=bot_phone_number).first()
+        bot = Bot.query.get(bot_id)
         if not bot:
             return {'status': 'error', 'message': 'Bot not found'}, 404
         
         # Check if scammer exists, if not return an error
-        scammer = Scammer.query.filter_by(phone=scammer_phone_number, platform=platform).first()
+        scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform).first()
         if not scammer:
             return {'status': 'error', 'message': 'Scammer not found'}, 404
         
@@ -617,7 +622,7 @@ class RecentMessages(Resource):
             messages = (
                 db.session.query(platform_class)
                 .join(Conversation, Conversation.id == platform_class.conversation_id)
-                .order_by(platform_class.timestamp.desc())
+                .order_by(platform_class.message_timestamp.desc())
                 .limit(5)
                 .all()
             )

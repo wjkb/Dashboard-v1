@@ -31,22 +31,22 @@ with app.app_context():
         ('90000009', 'Soh Wei Lun', 'sohweilun@gmail.com', 'Young man', 'Llama 3')
     ]
 
-    for phone, name, email, persona, model in bots_data:
-        bot = Bot(phone=phone, name=name, email=email, persona=persona, model=model)
+    for id, name, email, persona, model in bots_data:
+        bot = Bot(id=id, name=name, email=email, persona=persona, model=model)
         db.session.add(bot)
     db.session.commit()
 
     # Insert bot platforms
     platforms_data = [
-        (1, 'Facebook'), (1, 'WhatsApp'),
-        (2, 'WhatsApp'), (2, 'Telegram'),
-        (3, 'Facebook'),
-        (4, 'Facebook'), (4, 'Telegram'),
-        (5, 'Facebook'), (5, 'WhatsApp'),
-        (6, 'WhatsApp'), (6, 'Telegram'),
-        (7, 'Facebook'),
-        (8, 'Telegram'),
-        (9, 'Facebook'), (9, 'WhatsApp'), (9, 'Telegram')
+        (90000001, 'Facebook'), (90000001, 'WhatsApp'),
+        (90000002, 'WhatsApp'), (90000002, 'Telegram'),
+        (90000003, 'Facebook'),
+        (90000004, 'Facebook'), (90000004, 'Telegram'),
+        (90000005, 'Facebook'), (90000005, 'WhatsApp'),
+        (90000006, 'WhatsApp'), (90000006, 'Telegram'),
+        (90000007, 'Facebook'),
+        (90000008, 'Telegram'),
+        (90000009, 'Facebook'), (90000009, 'WhatsApp'), (90000009, 'Telegram')
     ]
 
     for bot_id, platform in platforms_data:
@@ -56,23 +56,23 @@ with app.app_context():
 
     # Insert scammers
     scammers_data = [
-        ('90000010', 'Facebook'),
-        ('90000011', 'Facebook'),
+        ('facebookid_0001', 'Facebook'),
+        ('facebookid_0002', 'Facebook'),
         ('90000012', 'WhatsApp'),
         ('90000013', 'WhatsApp'),
-        ('90000014', 'Telegram'),
-        ('90000015', 'Telegram')
+        ('telegramid_0001', 'Telegram'),
+        ('telegramid_0002', 'Telegram')
     ]
 
-    for phone, platform in scammers_data:
-        scammer = Scammer(phone=phone, platform=platform)
+    for unique_id, platform in scammers_data:
+        scammer = Scammer(unique_id=unique_id, platform=platform)
         db.session.add(scammer)
 
     # Insert conversations
     conversations_data = [
-        (1, 'Facebook', 1), (1, 'Facebook', 2),
-        (1, 'WhatsApp', 3), (1, 'WhatsApp', 4),
-        (2, 'Telegram', 5), (2, 'Telegram', 6),
+        (90000001, 'Facebook', 1), (90000001, 'Facebook', 2),
+        (90000001, 'WhatsApp', 3), (90000001, 'WhatsApp', 4),
+        (90000002, 'Telegram', 5), (90000002, 'Telegram', 6),
     ]
 
     for bot_id, platform, scammer_id in conversations_data:

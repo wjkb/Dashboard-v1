@@ -4,9 +4,8 @@ import json
 db = SQLAlchemy()
 
 class Bot(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(15), primary_key=True, nullable=False)
     active = db.Column(db.Boolean, nullable=False, default=True)
-    phone = db.Column(db.String(15), nullable=False)
     name = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(255), nullable=False)
     persona = db.Column(db.String(255), nullable=False)
@@ -19,7 +18,6 @@ class Bot(db.Model):
         return {
             'id': self.id,
             'active': self.active,
-            'phone': self.phone,
             'name': self.name,
             'email': self.email,
             'persona': self.persona,
@@ -34,21 +32,21 @@ class Bot(db.Model):
 
 class Scammer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    phone = db.Column(db.String(15), nullable=True)
+    unique_id = db.Column(db.String(50), nullable=True)
     platform = db.Column(db.String(50), nullable=False)
     conversations = db.relationship('Conversation', backref='scammer', lazy=True)
 
     def serialize(self):
         return {
             'id': self.id,
-            'phone': self.phone,
+            'unique_id': self.phone,
             'platform': self.platform,
             'conversations': [conv.id for conv in self.conversations],
         }
 
 class Platform(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    bot_id = db.Column(db.Integer, db.ForeignKey('bot.id'), nullable=False)
+    bot_id = db.Column(db.String(15), db.ForeignKey('bot.id'), nullable=False)
     platform = db.Column(db.String(50), nullable=False)
 
     def serialize(self):
@@ -60,7 +58,7 @@ class Platform(db.Model):
 
 class Conversation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    bot_id = db.Column(db.Integer, db.ForeignKey('bot.id'), nullable=False)
+    bot_id = db.Column(db.String(15), db.ForeignKey('bot.id'), nullable=False)
     scammer_id = db.Column(db.Integer, db.ForeignKey('scammer.id'), nullable=False)
     platform = db.Column(db.String(50), nullable=False)
     facebook_messages = db.relationship('FacebookMessage', backref='conversation', lazy=True)
