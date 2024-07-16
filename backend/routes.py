@@ -416,8 +416,11 @@ class ReceiveMessage(Resource):
     def post(self):
         platform_mapping = {
             'facebook': 'Facebook',
+            'fb': 'Facebook',
             'whatsapp': 'WhatsApp',
-            'telegram': 'Telegram'
+            'wa': 'WhatsApp',
+            'telegram': 'Telegram',
+            'tg': 'Telegram'
         }
         
         data = request.get_json()
