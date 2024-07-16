@@ -61,10 +61,16 @@ message_model = ns_messages.model('Message', {
     'id': fields.Integer(readOnly=True, description='The message unique identifier'),
     'conversation_id': fields.Integer(required=True),
     'direction': fields.String(required=True),
+    'message_id': fields.String(),
     'message_text': fields.String(required=True),
     'message_timestamp': fields.String(required=True),
     'file_path': fields.String(),
     'file_type': fields.String(),
+
+    'message_ids_responded_to': fields.String(),
+    'response_bef_generation_timestamp': fields.String(),
+    'response_aft_generation_timestamp': fields.String(),
+    'response_status': fields.String(),
 })
 
 conversation_model = ns_conversations.model('Conversation', {
@@ -362,8 +368,14 @@ class BotConversationMessages(Resource):
             if not message_class:
                 return {"error": "Unsupported platform"}, 400
             
-            messages = message_class.query.filter_by(conversation_id=conversation.id).all()      
+            messages = (
+                db.session.query(message_class)
+                .filter_by(conversation_id=conversation.id)
+                .order_by(message_class.message_timestamp.asc())
+                .all()
+            )
             return [msg.serialize() for msg in messages]
+
         except Exception as e:
             print(f"Error occurred: {e}")
             return {"error": "Internal Server Error"}, 500
