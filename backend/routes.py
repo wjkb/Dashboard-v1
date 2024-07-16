@@ -3,7 +3,7 @@ from flask import Blueprint, request
 from flask_restx import Api, Resource, fields
 from datetime import datetime
 import json
-from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, ExtractedInformation
+from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation
 from backend.utils import save_file, create_zip
 
 # Initialize Flask-RESTx Api
@@ -35,6 +35,13 @@ receive_extracted_information_model = ns_messages.model('ReceiveExtractedInforma
     'platform': fields.String(required=True, description='The platform the bot is talking on', example='Facebook'),
     'key': fields.String(required=True, description='The key of the extracted information', example='Name'),
     'value': fields.String(required=True, description='The value of the extracted information', example='John Doe'),
+})
+
+receive_screenshot_model = ns_messages.model('ReceiveScreenshot', {
+    'bot_id': fields.String(required=True, description='The bot phone number', example='90217777'),
+    'scammer_id': fields.String(required=True, description='The scammer phone number', example='80216666'),
+    'platform': fields.String(required=True, description='The platform the bot is talking on', example='Facebook'),
+    'file_path': fields.String(required=True, description='The path to the screenshot file', example='files/Facebook/1/1/screenshot.jpg'),
 })
 
 receive_message_model = ns_messages.model('ReceiveMessage', {
@@ -509,6 +516,65 @@ class ReceiveMessage(Resource):
             )
             db.session.add(message)
         
+        db.session.commit()
+        return {'status': 'success'}, 201
+    
+@ns_messages.route('/api/screenshots')
+class ReceiveScreenshot(Resource):
+    @ns_messages.doc('add_screenshot')
+    @ns_messages.expect(receive_screenshot_model)
+    def post(self):
+        platform_mapping = {
+            'facebook': 'Facebook',
+            'fb': 'Facebook',
+            'whatsapp': 'WhatsApp',
+            'wa': 'WhatsApp',
+            'telegram': 'Telegram',
+            'tg': 'Telegram'
+        }
+            
+        data = request.get_json()
+
+        platform = platform_mapping.get(data['platform'].lower())
+        if not platform:
+            return {'status': 'error', 'message': 'Unsupported platform'}, 400
+        
+        bot_id = data['bot_id']
+        scammer_unique_id = data['scammer_id']
+        file_path = data['file_path']
+
+        # Check if bot exists, if not return an error
+        bot = Bot.query.get(bot_id)
+        if not bot:
+            return {'status': 'error', 'message': 'Bot not found'}, 404
+        
+        # Check if scammer exists, if not create a new scammer
+        scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform).first()
+        if not scammer:
+            scammer = Scammer(unique_id=scammer_unique_id, platform=platform)
+            db.session.add(scammer)
+            db.session.commit()
+
+        # Check if conversation exists, if not create a new conversation
+        conversation = Conversation.query.filter_by(
+            bot_id=bot.id,
+            platform=platform,
+            scammer_id=scammer.id
+        ).first()
+        if not conversation:
+            conversation = Conversation(
+                bot_id=bot.id,
+                platform=platform,
+                scammer_id=scammer.id
+            )
+            db.session.add(conversation)
+            db.session.commit()
+
+        new_screenshot = MessageScreenshots(
+            conversation_id=conversation.id,
+            file_path=file_path
+        )
+        db.session.add(new_screenshot)
         db.session.commit()
         return {'status': 'success'}, 201
 

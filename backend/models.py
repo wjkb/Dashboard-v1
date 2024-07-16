@@ -64,6 +64,7 @@ class Conversation(db.Model):
     facebook_messages = db.relationship('FacebookMessage', backref='conversation', lazy=True)
     whatsapp_messages = db.relationship('WhatsappMessage', backref='conversation', lazy=True)
     telegram_messages = db.relationship('TelegramMessage', backref='conversation', lazy=True)
+    message_screenshots = db.relationship('MessageScreenshots', backref='conversation', lazy=True)
 
     def serialize(self):
         return {
@@ -150,6 +151,18 @@ class TelegramMessage(db.Model):
             'direction': self.direction,
             'file_path': self.file_path,
             'file_type': self.file_type
+        }
+    
+class MessageScreenshots(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
+    file_path = db.Column(db.String(255), nullable=False)
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'conversation_id': self.conversation_id,
+            'file_path': self.file_path
         }
     
 class ExtractedInformation(db.Model):
