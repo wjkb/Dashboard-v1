@@ -14,15 +14,10 @@ import {
 import { Formik } from "formik";
 import * as yup from "yup";
 
-const phoneRegExp = /^(6|8|9)\d{7}$/;
-
 const platformNames = ["Facebook", "WhatsApp", "Telegram"];
 
 const botSchema = yup.object().shape({
-  phone: yup
-    .string()
-    .required("required")
-    .matches(phoneRegExp, "Invalid phone number"),
+  phone: yup.string().required("required"),
   name: yup.string().required("required"),
   email: yup.string().email("Invalid email"),
   persona: yup.string().required("required"),

@@ -26,15 +26,10 @@ const initialValues = {
   platforms: [],
 };
 
-const phoneRegExp = /^(6|8|9)\d{7}$/;
-
 const platformNames = ["Facebook", "WhatsApp", "Telegram"];
 
 const botScheme = yup.object().shape({
-  phone: yup
-    .string()
-    .required("required")
-    .matches(phoneRegExp, "Invalid phone number"),
+  phone: yup.string().required("required"),
   name: yup.string().required("required"),
   email: yup.string().email("Invalid email"),
   persona: yup.string().required("required"),
