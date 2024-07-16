@@ -43,10 +43,9 @@ const WhatsappBots = () => {
   }, []);
 
   const columns = [
-    { field: "id", headerName: "ID", flex: 0.5 },
     {
-      field: "phone",
-      headerName: "Phone Number",
+      field: "id",
+      headerName: "ID/Phone Number",
       flex: 1,
       cellClassName: "phone-column--cell",
     },

@@ -34,17 +34,26 @@ function App() {
               <Route path="/platforms" element={<PlatformSidebar />}>
                 <Route path="facebook" element={<FacebookBots />}>
                   <Route path=":botId" element={<FacebookBotConversations />}>
-                    <Route path=":userId" element={<FacebookUserMessages />} />
+                    <Route
+                      path=":scammerUniqueId"
+                      element={<FacebookUserMessages />}
+                    />
                   </Route>
                 </Route>
                 <Route path="whatsapp" element={<WhatsappBots />}>
                   <Route path=":botId" element={<WhatsappBotConversations />}>
-                    <Route path=":userId" element={<WhatsappUserMessages />} />
+                    <Route
+                      path=":scammerUniqueId"
+                      element={<WhatsappUserMessages />}
+                    />
                   </Route>
                 </Route>
                 <Route path="telegram" element={<TelegramBots />}>
                   <Route path=":botId" element={<TelegramBotConversations />}>
-                    <Route path=":userId" element={<TelegramUserMessages />} />
+                    <Route
+                      path=":scammerUniqueId"
+                      element={<TelegramUserMessages />}
+                    />
                   </Route>
                 </Route>
               </Route>
