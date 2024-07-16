@@ -101,7 +101,7 @@ class WhatsappMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
     direction = db.Column(db.String(10), nullable=False)
-    message_id = db.Column(db.String(255), nullable=False)
+    message_id = db.Column(db.String(255), nullable=True)
     message_text = db.Column(db.Text, nullable=True)
     message_timestamp = db.Column(db.DateTime, nullable=True)
 
