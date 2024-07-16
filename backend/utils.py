@@ -19,14 +19,16 @@ def save_file(platform, bot_id, user, file):
     return file_path.replace('\\', '/'), file_type
 
 def create_zip(file_path_list):
-    zip_filename = 'files/downloaded_files.zip'
-    zip_filepath = os.path.join(current_app.root_path, zip_filename)
+    parent_directory = os.path.dirname(current_app.root_path)
+    zip_filename = 'media/downloaded_files.zip'
+    zip_filepath = os.path.join(parent_directory, zip_filename)
 
     with zipfile.ZipFile(zip_filepath, 'w') as zipf:
-        for file_path in file_path_list:
-            if os.path.exists(file_path):
-                zipf.write(file_path, os.path.basename(file_path))
+        for relative_file_path in file_path_list:
+            absolute_file_path = os.path.join(parent_directory, relative_file_path)
+            if os.path.exists(absolute_file_path):
+                zipf.write(absolute_file_path, os.path.basename(absolute_file_path))
             else:
-                print(f"File {file_path} does not exist")
+                print(f"File {absolute_file_path} does not exist")
     
     return zip_filename

@@ -14,7 +14,7 @@ def create_app(config_name='default'):
     app = Flask(__name__)
     CORS(app)
     app.config.from_object(config[config_name])
-    app.config['UPLOAD_FOLDER'] = 'files/'
+    # app.config['UPLOAD_FOLDER'] = 'files/'
 
     db.init_app(app)
 
@@ -24,14 +24,14 @@ def create_app(config_name='default'):
         db.create_all()
 
     # Serve files from the files directory with conditional download headers
-    @app.route('/files/<path:filename>')
-    def serve_files(filename):
-        directory = os.path.join(app.root_path, 'files')
-        response = make_response(send_from_directory(directory, filename))
+    @app.route('/<path:filepath>')
+    def serve_files(filepath):
+        parent_directory = os.path.dirname(app.root_path)
+        response = make_response(send_from_directory(parent_directory, filepath))
         # Check the 'download' query parameter
         download = request.args.get('download')
         if download == 'true':
-            response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+            response.headers['Content-Disposition'] = f'attachment; filename={filepath}'
         return response
     
     # Send message to backend for database updating
