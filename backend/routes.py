@@ -151,7 +151,18 @@ class CreateOrReadBots(Resource):
             return {"error": "Internal Server Error"}, 500
 
 @ns_bots.route('/api/bots/<bot_id>')
-class UpdateOrDeleteBot(Resource):
+class GetorUpdateOrDeleteBot(Resource):
+    @ns_bots.doc('get_bot')
+    @ns_bots.marshal_with(bot_model_1)
+    def get(self, bot_id):
+        try:
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {"error": "Bot not found"}, 404
+            return bot.serialize(), 200
+        except Exception as e:
+            return {"error": "Internal Server Error"}, 500
+
     @ns_bots.doc('update_bot')
     @ns_bots.expect(bot_model_2)
     @ns_bots.marshal_with(bot_model_1, code=200)
