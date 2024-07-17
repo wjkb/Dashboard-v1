@@ -386,7 +386,39 @@ class BotConversationMessages(Resource):
         except Exception as e:
             print(f"Error occurred: {e}")
             return {"error": "Internal Server Error"}, 500
-        
+
+@ns_messages.route('/api/<platform>/bots/<bot_id>/conversations/<scammer_unique_id>/screenshots')
+class BotConversationScreenshots(Resource):
+    @ns_messages.doc('get_screenshots')
+    def get(self, platform, bot_id, scammer_unique_id):
+        try:
+            platform_mapping = {
+                'facebook': 'Facebook',
+                'fb': 'Facebook',
+                'whatsapp': 'WhatsApp',
+                'wa': 'WhatsApp',
+                'telegram': 'Telegram',
+                'tg': 'Telegram'
+            }
+            platform_name = platform_mapping.get(platform.lower())
+            if not platform_name:
+                return {'error': 'Invalid platform'}, 400
+            
+            conversation = (
+                db.session.query(Conversation)
+                .join(Scammer, Conversation.scammer_id == Scammer.id)
+                .filter(Conversation.bot_id == bot_id, Conversation.platform == platform_name, Scammer.unique_id == scammer_unique_id)
+                .first()
+            )
+            if not conversation:
+                return {"error": "Conversation not found"}, 404
+            
+            screenshots = MessageScreenshots.query.filter_by(conversation_id=conversation.id).all()
+            return [screenshot.serialize() for screenshot in screenshots]
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return {"error": "Internal Server Error"}, 500
+
 @ns_messages.route('/api/<platform>/bots/<bot_id>/conversations/<scammer_unique_id>/extracted_information')
 class BotConversationInformation(Resource):
     @ns_messages.doc('get_conversation_info')

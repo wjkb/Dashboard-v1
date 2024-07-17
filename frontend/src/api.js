@@ -75,6 +75,24 @@ export const getBotConversationExtractedInformation = async (
   }
 };
 
+export const getBotConversationScreenshots = async (
+  platform,
+  botId,
+  scammerUniqueId
+) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/${platform}/bots/${botId}/conversations/${scammerUniqueId}/screenshots`
+    );
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error fetching data: ${error.message}`);
+  }
+};
+
 // POST APIs
 export const createBot = async (botData) => {
   try {

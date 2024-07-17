@@ -4,17 +4,20 @@ import { useParams } from "react-router-dom";
 import {
   getBotConversationMessages,
   getBotConversationExtractedInformation,
+  getBotConversationScreenshots,
 } from "../../../api";
 import Header from "../../../components/Header";
 import MessagesTab from "../MessagesTab";
 import FilesTab from "../FilesTab";
 import ExtractedInformationTab from "../ExtractedInformationTab";
+import ScreenshotsTab from "../ScreenshotsTab";
 import { tokens } from "../../../theme";
 
 // Constants for tab values
 const TAB_MESSAGES = 0;
 const TAB_FILES = 1;
 const TAB_EXTRACTED_INFORMATION = 2;
+const TAB_SCREENSHOTS = 3;
 
 /**
  * Component to display messages and files of a WhatsApp bot conversation with a specific user.
@@ -25,6 +28,7 @@ const WhatsappUserMessages = () => {
   const { botId, scammerUniqueId } = useParams();
   const [messages, setMessages] = useState([]);
   const [files, setFiles] = useState([]);
+  const [screenshots, setScreenshots] = useState([]);
   const [extractedInformation, setExtractedInformation] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -73,7 +77,24 @@ const WhatsappUserMessages = () => {
       );
       // Set extracted information state
       setExtractedInformation(extractedInformation);
-      console.log(extractedInformation);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Fetches screenshots from the API for the current bot and user.
+   */
+  const fetchScreenshots = async () => {
+    try {
+      const screenshots = await getBotConversationScreenshots(
+        "whatsapp",
+        botId,
+        scammerUniqueId
+      );
+      setScreenshots(screenshots);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -84,6 +105,7 @@ const WhatsappUserMessages = () => {
   useEffect(() => {
     fetchMessages();
     fetchExtractedInformation();
+    fetchScreenshots();
   }, [botId, scammerUniqueId]);
 
   const handleRefresh = () => {
@@ -128,9 +150,11 @@ const WhatsappUserMessages = () => {
       />
     ) : tabValue === TAB_FILES ? (
       <FilesTab files={files} onViewFile={handleViewFile} downloadable />
-    ) : (
+    ) : tabValue === TAB_EXTRACTED_INFORMATION ? (
       <ExtractedInformationTab extractedInformation={extractedInformation} />
-    );
+    ) : tabValue === TAB_SCREENSHOTS ? (
+      <ScreenshotsTab screenshots={screenshots} />
+    ) : null;
 
   return (
     <Box margin="20px" width="80%">
@@ -151,6 +175,7 @@ const WhatsappUserMessages = () => {
           <Tab label="Messages" />
           <Tab label="Files" />
           <Tab label="Extracted Information" />
+          <Tab label="Screenshots" />
         </Tabs>
         {shownTab}
       </Box>
