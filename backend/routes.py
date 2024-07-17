@@ -489,16 +489,16 @@ class ReceiveMessage(Resource):
 
         # Create message object
         if direction == 'incoming':
-            for i in range(len(message_ids)):
+            max_len = max(len(message_ids), len(file_paths))
+            for i in range(max_len):
                 message = message_class(
                     conversation_id=conversation.id,
                     direction=direction,
-                    message_id=message_ids[i],
-                    message_text=message_texts[i],
-                    message_timestamp=datetime.strptime(message_timestamps[i], '%Y-%m-%dT%H:%M:%S'),
-
-                    file_path=file_paths[i] if file_paths else None,
-                    file_type=file_types[i] if file_types else None
+                    message_id=message_ids[i] if i < len(message_ids) else None,
+                    message_text=message_texts[i] if i < len(message_texts) else None,
+                    message_timestamp=datetime.strptime(message_timestamps[i], '%Y-%m-%dT%H:%M:%S') if i < len(message_timestamps) else None,
+                    file_path=file_paths[i] if i < len(file_paths) else None,
+                    file_type=file_types[i] if i < len(file_types) else None
                 )
                 db.session.add(message)
         elif direction == 'outgoing':
