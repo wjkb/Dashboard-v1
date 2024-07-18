@@ -28,6 +28,12 @@ import { tokens } from "../../theme";
  * @returns {JSX.Element} - MessagesTab component.
  */
 const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
+  const filteredMessages = messages.filter(
+    (message) =>
+      message.response_status === null ||
+      message.response_status.toLowerCase() === "sent"
+  );
+
   const theme = useTheme();
   const colors = tokens;
 
@@ -162,7 +168,7 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
   return (
     <Box overflow="auto">
       <List>
-        {messages.map((msg, index) => (
+        {filteredMessages.map((msg, index) => (
           <ListItem
             key={index}
             ref={(el) => (messageRefs.current[msg.id] = el)}
