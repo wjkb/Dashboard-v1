@@ -56,12 +56,12 @@ receive_message_model = ns_messages.model('ReceiveMessage', {
     'file_path': fields.List(fields.String(description='The path to the file if the message contains a file', example='files/Facebook/1/1/cat.jpg')),
     'file_type': fields.List(fields.String(description='The MIME type of the file if the message contains a file', example='image/jpeg')),
 
-    'response_id': fields.String(description='The unique identifier of the response message', example='2'),
-    'response_text': fields.String(description='The response message content', example='This is a test response message using the API in flask-restx'),
-    'response_bef_generation_timestamp': fields.String(description='The timestamp before the response is generated', example='2024-07-02T12:31:44'),
-    'response_aft_generation_timestamp': fields.String(description='The timestamp after the response is generated', example='2024-07-02T12:32:25'),
-    'response_timestamp': fields.String(description='The timestamp when the response is sent', example='2024-07-02T12:33:56'),
-    'response_status': fields.String(description='The status of the response, either Sending, Sent or Failed', example='Sent'),
+    'response_id': fields.List(fields.String(description='The unique identifier of the response message', example='2')),
+    'response_text': fields.List(fields.String(description='The response message content', example='This is a test response message using the API in flask-restx')),
+    'response_bef_generation_timestamp': fields.List(fields.String(description='The timestamp before the response is generated', example='2024-07-02T12:31:44')),
+    'response_aft_generation_timestamp': fields.List(fields.String(description='The timestamp after the response is generated', example='2024-07-02T12:32:25')),
+    'response_timestamp': fields.List(fields.String(description='The timestamp when the response is sent', example='2024-07-02T12:33:56')),
+    'response_status': fields.List(fields.String(description='The status of the response, either Sending, Sent or Failed', example='Sent')),
 })
 
 message_model = ns_messages.model('Message', {
@@ -477,12 +477,12 @@ class ReceiveMessage(Resource):
         file_paths = data.get('file_path', [])
         file_types = data.get('file_type', [])
 
-        response_id = data.get('response_id', None)
-        response_text = data.get('response_text', None)
-        response_bef_generation_timestamp = data.get('response_bef_generation_timestamp', None)
-        response_aft_generation_timestamp = data.get('response_aft_generation_timestamp', None)
-        response_timestamp = data.get('response_timestamp', None)
-        response_status = data.get('response_status', None)
+        response_id = data.get('response_id', [])
+        response_text = data.get('response_text', [])
+        response_bef_generation_timestamp = data.get('response_bef_generation_timestamp', [])
+        response_aft_generation_timestamp = data.get('response_aft_generation_timestamp', [])
+        response_timestamp = data.get('response_timestamp', [])
+        response_status = data.get('response_status', [])
 
         # Check if bot exists, if not return an error
         bot = Bot.query.get(bot_id)
@@ -529,25 +529,41 @@ class ReceiveMessage(Resource):
                     message_id=message_ids[i] if i < len(message_ids) else None,
                     message_text=message_texts[i] if i < len(message_texts) else None,
                     message_timestamp=datetime.strptime(message_timestamps[i], '%Y-%m-%dT%H:%M:%S') if i < len(message_timestamps) else None,
+
                     file_path=file_paths[i] if i < len(file_paths) else None,
                     file_type=file_types[i] if i < len(file_types) else None
                 )
                 db.session.add(message)
         elif direction == 'outgoing':
-            message = message_class(
-                conversation_id=conversation.id,
-                direction=direction,
-                message_id=response_id,
-                message_text=response_text,
-                message_timestamp=datetime.strptime(response_timestamp, '%Y-%m-%dT%H:%M:%S'),
-                
-                message_ids_responded_to="" if not message_ids else ", ".join(message_ids),
-                response_bef_generation_timestamp=datetime.strptime(response_bef_generation_timestamp, '%Y-%m-%dT%H:%M:%S'),
-                response_aft_generation_timestamp=datetime.strptime(response_aft_generation_timestamp, '%Y-%m-%dT%H:%M:%S'),
-                response_status=response_status
-            )
-            db.session.add(message)
-        
+            for i in range(len(response_id)):
+                message = message_class.query.filter_by(conversation_id=conversation.id, message_id=response_id[i]).first()
+                if not message:
+                    message = message_class(
+                        conversation_id=conversation.id,
+                        direction=direction,
+                        message_id=response_id[i],
+                        message_text=response_text[i],
+                        message_timestamp=datetime.strptime(response_timestamp[i], '%Y-%m-%dT%H:%M:%S') if response_timestamp[i] else None,
+
+                        file_path=file_paths[i] if i < len(file_paths) else None,
+                        file_type=file_types[i] if i < len(file_types) else None,
+
+                        response_bef_generation_timestamp=datetime.strptime(response_bef_generation_timestamp[i], '%Y-%m-%dT%H:%M:%S') if response_bef_generation_timestamp[i] else None,
+                        response_aft_generation_timestamp=datetime.strptime(response_aft_generation_timestamp[i], '%Y-%m-%dT%H:%M:%S') if response_aft_generation_timestamp[i] else None,
+                        response_status=response_status[i],
+                    )
+                    db.session.add(message)
+                else:
+                    message.message_text = response_text[i]
+                    message.message_timestamp = datetime.strptime(response_timestamp[i], '%Y-%m-%dT%H:%M:%S') if response_timestamp[i] else None
+
+                    message.file_path = file_paths[i] if i < len(file_paths) else None
+                    message.file_type = file_types[i] if i < len(file_types) else None
+                    
+                    message.response_bef_generation_timestamp = datetime.strptime(response_bef_generation_timestamp[i], '%Y-%m-%dT%H:%M:%S') if response_bef_generation_timestamp[i] else None
+                    message.response_aft_generation_timestamp = datetime.strptime(response_aft_generation_timestamp[i], '%Y-%m-%dT%H:%M:%S') if response_aft_generation_timestamp[i] else None
+                    message.response_status = response_status[i]
+
         db.session.commit()
         return {'status': 'success'}, 201
     
