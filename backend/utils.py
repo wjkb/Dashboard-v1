@@ -1,5 +1,6 @@
 import os
 import zipfile
+from datetime import datetime
 from werkzeug.utils import secure_filename
 from flask import current_app
 
@@ -17,6 +18,15 @@ def save_file(platform, bot_id, user, file):
 
     # Return the relative path to the file and file type
     return file_path.replace('\\', '/'), file_type
+
+def safe_parse_timestamp(timestamp_list, index, date_format='%Y-%m-%dT%H:%M:%S'):
+    try:
+        if index >= len(timestamp_list) or timestamp_list[index] is None:
+            return None
+        else:
+            return datetime.strptime(timestamp_list[index], date_format)
+    except (ValueError, TypeError):
+        return None
 
 def create_zip(file_path_list):
     parent_directory = os.path.dirname(current_app.root_path)

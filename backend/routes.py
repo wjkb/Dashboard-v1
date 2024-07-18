@@ -4,7 +4,7 @@ from flask_restx import Api, Resource, fields
 from datetime import datetime
 import json
 from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation
-from backend.utils import save_file, create_zip
+from backend.utils import save_file, safe_parse_timestamp, create_zip
 
 # Initialize Flask-RESTx Api
 api_bp = Blueprint('api', __name__)
@@ -523,17 +523,25 @@ class ReceiveMessage(Resource):
         if direction == 'incoming':
             max_len = max(len(message_ids), len(file_paths))
             for i in range(max_len):
-                message = message_class(
-                    conversation_id=conversation.id,
-                    direction=direction,
-                    message_id=message_ids[i] if i < len(message_ids) else None,
-                    message_text=message_texts[i] if i < len(message_texts) else None,
-                    message_timestamp=datetime.strptime(message_timestamps[i], '%Y-%m-%dT%H:%M:%S') if i < len(message_timestamps) else None,
+                message = message_class.query.filter_by(conversation_id=conversation.id, message_id=message_ids[i]).first()
+                if not message:
+                    message = message_class(
+                        conversation_id=conversation.id,
+                        direction=direction,
+                        message_id=message_ids[i] if i < len(message_ids) else None,
+                        message_text=message_texts[i] if i < len(message_texts) else None,
+                        message_timestamp=safe_parse_timestamp(message_timestamps, i),
 
-                    file_path=file_paths[i] if i < len(file_paths) else None,
-                    file_type=file_types[i] if i < len(file_types) else None
-                )
-                db.session.add(message)
+                        file_path=file_paths[i] if i < len(file_paths) else None,
+                        file_type=file_types[i] if i < len(file_types) else None
+                    )
+                    db.session.add(message)
+                else:
+                    message.message_text = message_texts[i] if i < len(message_texts) else None
+                    message.message_timestamp = safe_parse_timestamp(message_timestamps, i)
+
+                    message.file_path = file_paths[i] if i < len(file_paths) else None
+                    message.file_type = file_types[i] if i < len(file_types) else None
         elif direction == 'outgoing':
             for i in range(len(response_id)):
                 message = message_class.query.filter_by(conversation_id=conversation.id, message_id=response_id[i]).first()
@@ -543,25 +551,25 @@ class ReceiveMessage(Resource):
                         direction=direction,
                         message_id=response_id[i],
                         message_text=response_text[i],
-                        message_timestamp=datetime.strptime(response_timestamp[i], '%Y-%m-%dT%H:%M:%S') if response_timestamp[i] else None,
+                        message_timestamp=safe_parse_timestamp(response_timestamp, i),
 
                         file_path=file_paths[i] if i < len(file_paths) else None,
                         file_type=file_types[i] if i < len(file_types) else None,
 
-                        response_bef_generation_timestamp=datetime.strptime(response_bef_generation_timestamp[i], '%Y-%m-%dT%H:%M:%S') if response_bef_generation_timestamp[i] else None,
-                        response_aft_generation_timestamp=datetime.strptime(response_aft_generation_timestamp[i], '%Y-%m-%dT%H:%M:%S') if response_aft_generation_timestamp[i] else None,
-                        response_status=response_status[i],
+                        response_bef_generation_timestamp=safe_parse_timestamp(response_bef_generation_timestamp, i),
+                        response_aft_generation_timestamp=safe_parse_timestamp(response_aft_generation_timestamp, i),
+                        response_status=response_status[i]
                     )
                     db.session.add(message)
                 else:
                     message.message_text = response_text[i]
-                    message.message_timestamp = datetime.strptime(response_timestamp[i], '%Y-%m-%dT%H:%M:%S') if response_timestamp[i] else None
+                    message.message_timestamp = safe_parse_timestamp(response_timestamp, i)
 
                     message.file_path = file_paths[i] if i < len(file_paths) else None
                     message.file_type = file_types[i] if i < len(file_types) else None
-                    
-                    message.response_bef_generation_timestamp = datetime.strptime(response_bef_generation_timestamp[i], '%Y-%m-%dT%H:%M:%S') if response_bef_generation_timestamp[i] else None
-                    message.response_aft_generation_timestamp = datetime.strptime(response_aft_generation_timestamp[i], '%Y-%m-%dT%H:%M:%S') if response_aft_generation_timestamp[i] else None
+
+                    message.response_bef_generation_timestamp = safe_parse_timestamp(response_bef_generation_timestamp, i)
+                    message.response_aft_generation_timestamp = safe_parse_timestamp(response_aft_generation_timestamp, i)
                     message.response_status = response_status[i]
 
         db.session.commit()
