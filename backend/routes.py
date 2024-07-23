@@ -1,4 +1,8 @@
-import subprocess
+import sys
+
+sys.path.append('..')
+from utils.send_utils import send_proactive_queue
+
 from flask import Blueprint, request
 from flask_restx import Api, Resource, fields
 from datetime import datetime
@@ -21,8 +25,9 @@ ns_graph_insights = api.namespace('graph_insights', description='Graph Insights 
 # Define models for Swagger documentation
 start_bot_script_model = ns_utils.model('StartBotScript', {
     'botPhone': fields.String(required=True, description='The bot phone number', example='90217777'),
-    'targetUrl': fields.String(required=True, description='The URL to send the bot messages to', example='facebook.com/xyz'),
+    'scammerIds': fields.String(required=True, description='The list of scammer phone numbers', example='80216666'),
     'platform': fields.String(required=True, description='The platform the bot is talking on', example='Facebook'),
+    'typeOfScam': fields.String(required=True, description='The type of scam the bot is dealing with', example='Romance scam'),
 })
 
 download_zip_model = ns_utils.model('DownloadZip', {
@@ -69,7 +74,6 @@ message_model = ns_messages.model('Message', {
     'message_id': fields.String(),
     'message_text': fields.String(required=True),
     'message_timestamp': fields.String(),
-
     'file_path': fields.String(),
     'file_type': fields.String(),
 
@@ -680,20 +684,21 @@ class ReceiveExtractedInformation(Resource):
         return {'status': 'success'}, 201
 
 # TODO: This is just a route to simulate starting a bot script with fake messages. Replace with actual bot script execution
-@ns_utils.route('/api/start_bot')
-class StartBot(Resource):
+@ns_utils.route('/api/send_bot')
+class SendBot(Resource):
     @ns_utils.expect(start_bot_script_model)
     def post(self):
         try:
-            data = request.json
-            bot_phone_number = data.get('botPhone')
-            target_url = data.get('targetUrl')
+            data = request.get_json()
+            bot_id = data.get('botPhone')
+            scammer_ids = data.get('scammerIds')
             platform = data.get('platform')
+            type_of_scam = data.get('typeOfScam')
 
-            if not bot_phone_number or not target_url or not platform:
+            if not bot_id or not scammer_ids or not platform or not type_of_scam:
                 return {'status': 'error', 'message': 'Missing required fields'}, 400
             
-            bot = Bot.query.filter_by(phone=bot_phone_number).first()
+            bot = Bot.query.get(bot_id)
             if not bot:
                 return {'status': 'error', 'message': 'Bot not found'}, 404
             
@@ -705,12 +710,15 @@ class StartBot(Resource):
             bot.set_health_status(new_health_status)
             db.session.commit()
 
-            print(f"Starting bot {bot_phone_number} for platform {platform} at {target_url}")
-
-            # Command to start the bot script
-            command = f"python bot.py {platform} {bot_phone_number} {target_url}"
-            subprocess.Popen(command, shell=True)
-            print(f"Command run: {command}")
+            print(f"Sending bot {bot_id} for platform {platform} to scammers: {scammer_ids} of type {type_of_scam}")
+            scammer_ids = scammer_ids.split(',')
+            for scammer_id in scammer_ids:
+                message = {
+                    "platform": platform,
+                    "bot_id": bot_id,
+                    "scammer_id": scammer_id
+                }
+                send_proactive_queue(message)
 
             return {"status": "success","message": "Bot sent successfully"}, 200
 

@@ -112,14 +112,14 @@ export const createBot = async (botData) => {
   }
 };
 
-export const sendBot = async (botPhone, targetUrl, platform) => {
+export const sendBot = async (botPhone, scammerIds, platform, typeOfScam) => {
   try {
-    const response = await fetch(`${API_URL}/start_bot`, {
+    const response = await fetch(`${API_URL}/send_bot`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ botPhone, targetUrl, platform }),
+      body: JSON.stringify({ botPhone, scammerIds, platform, typeOfScam }),
     });
     if (!response.ok) {
       throw new Error("Network response was not ok");
