@@ -106,6 +106,12 @@ const WhatsappUserMessages = () => {
     fetchMessages();
     fetchExtractedInformation();
     fetchScreenshots();
+
+    const interval = setInterval(() => {
+      fetchMessages();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [botId, scammerUniqueId]);
 
   const handleRefresh = () => {
