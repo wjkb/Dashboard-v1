@@ -696,12 +696,17 @@ class GetNextResponseMessageId(Resource):
         try:
             platform_mapping = {
                 'facebook': 'Facebook',
+                'fb': 'Facebook',
                 'whatsapp': 'WhatsApp',
-                'telegram': 'Telegram'
+                'wa': 'WhatsApp',
+                'telegram': 'Telegram',
+                'tg': 'Telegram'
             }
 
             data = request.get_json()
             platform = platform_mapping.get(data.get('platform').lower())
+            if not platform:
+                return {'status': 'error', 'message': 'Unsupported platform'}, 400
             bot_id = data.get('bot_id')
             scammer_unique_id = data.get('scammer_id')
 
