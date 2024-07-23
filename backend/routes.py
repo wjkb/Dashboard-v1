@@ -34,6 +34,12 @@ download_zip_model = ns_utils.model('DownloadZip', {
     'filePaths': fields.List(fields.String, required=True, description='The list of file paths to include in the zip file', example=['files/Facebook/1/User123/cat.jpg', 'files/Facebook/1/User123/cat.pdf', 'files/Facebook/1/User123/cat.txt']),
 })
 
+return_next_response_message_id_model = ns_utils.model('ReturnNextResponseMessageId', {
+    'platform': fields.String(required=True, description='The platform the bot is talking on', example='WhatsApp'),
+    'bot_id': fields.String(required=True, description='The bot phone number', example='90217777'),
+    'scammer_id': fields.String(required=True, description='The scammer phone number', example='80216666'),
+})
+
 receive_extracted_information_model = ns_messages.model('ReceiveExtractedInformation', {
     'bot_id': fields.String(required=True, description='The bot phone number', example='90217777'),
     'scammer_id': fields.String(required=True, description='The scammer phone number', example='80216666'),
@@ -683,6 +689,57 @@ class ReceiveExtractedInformation(Resource):
         db.session.commit()
         return {'status': 'success'}, 201
 
+@ns_utils.route('/api/get_next_response_message_id')
+class GetNextResponseMessageId(Resource):
+    @ns_utils.expect(return_next_response_message_id_model)
+    def post(self):
+        try:
+            platform_mapping = {
+                'facebook': 'Facebook',
+                'whatsapp': 'WhatsApp',
+                'telegram': 'Telegram'
+            }
+
+            data = request.get_json()
+            platform = platform_mapping.get(data.get('platform').lower())
+            bot_id = data.get('bot_id')
+            scammer_unique_id = data.get('scammer_id')
+
+            # Get the scammer
+            scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform).first()
+            if not scammer:
+                return {'status': 'error', 'message': 'Scammer not found'}, 404
+
+            # Get the conversation
+            conversation = Conversation.query.filter_by(bot_id=bot_id, platform=platform, scammer_id=scammer.id).first()
+            if not conversation:
+                return {'status': 'error', 'message': 'Conversation not found'}, 404
+            
+            platform_message_classes = {
+                'facebook': FacebookMessage,
+                'whatsapp': WhatsappMessage,
+                'telegram': TelegramMessage
+            }
+            
+            print(f"Getting next response message ID for bot {bot_id} on platform {platform} for scammer {scammer_unique_id}")
+            platformMessage = platform_message_classes[platform.lower()]
+            print(f"Platform message class: {platform}")
+            # Get the last message sent by the bot
+            last_bot_message = (
+                db.session.query(platformMessage)
+                .filter_by(conversation_id=conversation.id, direction='outgoing')
+                .order_by(platformMessage.message_timestamp.desc())
+                .first()
+            )
+            print(f"Last bot message: {last_bot_message}")
+            if not last_bot_message:
+                return {'next_message_id': '1'}, 200
+            else:
+                return {'next_message_id': str(int(last_bot_message.message_id) + 1)}, 200
+        
+        except Exception as e:
+            return {'status': 'error', 'message': str(e)}, 500
+
 # TODO: This is just a route to simulate starting a bot script with fake messages. Replace with actual bot script execution
 @ns_utils.route('/api/send_bot')
 class SendBot(Resource):
@@ -790,8 +847,6 @@ class RecentMessages(Resource):
                 .limit(5)
                 .all()
             )
-
-            
             
             # Serialize the messages along with conversation details
             response = []
@@ -815,6 +870,3 @@ class RecentMessages(Resource):
         
         except Exception as e:
             return {'error': str(e)}, 500
-
-
-    
