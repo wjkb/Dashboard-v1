@@ -19,12 +19,12 @@ def save_file(platform, bot_id, user, file):
     # Return the relative path to the file and file type
     return file_path.replace('\\', '/'), file_type
 
-def safe_parse_timestamp(timestamp_list, index, date_format='%Y-%m-%dT%H:%M:%S'):
+def safe_parse_timestamp(timestamp, date_format='%Y-%m-%dT%H:%M:%S'):
     try:
-        if index >= len(timestamp_list) or timestamp_list[index] is None:
+        if timestamp is None:
             return None
         else:
-            return datetime.strptime(timestamp_list[index], date_format)
+            return datetime.strptime(timestamp, date_format)
     except (ValueError, TypeError):
         return None
 

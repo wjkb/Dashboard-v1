@@ -49,19 +49,17 @@ receive_message_model = ns_messages.model('ReceiveMessage', {
     'bot_id': fields.String(required=True, description='The bot phone number', example='90217777'),
     'scammer_id': fields.String(required=True, description='The scammer phone number', example='80216666'),
     'direction': fields.String(required=True, description='The direction of the message, either incoming or outgoing', example='outgoing'),
-    'message_id': fields.List(fields.String(description='The unique identifier of the message', example='1')),
-    'message_text': fields.List(fields.String(description='The message content', example='This is a test message using the API in flask-restx')),
-    'message_timestamp': fields.List(fields.String(example='2024-07-02T12:30:44')),
+    'message_id': fields.String(description='The unique identifier of the message', example='1'),
+    'message_text': fields.String(description='The message content', example='This is a test message using the API in flask-restx'),
+    'message_timestamp': fields.String(example='2024-07-02T12:30:44'),
 
-    'file_path': fields.List(fields.String(description='The path to the file if the message contains a file', example='files/Facebook/1/1/cat.jpg')),
-    'file_type': fields.List(fields.String(description='The MIME type of the file if the message contains a file', example='image/jpeg')),
+    'file_path': fields.String(description='The path to the file if the message contains a file', example='files/Facebook/1/1/cat.jpg'),
+    'file_type': fields.String(description='The MIME type of the file if the message contains a file', example='image/jpeg'),
 
-    'response_id': fields.List(fields.String(description='The unique identifier of the response message', example='2')),
-    'response_text': fields.List(fields.String(description='The response message content', example='This is a test response message using the API in flask-restx')),
-    'response_bef_generation_timestamp': fields.List(fields.String(description='The timestamp before the response is generated', example='2024-07-02T12:31:44')),
-    'response_aft_generation_timestamp': fields.List(fields.String(description='The timestamp after the response is generated', example='2024-07-02T12:32:25')),
-    'response_timestamp': fields.List(fields.String(description='The timestamp when the response is sent', example='2024-07-02T12:33:56')),
-    'response_status': fields.List(fields.String(description='The status of the response, either Sending, Sent or Failed', example='Sent')),
+    'responded_to': fields.String(description='The message IDs that this message is responding to', example='1,2,3'),
+    'response_bef_generation_timestamp': fields.String(description='The timestamp before the response is generated', example='2024-07-02T12:31:44'),
+    'response_aft_generation_timestamp': fields.String(description='The timestamp after the response is generated', example='2024-07-02T12:32:25'),
+    'response_status': fields.String(description='The status of the response, either Sending, Sent or Failed', example='Sent'),
 })
 
 message_model = ns_messages.model('Message', {
@@ -70,11 +68,12 @@ message_model = ns_messages.model('Message', {
     'direction': fields.String(required=True),
     'message_id': fields.String(),
     'message_text': fields.String(required=True),
-    'message_timestamp': fields.String(required=True),
+    'message_timestamp': fields.String(),
+
     'file_path': fields.String(),
     'file_type': fields.String(),
 
-    'message_ids_responded_to': fields.String(),
+    'responded_to': fields.String(),
     'response_bef_generation_timestamp': fields.String(),
     'response_aft_generation_timestamp': fields.String(),
     'response_status': fields.String(),
@@ -413,7 +412,7 @@ class BotConversationScreenshots(Resource):
             if not conversation:
                 return {"error": "Conversation not found"}, 404
             
-            screenshots = MessageScreenshots.query.filter_by(conversation_id=conversation.id).all()
+            screenshots = MessageScreenshots.query.filter_by(conversation_id=conversation.id).order_by(MessageScreenshots.id.desc()).all()
             return [screenshot.serialize() for screenshot in screenshots]
         except Exception as e:
             print(f"Error occurred: {e}")
@@ -471,18 +470,17 @@ class ReceiveMessage(Resource):
         bot_id = data['bot_id']
         scammer_unique_id = data['scammer_id']
         direction = data['direction']
-        message_ids = data.get('message_id', [])
-        message_texts = data.get('message_text', [])
-        message_timestamps = data.get('message_timestamp', [])
-        file_paths = data.get('file_path', [])
-        file_types = data.get('file_type', [])
+        message_id = data.get('message_id', None)
+        message_text = data.get('message_text', None)
+        message_timestamp = data.get('message_timestamp', None)
 
-        response_id = data.get('response_id', [])
-        response_text = data.get('response_text', [])
-        response_bef_generation_timestamp = data.get('response_bef_generation_timestamp', [])
-        response_aft_generation_timestamp = data.get('response_aft_generation_timestamp', [])
-        response_timestamp = data.get('response_timestamp', [])
-        response_status = data.get('response_status', [])
+        file_path = data.get('file_path', None)
+        file_type = data.get('file_type', None)
+
+        responded_to = data.get('responded_to', None)
+        response_bef_generation_timestamp = data.get('response_bef_generation_timestamp', None)
+        response_aft_generation_timestamp = data.get('response_aft_generation_timestamp', None)
+        response_status = data.get('response_status', None)
 
         # Check if bot exists, if not return an error
         bot = Bot.query.get(bot_id)
@@ -521,56 +519,55 @@ class ReceiveMessage(Resource):
 
         # Create message object
         if direction == 'incoming':
-            max_len = max(len(message_ids), len(file_paths))
-            for i in range(max_len):
-                message = message_class.query.filter_by(conversation_id=conversation.id, message_id=message_ids[i]).first()
-                if not message:
-                    message = message_class(
-                        conversation_id=conversation.id,
-                        direction=direction,
-                        message_id=message_ids[i] if i < len(message_ids) else None,
-                        message_text=message_texts[i] if i < len(message_texts) else None,
-                        message_timestamp=safe_parse_timestamp(message_timestamps, i),
+            message = message_class.query.filter_by(conversation_id=conversation.id, direction=direction, message_id=message_id).first()
+            if not message:
+                message = message_class(
+                    conversation_id=conversation.id,
+                    direction=direction,
+                    message_id=message_id,
+                    message_text=message_text,
+                    message_timestamp=safe_parse_timestamp(message_timestamp),
 
-                        file_path=file_paths[i] if i < len(file_paths) else None,
-                        file_type=file_types[i] if i < len(file_types) else None
-                    )
-                    db.session.add(message)
-                else:
-                    message.message_text = message_texts[i] if i < len(message_texts) else None
-                    message.message_timestamp = safe_parse_timestamp(message_timestamps, i)
+                    file_path=file_path,
+                    file_type=file_type
+                )
+                db.session.add(message)
+            else:
+                message.message_text = message_text
+                message.message_timestamp = safe_parse_timestamp(message_timestamp)
 
-                    message.file_path = file_paths[i] if i < len(file_paths) else None
-                    message.file_type = file_types[i] if i < len(file_types) else None
+                message.file_path = file_path
+                message.file_type = file_type
         elif direction == 'outgoing':
-            for i in range(len(response_id)):
-                message = message_class.query.filter_by(conversation_id=conversation.id, message_id=response_id[i]).first()
-                if not message:
-                    message = message_class(
-                        conversation_id=conversation.id,
-                        direction=direction,
-                        message_id=response_id[i],
-                        message_text=response_text[i],
-                        message_timestamp=safe_parse_timestamp(response_timestamp, i),
+            message = message_class.query.filter_by(conversation_id=conversation.id, direction=direction, message_id=message_id).first()
+            if not message:
+                message = message_class(
+                    conversation_id=conversation.id,
+                    direction=direction,
+                    message_id=message_id,
+                    message_text=message_text,
+                    message_timestamp=safe_parse_timestamp(message_timestamp),
 
-                        file_path=file_paths[i] if i < len(file_paths) else None,
-                        file_type=file_types[i] if i < len(file_types) else None,
+                    file_path=file_path,
+                    file_type=file_type,
 
-                        response_bef_generation_timestamp=safe_parse_timestamp(response_bef_generation_timestamp, i),
-                        response_aft_generation_timestamp=safe_parse_timestamp(response_aft_generation_timestamp, i),
-                        response_status=response_status[i]
-                    )
-                    db.session.add(message)
-                else:
-                    message.message_text = response_text[i]
-                    message.message_timestamp = safe_parse_timestamp(response_timestamp, i)
+                    responded_to = responded_to,
+                    response_bef_generation_timestamp=safe_parse_timestamp(response_bef_generation_timestamp),
+                    response_aft_generation_timestamp=safe_parse_timestamp(response_aft_generation_timestamp),
+                    response_status=response_status
+                )
+                db.session.add(message)
+            else:
+                message.message_text = message_text
+                message.message_timestamp = safe_parse_timestamp(message_timestamp)
 
-                    message.file_path = file_paths[i] if i < len(file_paths) else None
-                    message.file_type = file_types[i] if i < len(file_types) else None
+                message.file_path = file_path
+                message.file_type = file_type
 
-                    message.response_bef_generation_timestamp = safe_parse_timestamp(response_bef_generation_timestamp, i)
-                    message.response_aft_generation_timestamp = safe_parse_timestamp(response_aft_generation_timestamp, i)
-                    message.response_status = response_status[i]
+                message.responded_to = responded_to
+                message.response_bef_generation_timestamp = safe_parse_timestamp(response_bef_generation_timestamp)
+                message.response_aft_generation_timestamp = safe_parse_timestamp(response_aft_generation_timestamp)
+                message.response_status = response_status
 
         db.session.commit()
         return {'status': 'success'}, 201

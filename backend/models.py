@@ -109,7 +109,7 @@ class WhatsappMessage(db.Model):
     file_path = db.Column(db.String(255), nullable=True)
     file_type = db.Column(db.String(50), nullable=True)
 
-    message_ids_responded_to = db.Column(db.String(255), nullable=True)
+    responded_to = db.Column(db.String(255), nullable=True)
     response_bef_generation_timestamp = db.Column(db.DateTime, nullable=True)
     response_aft_generation_timestamp = db.Column(db.DateTime, nullable=True)
     response_status = db.Column(db.String(10), nullable=True)
@@ -126,7 +126,7 @@ class WhatsappMessage(db.Model):
             'file_path': self.file_path,
             'file_type': self.file_type,
 
-            'message_ids_responded_to': self.message_ids_responded_to,
+            'responded_to': self.responded_to,
             'response_bef_generation_timestamp': self.response_bef_generation_timestamp.isoformat() if self.response_bef_generation_timestamp else None,
             'response_aft_generation_timestamp': self.response_aft_generation_timestamp.isoformat() if self.response_aft_generation_timestamp else None,
             'response_status': self.response_status
