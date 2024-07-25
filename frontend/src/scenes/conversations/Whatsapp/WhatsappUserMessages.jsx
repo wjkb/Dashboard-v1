@@ -177,7 +177,12 @@ const WhatsappUserMessages = () => {
         Refresh Messages
       </Button>
       <Box height="75vh" display="flex" flexDirection="column">
-        <Tabs value={tabValue} onChange={handleChangeTab}>
+        <Tabs
+          value={tabValue}
+          onChange={handleChangeTab}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
           <Tab label="Messages" />
           <Tab label="Files" />
           <Tab label="Extracted Information" />
