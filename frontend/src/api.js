@@ -25,6 +25,18 @@ export const getPlatformBots = async (platform) => {
   }
 };
 
+export const getBot = async (botId) => {
+  try {
+    const response = await fetch(`${API_URL}/bots/${botId}`);
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error fetching data: ${error.message}`);
+  }
+};
+
 export const getBotConversations = async (platform, botId) => {
   try {
     const response = await fetch(
@@ -195,6 +207,23 @@ export const activateBot = async (botId) => {
     return await response.json();
   } catch (error) {
     throw new Error(`Error activating bot: ${error.message}`);
+  }
+};
+
+export const toggleBotPause = async (botId) => {
+  try {
+    const response = await fetch(`${API_URL}/bots/${botId}/toggle_pause`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error pausing/resuming bot: ${error.message}`);
   }
 };
 

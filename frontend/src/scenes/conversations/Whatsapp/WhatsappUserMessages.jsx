@@ -2,9 +2,11 @@ import React, { useEffect, useState, useRef } from "react";
 import { Box, Tabs, Tab, Button } from "@mui/material";
 import { useParams } from "react-router-dom";
 import {
+  getBot,
   getBotConversationMessages,
   getBotConversationExtractedInformation,
   getBotConversationScreenshots,
+  toggleBotPause,
 } from "../../../api";
 import Header from "../../../components/Header";
 import MessagesTab from "../MessagesTab";
@@ -26,6 +28,7 @@ const TAB_SCREENSHOTS = 3;
  */
 const WhatsappUserMessages = () => {
   const { botId, scammerUniqueId } = useParams();
+  const [bot, setBot] = useState(null);
   const [messages, setMessages] = useState([]);
   const [files, setFiles] = useState([]);
   const [screenshots, setScreenshots] = useState([]);
@@ -35,6 +38,18 @@ const WhatsappUserMessages = () => {
   const [tabValue, setTabValue] = useState(TAB_MESSAGES);
   const messageRefs = useRef({});
   const [highlightedMessage, setHighlightedMessage] = useState(null);
+
+  /**
+   * Fetches bot details
+   */
+  const fetchBot = async () => {
+    try {
+      const bot = await getBot(botId);
+      setBot(bot);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   /**
    * Fetches messages and files from the API for the current bot and user.
@@ -103,6 +118,7 @@ const WhatsappUserMessages = () => {
   };
 
   useEffect(() => {
+    fetchBot();
     fetchMessages();
     fetchExtractedInformation();
     fetchScreenshots();
@@ -117,6 +133,15 @@ const WhatsappUserMessages = () => {
   const handleRefresh = () => {
     setLoading(true);
     fetchMessages();
+  };
+
+  const handlePauseorResumeBot = async () => {
+    try {
+      await toggleBotPause(botId);
+      fetchBot();
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   const handleViewFile = (messageId) => {
@@ -176,6 +201,15 @@ const WhatsappUserMessages = () => {
       >
         Refresh Messages
       </Button>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handlePauseorResumeBot}
+        style={{ marginBottom: "10px", marginLeft: "10px" }}
+      >
+        {bot ? (bot.pause ? "Resume Bot" : "Pause Bot") : "Loading..."}
+      </Button>
+
       <Box height="75vh" display="flex" flexDirection="column">
         <Tabs
           value={tabValue}
