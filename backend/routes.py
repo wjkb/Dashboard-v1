@@ -24,10 +24,11 @@ ns_graph_insights = api.namespace('graph_insights', description='Graph Insights 
 
 # Define models for Swagger documentation
 start_bot_script_model = ns_utils.model('StartBotScript', {
-    'botPhone': fields.String(required=True, description='The bot phone number', example='90217777'),
+    'botId': fields.String(required=True, description='The bot phone number', example='90217777'),
     'scammerIds': fields.String(required=True, description='The list of scammer phone numbers', example='80216666'),
     'platform': fields.String(required=True, description='The platform the bot is talking on', example='Facebook'),
     'typeOfScam': fields.String(required=True, description='The type of scam the bot is dealing with', example='Romance scam'),
+    'startingMessage': fields.String(description='The starting message to send to the scammers', example='Hello, how are you?'),
 })
 
 download_zip_model = ns_utils.model('DownloadZip', {
@@ -761,10 +762,11 @@ class SendBot(Resource):
             }
 
             data = request.get_json()
-            bot_id = data.get('botPhone')
+            bot_id = data.get('botId')
             scammer_ids = data.get('scammerIds')
             platform = platform_mapping[data.get('platform').lower()]
             type_of_scam = data.get('typeOfScam')
+            starting_message = data.get('startingMessage')
 
             if not bot_id or not scammer_ids or not platform or not type_of_scam:
                 return {'status': 'error', 'message': 'Missing required fields'}, 400
@@ -784,7 +786,8 @@ class SendBot(Resource):
                 message = {
                     "platform": platform,
                     "bot_id": bot_id,
-                    "scammer_id": scammer_id
+                    "scammer_id": scammer_id,
+                    "starting_message": starting_message
                 }
                 send_proactive_queue(message)
 

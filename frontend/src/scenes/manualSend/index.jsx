@@ -15,6 +15,7 @@ const initialValues = {
   scammerIds: "",
   platform: "",
   typeOfScam: "",
+  initialMessage: "",
 };
 
 const platformNames = ["Facebook", "WhatsApp", "Telegram"];
@@ -23,6 +24,7 @@ const botScheme = yup.object().shape({
   scammerIds: yup.string().required("required"),
   platform: yup.string().required("required"),
   typeOfScam: yup.string().required("required"),
+  startingMessage: yup.string(),
 });
 
 /**
@@ -74,9 +76,16 @@ const ManualSendForm = () => {
 
   const handleSendClick = async (bot) => {
     try {
-      const { scammerIds, platform, typeOfScam } = formValues;
-      console.log("Sending bot", bot.id, scammerIds, platform, typeOfScam);
-      await sendBot(bot.id, scammerIds, platform, typeOfScam);
+      const { scammerIds, platform, typeOfScam, startingMessage } = formValues;
+      console.log(
+        "Sending bot",
+        bot.id,
+        scammerIds,
+        platform,
+        typeOfScam,
+        startingMessage
+      );
+      await sendBot(bot.id, scammerIds, platform, typeOfScam, startingMessage);
       // Fetch updated bot list after sending
       await fetchBots();
     } catch (error) {
@@ -261,6 +270,7 @@ const ManualSendForm = () => {
                 ))}
               </TextField>
 
+              {/* Type of Scam field */}
               <TextField
                 fullWidth
                 variant="filled"
@@ -272,6 +282,21 @@ const ManualSendForm = () => {
                 name="typeOfScam"
                 error={!!touched.typeOfScam && !!errors.typeOfScam}
                 helperText={touched.typeOfScam && errors.typeOfScam}
+                sx={{ gridColumn: "span 4" }}
+              />
+
+              {/* Starting Message field */}
+              <TextField
+                fullWidth
+                variant="filled"
+                type="text"
+                label="Starting Message (optional)"
+                onBlur={handleBlur}
+                onChange={handleChange}
+                value={values.startingMessage}
+                name="startingMessage"
+                error={!!touched.startingMessage && !!errors.startingMessage}
+                helperText={touched.startingMessage && errors.startingMessage}
                 sx={{ gridColumn: "span 4" }}
               />
             </Box>
