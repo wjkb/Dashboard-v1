@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Box, useTheme, Button } from "@mui/material";
-import { tokens } from "../../../theme";
+import { tokens } from "../../theme";
 import { DataGrid } from "@mui/x-data-grid";
 import { useParams, useNavigate, Outlet } from "react-router-dom";
-import { getBotConversations } from "../../../api";
-import Header from "../../../components/Header";
+import { getBotConversations } from "../../api";
+import Header from "../../components/Header";
 
-const WhatsappBotConversations = () => {
+const PlatformBotConversations = ({ platform }) => {
   const { botId } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -18,7 +18,7 @@ const WhatsappBotConversations = () => {
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const convData = await getBotConversations("whatsapp", botId);
+        const convData = await getBotConversations(platform, botId);
         setConversations(convData);
       } catch (err) {
         setError(err.message);
@@ -47,7 +47,9 @@ const WhatsappBotConversations = () => {
           color="primary"
           onClick={() =>
             navigate(
-              `/platforms/whatsapp/${botId}/${params.row.scammerUniqueID}`
+              `/platforms/${platform.toLowerCase()}/${botId}/${
+                params.row.scammerUniqueID
+              }`
             )
           }
         >
@@ -115,4 +117,4 @@ const WhatsappBotConversations = () => {
   );
 };
 
-export default WhatsappBotConversations;
+export default PlatformBotConversations;

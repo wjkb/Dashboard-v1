@@ -19,13 +19,13 @@ import {
   getBotConversationScreenshots,
   toggleBotPause,
   sendProactiveMessage,
-} from "../../../api";
-import Header from "../../../components/Header";
-import MessagesTab from "../MessagesTab";
-import FilesTab from "../FilesTab";
-import ExtractedInformationTab from "../ExtractedInformationTab";
-import ScreenshotsTab from "../ScreenshotsTab";
-import { tokens } from "../../../theme";
+} from "../../api";
+import Header from "../../components/Header";
+import MessagesTab from "./MessagesTab";
+import FilesTab from "./FilesTab";
+import ExtractedInformationTab from "./ExtractedInformationTab";
+import ScreenshotsTab from "./ScreenshotsTab";
+import { tokens } from "../../theme";
 
 // Constants for tab values
 const TAB_MESSAGES = 0;
@@ -34,11 +34,11 @@ const TAB_EXTRACTED_INFORMATION = 2;
 const TAB_SCREENSHOTS = 3;
 
 /**
- * Component to display messages and files of a WhatsApp bot conversation with a specific user.
+ * Component to display messages and files of a Platform (i.e. Facebook, Whatsapp, etc.) bot conversation with a specific user.
  *
- * @returns {JSX.Element} The WhatsappUserMessages component.
+ * @returns {JSX.Element} The PlatformUserMessages component.
  */
-const WhatsappUserMessages = () => {
+const PlatformUserMessages = ({ platform }) => {
   const { botId, scammerUniqueId } = useParams();
   const [bot, setBot] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -71,7 +71,7 @@ const WhatsappUserMessages = () => {
   const fetchMessages = async () => {
     try {
       const messagesData = await getBotConversationMessages(
-        "whatsapp",
+        platform,
         botId,
         scammerUniqueId
       );
@@ -100,7 +100,7 @@ const WhatsappUserMessages = () => {
   const fetchExtractedInformation = async () => {
     try {
       const extractedInformation = await getBotConversationExtractedInformation(
-        "whatsapp",
+        platform,
         botId,
         scammerUniqueId
       );
@@ -119,7 +119,7 @@ const WhatsappUserMessages = () => {
   const fetchScreenshots = async () => {
     try {
       const screenshots = await getBotConversationScreenshots(
-        "whatsapp",
+        platform,
         botId,
         scammerUniqueId
       );
@@ -160,12 +160,7 @@ const WhatsappUserMessages = () => {
 
   const handleSendMessage = async () => {
     try {
-      await sendProactiveMessage(
-        botId,
-        scammerUniqueId,
-        "whatsapp",
-        messageText
-      );
+      await sendProactiveMessage(botId, scammerUniqueId, platform, messageText);
       setOpenSendMessageDialog(false);
       setMessageText("");
       fetchMessages();
@@ -320,4 +315,4 @@ const WhatsappUserMessages = () => {
   );
 };
 
-export default WhatsappUserMessages;
+export default PlatformUserMessages;

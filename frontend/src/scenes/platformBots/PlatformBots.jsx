@@ -8,11 +8,11 @@ import { useNavigate, Outlet } from "react-router-dom";
 import { getPlatformBots } from "../../api";
 
 /**
- * Component to manage and display Facebook bots.
+ * Component to manage and display Platform bots.
  *
- * @returns {JSX.Element} The FacebookBots component.
+ * @returns {JSX.Element} The PlatformBots component.
  */
-const FacebookBots = () => {
+const PlatformBots = ({ platform }) => {
   const theme = useTheme();
   const colors = tokens;
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ const FacebookBots = () => {
   useEffect(() => {
     const fetchBots = async () => {
       try {
-        const botsData = await getPlatformBots("facebook");
+        const botsData = await getPlatformBots(platform);
         console.log("Bots data:", botsData);
         const activeBotsData = botsData.filter((bot) => bot.active);
         const deactivatedBotsData = botsData.filter((bot) => !bot.active);
@@ -80,7 +80,9 @@ const FacebookBots = () => {
             color="primary"
             startIcon={<QuestionAnswerIcon />}
             style={{ width: "100px", marginRight: "10px" }}
-            onClick={() => navigate(`/platforms/facebook/${params.row.id}`)}
+            onClick={() =>
+              navigate(`/platforms/${platform.toLowerCase()}/${params.row.id}`)
+            }
           >
             View
           </Button>
@@ -100,7 +102,10 @@ const FacebookBots = () => {
   return (
     <Box display="flex">
       <Box margin="20px" width="40%">
-        <Header title="Facebook Bots" subtitle="Active Facebook Bots" />
+        <Header
+          title={`${platform} Bots`}
+          subtitle={`Active ${platform} Bots`}
+        />
         <Box
           height={deactivatedBots.length > 0 ? "55vh" : "75vh"}
           sx={{
@@ -174,4 +179,4 @@ const FacebookBots = () => {
   );
 };
 
-export default FacebookBots;
+export default PlatformBots;

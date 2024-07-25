@@ -5,21 +5,44 @@ import Topbar from "./scenes/global/Topbar";
 import Sidebar from "./scenes/global/Sidebar";
 import Dashboard from "./scenes/dashboard";
 import PlatformSidebar from "./scenes/platforms";
-import FacebookBots from "./scenes/platformBots/FacebookBots";
-import WhatsappBots from "./scenes/platformBots/WhatsappBots";
-import TelegramBots from "./scenes/platformBots/TelegramBots";
-import FacebookBotConversations from "./scenes/conversations/Facebook/FacebookBotConversations";
-import WhatsappBotConversations from "./scenes/conversations/Whatsapp/WhatsappBotConversations";
-import TelegramBotConversations from "./scenes/conversations/Telegram/TelegramBotConversations";
-import FacebookUserMessages from "./scenes/conversations/Facebook/FacebookUserMessages";
-import WhatsappUserMessages from "./scenes/conversations/Whatsapp/WhatsappUserMessages";
-import TelegramUserMessages from "./scenes/conversations/Telegram/TelegramUserMessages";
+// import FacebookBots from "./scenes/platformBots/FacebookBots";
+// import WhatsappBots from "./scenes/platformBots/WhatsappBots";
+// import TelegramBots from "./scenes/platformBots/TelegramBots";
+// import FacebookBotConversations from "./scenes/conversations/Facebook/FacebookBotConversations";
+// import WhatsappBotConversations from "./scenes/conversations/Whatsapp/WhatsappBotConversations";
+// import TelegramBotConversations from "./scenes/conversations/Telegram/TelegramBotConversations";
+// import FacebookUserMessages from "./scenes/conversations/Facebook/FacebookUserMessages";
+// import WhatsappUserMessages from "./scenes/conversations/Whatsapp/WhatsappUserMessages";
+// import TelegramUserMessages from "./scenes/conversations/Telegram/TelegramUserMessages";
+import PlatformBots from "./scenes/platformBots/PlatformBots";
+import PlatformBotConversations from "./scenes/conversations/PlatformBotConversations";
+import PlatformUserMessages from "./scenes/conversations/PlatformUserMessages";
 import ManageBots from "./scenes/manageBots";
 import ManualSendForm from "./scenes/manualSend";
 import AddBotForm from "./scenes/addBot";
 
 function App() {
   const [theme, colorMode] = useMode();
+  // You can add more platforms dynamically in the future by adding to the platforms array below
+  const platforms = ["Facebook", "WhatsApp", "Telegram"];
+
+  const generatePlatformRoutes = (platform) => (
+    <Route
+      key={platform}
+      path={platform.toLowerCase()}
+      element={<PlatformBots platform={platform} />}
+    >
+      <Route
+        path=":botId"
+        element={<PlatformBotConversations platform={platform} />}
+      >
+        <Route
+          path=":scammerUniqueId"
+          element={<PlatformUserMessages platform={platform} />}
+        />
+      </Route>
+    </Route>
+  );
 
   return (
     <ColorModeContext.Provider value={colorMode}>
@@ -32,30 +55,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/platforms" element={<PlatformSidebar />}>
-                <Route path="facebook" element={<FacebookBots />}>
-                  <Route path=":botId" element={<FacebookBotConversations />}>
-                    <Route
-                      path=":scammerUniqueId"
-                      element={<FacebookUserMessages />}
-                    />
-                  </Route>
-                </Route>
-                <Route path="whatsapp" element={<WhatsappBots />}>
-                  <Route path=":botId" element={<WhatsappBotConversations />}>
-                    <Route
-                      path=":scammerUniqueId"
-                      element={<WhatsappUserMessages />}
-                    />
-                  </Route>
-                </Route>
-                <Route path="telegram" element={<TelegramBots />}>
-                  <Route path=":botId" element={<TelegramBotConversations />}>
-                    <Route
-                      path=":scammerUniqueId"
-                      element={<TelegramUserMessages />}
-                    />
-                  </Route>
-                </Route>
+                {platforms.map(generatePlatformRoutes)}
               </Route>
               <Route path="/managebots" element={<ManageBots />} />
               <Route path="/manual-send" element={<ManualSendForm />} />
