@@ -817,10 +817,15 @@ class SendBot(Resource):
                     "platform": platform,
                     "bot_id": bot_id,
                     "scammer_id": scammer_unique_id,
+                    "direction": "outgoing",
+                    "message_id": next_message_id,
                     "message_text": starting_message,
-                    "message_id": next_message_id
+                    "response_status": "Sending"
                 }
                 send_proactive_queue(message)
+
+                # Update database with new platform message
+                response = requests.post('http://localhost:5000/api/messages', json=message)
 
         except Exception as e:
             return {'status': 'error', 'message': str(e)}, 500
@@ -863,10 +868,15 @@ class SendProactiveMessage(Resource):
                 "platform": platform,
                 "bot_id": bot_id,
                 "scammer_id": scammer_unique_id,
+                "direction": "outgoing",
+                "message_id": next_message_id,
                 "message_text": message,
-                "message_id": next_message_id
+                "response_status": "Sending"
             }
             send_proactive_queue(message)
+
+            # Update database with new platform message
+            response = requests.post('http://localhost:5000/api/messages', json=message)
 
             return {"status": "success", "message": "Proactive message sent successfully"}, 200
         
