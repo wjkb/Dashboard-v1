@@ -14,6 +14,9 @@ class Bot(db.Model):
     health_status = db.Column(db.Text, nullable=False, default='{}')
     conversations = db.relationship('Conversation', backref='bot', lazy=True)
 
+    # Work in progress
+    pause = db.Column(db.Boolean, nullable=False, default=False)
+
     def serialize(self):
         return {
             'id': self.id,
@@ -25,6 +28,7 @@ class Bot(db.Model):
             'platforms': [platform.platform for platform in self.platforms],
             'health_status': json.loads(self.health_status),
             'conversations': [conv.id for conv in self.conversations],
+            'pause': self.pause
         }
     
     def set_health_status(self, health_dict):

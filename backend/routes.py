@@ -120,6 +120,7 @@ bot_model_1 = ns_bots.model('Bot1', {
     'platforms': fields.List(fields.String, required=True),
     'health_status': fields.Raw(default={}, description='Health status of the bot on each platform'),
     'conversations': fields.List(fields.Integer),
+    'pause': fields.Boolean(required=True, default=False)
 })
 
 
@@ -286,7 +287,22 @@ class ActivateBot(Resource):
             return {"message": "Bot activated successfully"}, 200
         except Exception as e:
             return {"error": "Internal Server Error"}, 500
-
+        
+@ns_bots.route('/api/bots/<bot_id>/toggle_pause')
+class TogglePauseBot(Resource):
+    @ns_bots.doc('toggle_pause_bot')
+    def put(self, bot_id):
+        try:
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {"error": "Bot not found"}, 404
+            
+            bot.pause = not bot.pause
+            db.session.commit()
+            return {"message": "Bot pause status updated successfully to " + str(bot.pause)}, 200
+        except Exception as e:
+            return {"error": "Internal Server Error"}, 500
+            
 
 @ns_platform_bots.route('/api/<platform>/bots')
 class PlatformBots(Resource):
