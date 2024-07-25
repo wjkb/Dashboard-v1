@@ -84,21 +84,35 @@ class Conversation(db.Model):
 class FacebookMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
-    timestamp = db.Column(db.DateTime, nullable=False)
-    message = db.Column(db.Text, nullable=True)
     direction = db.Column(db.String(10), nullable=False)
+    message_id = db.Column(db.String(255), nullable=True)
+    message_text = db.Column(db.Text, nullable=True)
+    message_timestamp = db.Column(db.DateTime, nullable=True)
+
     file_path = db.Column(db.String(255), nullable=True)
     file_type = db.Column(db.String(50), nullable=True)
+
+    responded_to = db.Column(db.String(255), nullable=True)
+    response_bef_generation_timestamp = db.Column(db.DateTime, nullable=True)
+    response_aft_generation_timestamp = db.Column(db.DateTime, nullable=True)
+    response_status = db.Column(db.String(10), nullable=True)
 
     def serialize(self):
         return {
             'id': self.id,
             'conversation_id': self.conversation_id,
-            'timestamp': self.timestamp.isoformat(),
-            'message': self.message,
             'direction': self.direction,
+            'message_id': self.message_id,
+            'message_text': self.message_text,
+            'message_timestamp': self.message_timestamp.isoformat() if self.message_timestamp else None,
+
             'file_path': self.file_path,
-            'file_type': self.file_type
+            'file_type': self.file_type,
+
+            'responded_to': self.responded_to,
+            'response_bef_generation_timestamp': self.response_bef_generation_timestamp.isoformat() if self.response_bef_generation_timestamp else None,
+            'response_aft_generation_timestamp': self.response_aft_generation_timestamp.isoformat() if self.response_aft_generation_timestamp else None,
+            'response_status': self.response_status
         }
 
 
@@ -140,21 +154,35 @@ class WhatsappMessage(db.Model):
 class TelegramMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
-    timestamp = db.Column(db.DateTime, nullable=False)
-    message = db.Column(db.Text, nullable=True)
     direction = db.Column(db.String(10), nullable=False)
+    message_id = db.Column(db.String(255), nullable=True)
+    message_text = db.Column(db.Text, nullable=True)
+    message_timestamp = db.Column(db.DateTime, nullable=True)
+
     file_path = db.Column(db.String(255), nullable=True)
     file_type = db.Column(db.String(50), nullable=True)
+
+    responded_to = db.Column(db.String(255), nullable=True)
+    response_bef_generation_timestamp = db.Column(db.DateTime, nullable=True)
+    response_aft_generation_timestamp = db.Column(db.DateTime, nullable=True)
+    response_status = db.Column(db.String(10), nullable=True)
 
     def serialize(self):
         return {
             'id': self.id,
             'conversation_id': self.conversation_id,
-            'timestamp': self.timestamp.isoformat(),
-            'message': self.message,
             'direction': self.direction,
+            'message_id': self.message_id,
+            'message_text': self.message_text,
+            'message_timestamp': self.message_timestamp.isoformat() if self.message_timestamp else None,
+
             'file_path': self.file_path,
-            'file_type': self.file_type
+            'file_type': self.file_type,
+
+            'responded_to': self.responded_to,
+            'response_bef_generation_timestamp': self.response_bef_generation_timestamp.isoformat() if self.response_bef_generation_timestamp else None,
+            'response_aft_generation_timestamp': self.response_aft_generation_timestamp.isoformat() if self.response_aft_generation_timestamp else None,
+            'response_status': self.response_status
         }
     
 class MessageScreenshots(db.Model):
