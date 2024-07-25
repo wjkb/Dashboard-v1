@@ -1,10 +1,16 @@
-import subprocess
+import sys
+
+
+sys.path.append('..')
+from utils.send_utils import send_proactive_queue
+
 from flask import Blueprint, request
 from flask_restx import Api, Resource, fields
 from datetime import datetime
 import json
-from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, ExtractedInformation
-from backend.utils import save_file, create_zip
+import requests
+from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation
+from backend.utils import save_file, safe_parse_timestamp, create_zip
 
 # Initialize Flask-RESTx Api
 api_bp = Blueprint('api', __name__)
@@ -20,13 +26,21 @@ ns_graph_insights = api.namespace('graph_insights', description='Graph Insights 
 
 # Define models for Swagger documentation
 start_bot_script_model = ns_utils.model('StartBotScript', {
-    'botPhone': fields.String(required=True, description='The bot phone number', example='90217777'),
-    'targetUrl': fields.String(required=True, description='The URL to send the bot messages to', example='facebook.com/xyz'),
+    'botId': fields.String(required=True, description='The bot phone number', example='90217777'),
+    'scammerIds': fields.String(required=True, description='The list of scammer phone numbers', example='80216666'),
     'platform': fields.String(required=True, description='The platform the bot is talking on', example='Facebook'),
+    'typeOfScam': fields.String(required=True, description='The type of scam the bot is dealing with', example='Romance scam'),
+    'startingMessage': fields.String(description='The starting message to send to the scammers', example='Hello, how are you?'),
 })
 
 download_zip_model = ns_utils.model('DownloadZip', {
     'filePaths': fields.List(fields.String, required=True, description='The list of file paths to include in the zip file', example=['files/Facebook/1/User123/cat.jpg', 'files/Facebook/1/User123/cat.pdf', 'files/Facebook/1/User123/cat.txt']),
+})
+
+return_next_response_message_id_model = ns_utils.model('ReturnNextResponseMessageId', {
+    'platform': fields.String(required=True, description='The platform the bot is talking on', example='WhatsApp'),
+    'bot_id': fields.String(required=True, description='The bot phone number', example='90217777'),
+    'scammer_id': fields.String(required=True, description='The scammer phone number', example='80216666'),
 })
 
 receive_extracted_information_model = ns_messages.model('ReceiveExtractedInformation', {
@@ -37,23 +51,28 @@ receive_extracted_information_model = ns_messages.model('ReceiveExtractedInforma
     'value': fields.String(required=True, description='The value of the extracted information', example='John Doe'),
 })
 
+receive_screenshot_model = ns_messages.model('ReceiveScreenshot', {
+    'bot_id': fields.String(required=True, description='The bot phone number', example='90217777'),
+    'scammer_id': fields.String(required=True, description='The scammer phone number', example='80216666'),
+    'platform': fields.String(required=True, description='The platform the bot is talking on', example='Facebook'),
+    'file_path': fields.String(required=True, description='The path to the screenshot file', example='files/Facebook/1/1/screenshot.jpg'),
+})
+
 receive_message_model = ns_messages.model('ReceiveMessage', {
     'platform': fields.String(required=True, description='The platform the bot is talking on', example='WhatsApp'),
     'bot_id': fields.String(required=True, description='The bot phone number', example='90217777'),
     'scammer_id': fields.String(required=True, description='The scammer phone number', example='80216666'),
     'direction': fields.String(required=True, description='The direction of the message, either incoming or outgoing', example='outgoing'),
-    'message_id': fields.List(fields.String(description='The unique identifier of the message', example='1')),
-    'message_text': fields.List(fields.String(description='The message content', example='This is a test message using the API in flask-restx')),
-    'message_timestamp': fields.List(fields.String(example='2024-07-02T12:30:44')),
+    'message_id': fields.String(description='The unique identifier of the message', example='1'),
+    'message_text': fields.String(description='The message content', example='This is a test message using the API in flask-restx'),
+    'message_timestamp': fields.String(example='2024-07-02T12:30:44'),
 
-    'file_path': fields.List(fields.String(description='The path to the file if the message contains a file', example='files/Facebook/1/1/cat.jpg')),
-    'file_type': fields.List(fields.String(description='The MIME type of the file if the message contains a file', example='image/jpeg')),
+    'file_path': fields.String(description='The path to the file if the message contains a file', example='files/Facebook/1/1/cat.jpg'),
+    'file_type': fields.String(description='The MIME type of the file if the message contains a file', example='image/jpeg'),
 
-    'response_id': fields.String(description='The unique identifier of the response message', example='2'),
-    'response_text': fields.String(description='The response message content', example='This is a test response message using the API in flask-restx'),
+    'responded_to': fields.String(description='The message IDs that this message is responding to', example='1,2,3'),
     'response_bef_generation_timestamp': fields.String(description='The timestamp before the response is generated', example='2024-07-02T12:31:44'),
     'response_aft_generation_timestamp': fields.String(description='The timestamp after the response is generated', example='2024-07-02T12:32:25'),
-    'response_timestamp': fields.String(description='The timestamp when the response is sent', example='2024-07-02T12:33:56'),
     'response_status': fields.String(description='The status of the response, either Sending, Sent or Failed', example='Sent'),
 })
 
@@ -63,11 +82,11 @@ message_model = ns_messages.model('Message', {
     'direction': fields.String(required=True),
     'message_id': fields.String(),
     'message_text': fields.String(required=True),
-    'message_timestamp': fields.String(required=True),
+    'message_timestamp': fields.String(),
     'file_path': fields.String(),
     'file_type': fields.String(),
 
-    'message_ids_responded_to': fields.String(),
+    'responded_to': fields.String(),
     'response_bef_generation_timestamp': fields.String(),
     'response_aft_generation_timestamp': fields.String(),
     'response_status': fields.String(),
@@ -103,6 +122,7 @@ bot_model_1 = ns_bots.model('Bot1', {
     'platforms': fields.List(fields.String, required=True),
     'health_status': fields.Raw(default={}, description='Health status of the bot on each platform'),
     'conversations': fields.List(fields.Integer),
+    'pause': fields.Boolean(required=True, default=False)
 })
 
 
@@ -269,7 +289,22 @@ class ActivateBot(Resource):
             return {"message": "Bot activated successfully"}, 200
         except Exception as e:
             return {"error": "Internal Server Error"}, 500
-
+        
+@ns_bots.route('/api/bots/<bot_id>/toggle_pause')
+class TogglePauseBot(Resource):
+    @ns_bots.doc('toggle_pause_bot')
+    def put(self, bot_id):
+        try:
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {"error": "Bot not found"}, 404
+            
+            bot.pause = not bot.pause
+            db.session.commit()
+            return {"message": "Bot pause status updated successfully to " + str(bot.pause)}, 200
+        except Exception as e:
+            return {"error": "Internal Server Error"}, 500
+            
 
 @ns_platform_bots.route('/api/<platform>/bots')
 class PlatformBots(Resource):
@@ -379,7 +414,39 @@ class BotConversationMessages(Resource):
         except Exception as e:
             print(f"Error occurred: {e}")
             return {"error": "Internal Server Error"}, 500
-        
+
+@ns_messages.route('/api/<platform>/bots/<bot_id>/conversations/<scammer_unique_id>/screenshots')
+class BotConversationScreenshots(Resource):
+    @ns_messages.doc('get_screenshots')
+    def get(self, platform, bot_id, scammer_unique_id):
+        try:
+            platform_mapping = {
+                'facebook': 'Facebook',
+                'fb': 'Facebook',
+                'whatsapp': 'WhatsApp',
+                'wa': 'WhatsApp',
+                'telegram': 'Telegram',
+                'tg': 'Telegram'
+            }
+            platform_name = platform_mapping.get(platform.lower())
+            if not platform_name:
+                return {'error': 'Invalid platform'}, 400
+            
+            conversation = (
+                db.session.query(Conversation)
+                .join(Scammer, Conversation.scammer_id == Scammer.id)
+                .filter(Conversation.bot_id == bot_id, Conversation.platform == platform_name, Scammer.unique_id == scammer_unique_id)
+                .first()
+            )
+            if not conversation:
+                return {"error": "Conversation not found"}, 404
+            
+            screenshots = MessageScreenshots.query.filter_by(conversation_id=conversation.id).order_by(MessageScreenshots.id.desc()).all()
+            return [screenshot.serialize() for screenshot in screenshots]
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return {"error": "Internal Server Error"}, 500
+
 @ns_messages.route('/api/<platform>/bots/<bot_id>/conversations/<scammer_unique_id>/extracted_information')
 class BotConversationInformation(Resource):
     @ns_messages.doc('get_conversation_info')
@@ -432,17 +499,16 @@ class ReceiveMessage(Resource):
         bot_id = data['bot_id']
         scammer_unique_id = data['scammer_id']
         direction = data['direction']
-        message_ids = data.get('message_id', [])
-        message_texts = data.get('message_text', [])
-        message_timestamps = data.get('message_timestamp', [])
-        file_paths = data.get('file_path', [])
-        file_types = data.get('file_type', [])
+        message_id = data.get('message_id', None)
+        message_text = data.get('message_text', None)
+        message_timestamp = data.get('message_timestamp', None)
 
-        response_id = data.get('response_id', None)
-        response_text = data.get('response_text', None)
+        file_path = data.get('file_path', None)
+        file_type = data.get('file_type', None)
+
+        responded_to = data.get('responded_to', None)
         response_bef_generation_timestamp = data.get('response_bef_generation_timestamp', None)
         response_aft_generation_timestamp = data.get('response_aft_generation_timestamp', None)
-        response_timestamp = data.get('response_timestamp', None)
         response_status = data.get('response_status', None)
 
         # Check if bot exists, if not return an error
@@ -482,33 +548,115 @@ class ReceiveMessage(Resource):
 
         # Create message object
         if direction == 'incoming':
-            for i in range(len(message_ids)):
+            message = message_class.query.filter_by(conversation_id=conversation.id, direction=direction, message_id=message_id).first()
+            if not message:
                 message = message_class(
                     conversation_id=conversation.id,
                     direction=direction,
-                    message_id=message_ids[i],
-                    message_text=message_texts[i],
-                    message_timestamp=datetime.strptime(message_timestamps[i], '%Y-%m-%dT%H:%M:%S'),
+                    message_id=message_id,
+                    message_text=message_text,
+                    message_timestamp=safe_parse_timestamp(message_timestamp),
 
-                    file_path=file_paths[i] if file_paths else None,
-                    file_type=file_types[i] if file_types else None
+                    file_path=file_path,
+                    file_type=file_type
                 )
                 db.session.add(message)
+            else:
+                message.message_text = message_text
+                message.message_timestamp = safe_parse_timestamp(message_timestamp)
+
+                message.file_path = file_path
+                message.file_type = file_type
         elif direction == 'outgoing':
-            message = message_class(
-                conversation_id=conversation.id,
-                direction=direction,
-                message_id=response_id,
-                message_text=response_text,
-                message_timestamp=datetime.strptime(response_timestamp, '%Y-%m-%dT%H:%M:%S'),
-                
-                message_ids_responded_to="" if not message_ids else ", ".join(message_ids),
-                response_bef_generation_timestamp=datetime.strptime(response_bef_generation_timestamp, '%Y-%m-%dT%H:%M:%S'),
-                response_aft_generation_timestamp=datetime.strptime(response_aft_generation_timestamp, '%Y-%m-%dT%H:%M:%S'),
-                response_status=response_status
-            )
-            db.session.add(message)
+            message = message_class.query.filter_by(conversation_id=conversation.id, direction=direction, message_id=message_id).first()
+            if not message:
+                message = message_class(
+                    conversation_id=conversation.id,
+                    direction=direction,
+                    message_id=message_id,
+                    message_text=message_text,
+                    message_timestamp=safe_parse_timestamp(message_timestamp),
+
+                    file_path=file_path,
+                    file_type=file_type,
+
+                    responded_to = responded_to,
+                    response_bef_generation_timestamp=safe_parse_timestamp(response_bef_generation_timestamp),
+                    response_aft_generation_timestamp=safe_parse_timestamp(response_aft_generation_timestamp),
+                    response_status=response_status
+                )
+                db.session.add(message)
+            else:
+                message.message_text = message_text
+                message.message_timestamp = safe_parse_timestamp(message_timestamp)
+
+                message.file_path = file_path
+                message.file_type = file_type
+
+                message.responded_to = responded_to
+                message.response_bef_generation_timestamp = safe_parse_timestamp(response_bef_generation_timestamp)
+                message.response_aft_generation_timestamp = safe_parse_timestamp(response_aft_generation_timestamp)
+                message.response_status = response_status
+
+        db.session.commit()
+        return {'status': 'success'}, 201
+    
+@ns_messages.route('/api/screenshots')
+class ReceiveScreenshot(Resource):
+    @ns_messages.doc('add_screenshot')
+    @ns_messages.expect(receive_screenshot_model)
+    def post(self):
+        platform_mapping = {
+            'facebook': 'Facebook',
+            'fb': 'Facebook',
+            'whatsapp': 'WhatsApp',
+            'wa': 'WhatsApp',
+            'telegram': 'Telegram',
+            'tg': 'Telegram'
+        }
+            
+        data = request.get_json()
+
+        platform = platform_mapping.get(data['platform'].lower())
+        if not platform:
+            return {'status': 'error', 'message': 'Unsupported platform'}, 400
         
+        bot_id = data['bot_id']
+        scammer_unique_id = data['scammer_id']
+        file_path = data['file_path']
+
+        # Check if bot exists, if not return an error
+        bot = Bot.query.get(bot_id)
+        if not bot:
+            return {'status': 'error', 'message': 'Bot not found'}, 404
+        
+        # Check if scammer exists, if not create a new scammer
+        scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform).first()
+        if not scammer:
+            scammer = Scammer(unique_id=scammer_unique_id, platform=platform)
+            db.session.add(scammer)
+            db.session.commit()
+
+        # Check if conversation exists, if not create a new conversation
+        conversation = Conversation.query.filter_by(
+            bot_id=bot.id,
+            platform=platform,
+            scammer_id=scammer.id
+        ).first()
+        if not conversation:
+            conversation = Conversation(
+                bot_id=bot.id,
+                platform=platform,
+                scammer_id=scammer.id
+            )
+            db.session.add(conversation)
+            db.session.commit()
+
+        new_screenshot = MessageScreenshots(
+            conversation_id=conversation.id,
+            file_path=file_path
+        )
+        db.session.add(new_screenshot)
         db.session.commit()
         return {'status': 'success'}, 201
 
@@ -560,41 +708,178 @@ class ReceiveExtractedInformation(Resource):
         db.session.commit()
         return {'status': 'success'}, 201
 
+@ns_utils.route('/api/get_next_response_message_id')
+class GetNextResponseMessageId(Resource):
+    @ns_utils.expect(return_next_response_message_id_model)
+    def post(self):
+        try:
+            platform_mapping = {
+                'facebook': 'Facebook',
+                'fb': 'Facebook',
+                'whatsapp': 'WhatsApp',
+                'wa': 'WhatsApp',
+                'telegram': 'Telegram',
+                'tg': 'Telegram'
+            }
+
+            data = request.get_json()
+            platform = platform_mapping.get(data.get('platform').lower())
+            if not platform:
+                return {'status': 'error', 'message': 'Unsupported platform'}, 400
+            bot_id = data.get('bot_id')
+            scammer_unique_id = data.get('scammer_id')
+
+            # Get the bot
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {'status': 'error', 'message': 'Bot not found'}, 404
+
+            # Get the scammer
+            scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform).first()
+            if not scammer:
+                return {'next_message_id': '1'}, 200
+
+            # Get the conversation. If no conversation yet, return message_id 1
+            conversation = Conversation.query.filter_by(bot_id=bot_id, platform=platform, scammer_id=scammer.id).first()
+            if not conversation:
+                return {'next_message_id': '1'}, 200
+            
+            platform_message_classes = {
+                'facebook': FacebookMessage,
+                'whatsapp': WhatsappMessage,
+                'telegram': TelegramMessage
+            }
+            
+            print(f"Getting next response message ID for bot {bot_id} on platform {platform} for scammer {scammer_unique_id}")
+            platformMessage = platform_message_classes[platform.lower()]
+            print(f"Platform message class: {platform}")
+            # Get the last message sent by the bot
+            last_bot_message = (
+                db.session.query(platformMessage)
+                .filter_by(conversation_id=conversation.id, direction='outgoing')
+                .order_by(platformMessage.message_timestamp.desc())
+                .first()
+            )
+            print(f"Last bot message: {last_bot_message}")
+            if not last_bot_message:
+                return {'next_message_id': '1'}, 200
+            else:
+                return {'next_message_id': str(int(last_bot_message.message_id) + 1)}, 200
+        
+        except Exception as e:
+            return {'status': 'error', 'message': str(e)}, 500
+
 # TODO: This is just a route to simulate starting a bot script with fake messages. Replace with actual bot script execution
-@ns_utils.route('/api/start_bot')
-class StartBot(Resource):
+@ns_utils.route('/api/send_bot')
+class SendBot(Resource):
     @ns_utils.expect(start_bot_script_model)
     def post(self):
         try:
-            data = request.json
-            bot_phone_number = data.get('botPhone')
-            target_url = data.get('targetUrl')
-            platform = data.get('platform')
+            platform_mapping = {
+                'facebook': 'FA',
+                'fb': 'FA',
+                'whatsapp': 'WA',
+                'wa': 'WA',
+                'telegram': 'TG',
+                'tg': 'TG'
+            }
 
-            if not bot_phone_number or not target_url or not platform:
+            data = request.get_json()
+            bot_id = data.get('botId')
+            scammer_ids = data.get('scammerIds')
+            platform = platform_mapping[data.get('platform').lower()]
+            type_of_scam = data.get('typeOfScam')
+            starting_message = data.get('startingMessage')
+
+            if not bot_id or not scammer_ids or not platform or not type_of_scam:
                 return {'status': 'error', 'message': 'Missing required fields'}, 400
             
-            bot = Bot.query.filter_by(phone=bot_phone_number).first()
+            bot = Bot.query.get(bot_id)
             if not bot:
                 return {'status': 'error', 'message': 'Bot not found'}, 404
             
             # Update health status to running
             new_health_status = json.loads(bot.health_status)
-            print(new_health_status)
-            new_health_status[platform] = 'running'
-            print(new_health_status)
+            new_health_status[data.get('platform')] = 'running'
             bot.set_health_status(new_health_status)
             db.session.commit()
 
-            print(f"Starting bot {bot_phone_number} for platform {platform} at {target_url}")
+            scammer_ids = scammer_ids.split(',')
+            for scammer_unique_id in scammer_ids:
+                next_response_data = {
+                    "platform": platform,
+                    "bot_id": bot_id,
+                    "scammer_id": scammer_unique_id
+                }
+                response = requests.post('http://localhost:5000/api/get_next_response_message_id', json=next_response_data)
+                next_message_id = response.json().get('next_message_id')
+                message = {
+                    "platform": platform,
+                    "bot_id": bot_id,
+                    "scammer_id": scammer_unique_id,
+                    "direction": "outgoing",
+                    "message_id": next_message_id,
+                    "message_text": starting_message,
+                    "response_status": "Sending"
+                }
+                send_proactive_queue(message)
 
-            # Command to start the bot script
-            command = f"python bot.py {platform} {bot_phone_number} {target_url}"
-            subprocess.Popen(command, shell=True)
-            print(f"Command run: {command}")
+                # Update database with new platform message
+                response = requests.post('http://localhost:5000/api/messages', json=message)
 
-            return {"status": "success","message": "Bot sent successfully"}, 200
+        except Exception as e:
+            return {'status': 'error', 'message': str(e)}, 500
+        
+@ns_utils.route('/api/send_proactive_message')
+class SendProactiveMessage(Resource):
+    def post(self):
+        try:
+            platform_mapping = {
+                'facebook': 'FA',
+                'fb': 'FA',
+                'whatsapp': 'WA',
+                'wa': 'WA',
+                'telegram': 'TG',
+                'tg': 'TG'
+            }
+            
+            data = request.get_json()
+            bot_id = data.get('botId')
+            scammer_unique_id = data.get('scammerId')
+            platform = platform_mapping[data.get('platform').lower()]
+            message = data.get('message')
 
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {'status': 'error', 'message': 'Bot not found'}, 404
+
+            if not bot.pause:
+                return {'status': 'error', 'message': 'Bot is running. Pause first!'}, 400
+            
+            next_response_data = {
+                "platform": platform,
+                "bot_id": bot_id,
+                "scammer_id": scammer_unique_id
+            }
+            response = requests.post('http://localhost:5000/api/get_next_response_message_id', json=next_response_data)
+            next_message_id = response.json().get('next_message_id')
+            
+            message = {
+                "platform": platform,
+                "bot_id": bot_id,
+                "scammer_id": scammer_unique_id,
+                "direction": "outgoing",
+                "message_id": next_message_id,
+                "message_text": message,
+                "response_status": "Sending"
+            }
+            send_proactive_queue(message)
+
+            # Update database with new platform message
+            response = requests.post('http://localhost:5000/api/messages', json=message)
+
+            return {"status": "success", "message": "Proactive message sent successfully"}, 200
+        
         except Exception as e:
             return {'status': 'error', 'message': str(e)}, 500
     
@@ -663,8 +948,6 @@ class RecentMessages(Resource):
                 .limit(5)
                 .all()
             )
-
-            
             
             # Serialize the messages along with conversation details
             response = []
@@ -688,6 +971,3 @@ class RecentMessages(Resource):
         
         except Exception as e:
             return {'error': str(e)}, 500
-
-
-    

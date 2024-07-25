@@ -7,22 +7,25 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
 import { DataGrid } from "@mui/x-data-grid";
 import { getAllBots, sendBot } from "../../api";
+import SuccessDialog from "./SuccessDialog";
 import Circle from "@mui/icons-material/Circle";
 import CloseIcon from "@mui/icons-material/Close";
 import SendIcon from "@mui/icons-material/Send";
 
 const initialValues = {
-  url: "",
+  scammerIds: "",
   platform: "",
+  typeOfScam: "",
+  initialMessage: "",
 };
 
-const URL_REGEX =
-  /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/;
 const platformNames = ["Facebook", "WhatsApp", "Telegram"];
 
 const botScheme = yup.object().shape({
-  url: yup.string().required("required").matches(URL_REGEX, "Invalid URL"),
+  scammerIds: yup.string().required("required"),
   platform: yup.string().required("required"),
+  typeOfScam: yup.string().required("required"),
+  startingMessage: yup.string(),
 });
 
 /**
@@ -38,6 +41,7 @@ const ManualSendForm = () => {
   const [formValues, setFormValues] = useState(initialValues);
   const [activeBots, setActiveBots] = useState([]);
   const [filteredBots, setFilteredBots] = useState([]);
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false); // State for SuccessDialog
   const [error, setError] = useState(null);
 
   const fetchBots = useCallback(async () => {
@@ -74,13 +78,26 @@ const ManualSendForm = () => {
 
   const handleSendClick = async (bot) => {
     try {
-      const { url: targetUrl, platform } = formValues;
-      await sendBot(bot.phone, targetUrl, platform);
+      const { scammerIds, platform, typeOfScam, startingMessage } = formValues;
+      console.log(
+        "Sending bot",
+        bot.id,
+        scammerIds,
+        platform,
+        typeOfScam,
+        startingMessage
+      );
+      await sendBot(bot.id, scammerIds, platform, typeOfScam, startingMessage);
       // Fetch updated bot list after sending
       await fetchBots();
+      setIsSuccessDialogOpen(true);
     } catch (error) {
       console.error("Error sending bot", error);
     }
+  };
+
+  const handleCloseSuccessDialog = () => {
+    setIsSuccessDialogOpen(false);
   };
 
   /**
@@ -118,10 +135,9 @@ const ManualSendForm = () => {
    * Columns configuration for the DataGrid displaying bot information.
    */
   const columns = [
-    { field: "id", headerName: "ID", flex: 0.5 },
     {
-      field: "phone",
-      headerName: "Phone Number",
+      field: "id",
+      headerName: "ID",
       flex: 1,
       cellClassName: "phone-column--cell",
     },
@@ -224,18 +240,18 @@ const ManualSendForm = () => {
                 "& > div": { gridColumn: isNonMobile ? undefined : "span 4" },
               }}
             >
-              {/* URL field */}
+              {/* Scammer ID(s) field */}
               <TextField
                 fullWidth
                 variant="filled"
                 type="text"
-                label="URL"
+                label="Scammer ID(s)"
                 onBlur={handleBlur}
                 onChange={handleChange}
-                value={values.url}
-                name="url"
-                error={!!touched.url && !!errors.url}
-                helperText={touched.url && errors.url}
+                value={values.scammerIds}
+                name="scammerIds"
+                error={!!touched.scammerIds && !!errors.scammerIds}
+                helperText={touched.scammerIds && errors.scammerIds}
                 sx={{ gridColumn: "span 4" }}
               />
 
@@ -260,6 +276,36 @@ const ManualSendForm = () => {
                   </MenuItem>
                 ))}
               </TextField>
+
+              {/* Type of Scam field */}
+              <TextField
+                fullWidth
+                variant="filled"
+                type="text"
+                label="Type of Scam"
+                onBlur={handleBlur}
+                onChange={handleChange}
+                value={values.typeOfScam}
+                name="typeOfScam"
+                error={!!touched.typeOfScam && !!errors.typeOfScam}
+                helperText={touched.typeOfScam && errors.typeOfScam}
+                sx={{ gridColumn: "span 4" }}
+              />
+
+              {/* Starting Message field */}
+              <TextField
+                fullWidth
+                variant="filled"
+                type="text"
+                label="Starting Message (optional)"
+                onBlur={handleBlur}
+                onChange={handleChange}
+                value={values.startingMessage}
+                name="startingMessage"
+                error={!!touched.startingMessage && !!errors.startingMessage}
+                helperText={touched.startingMessage && errors.startingMessage}
+                sx={{ gridColumn: "span 4" }}
+              />
             </Box>
             <Box display="flex" justifyContent="end" mt="20px">
               <Button
@@ -313,6 +359,12 @@ const ManualSendForm = () => {
           </Box>
         </Box>
       )}
+
+      <SuccessDialog
+        open={isSuccessDialogOpen}
+        onClose={handleCloseSuccessDialog}
+        formValues={formValues}
+      />
     </Box>
   );
 };

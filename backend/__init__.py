@@ -27,7 +27,8 @@ def create_app(config_name='default'):
     @app.route('/<path:filepath>')
     def serve_files(filepath):
         parent_directory = os.path.dirname(app.root_path)
-        response = make_response(send_from_directory(parent_directory, filepath))
+        media_directory = os.path.join(parent_directory, 'media')
+        response = make_response(send_from_directory(media_directory, filepath))
         # Check the 'download' query parameter
         download = request.args.get('download')
         if download == 'true':

@@ -18,50 +18,15 @@ import {
 import { tokens } from "../../theme";
 
 /**
- * Renders a tab displaying messages with various media types and file attachments.
- *
+ * Renders a tab displaying screenshots of the conversation.
  * @component
  * @param {Object} props - Component props.
- * @param {Array<Object>} props.messages - Array of message objects to display.
- * @param {Object} props.messageRefs - Refs to messages for scrolling.
- * @param {string | number | null} props.highlightedMessage - ID of the highlighted message.
- * @returns {JSX.Element} - MessagesTab component.
+ * @param {Array<Object>} props.screenshots - Array of screenshot objects to display.
+ * @returns {JSX.Element} - ScreenshotsTab component.
  */
-const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
-  const filteredMessages = messages.filter(
-    (message) =>
-      message.response_status === null ||
-      message.response_status.toLowerCase() === "sent"
-  );
-
+const ScreenshotsTab = ({ screenshots }) => {
   const theme = useTheme();
   const colors = tokens;
-
-  // Styles for message types
-  const messageStyles = {
-    incoming: {
-      backgroundColor: colors.grey[100],
-      color: colors.black,
-      marginRight: "auto",
-    },
-    outgoing: {
-      backgroundColor: colors.greenAccent,
-      color: colors.black,
-      marginLeft: "auto",
-    },
-  };
-
-  /**
-   * Formats timestamp to a readable date and time format.
-   *
-   * @param {number} timestamp - Unix timestamp.
-   * @returns {string} - Formatted date and time string.
-   */
-  const formatDateTime = (timestamp) => {
-    const date = new Date(timestamp);
-    const formattedDateTime = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-    return formattedDateTime;
-  };
 
   /**
    * Renders different file types based on their MIME type.
@@ -168,18 +133,12 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
   return (
     <Box overflow="auto">
       <List>
-        {filteredMessages.map((msg, index) => (
+        {screenshots.map((screenshot, index) => (
           <ListItem
             key={index}
-            ref={(el) => (messageRefs.current[msg.id] = el)}
             sx={{
               display: "flex",
               flexDirection: "column",
-              alignItems:
-                msg.direction === "incoming" ? "flex-start" : "flex-end",
-              backgroundColor:
-                highlightedMessage === msg.id ? "yellow" : "inherit",
-              transition: "background-color 0.5s ease",
             }}
           >
             <Paper
@@ -188,16 +147,10 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                 padding: theme.spacing(1),
                 borderRadius: theme.shape.borderRadius,
                 maxWidth: "60%",
-                ...messageStyles[msg.direction],
               }}
             >
-              {msg.file_path && renderFile(msg.file_path, msg.file_type)}
-              {msg.message_text && (
-                <Typography variant="body1">{msg.message_text}</Typography>
-              )}
-              <Typography variant="caption" color={colors.grey[500]}>
-                {formatDateTime(msg.message_timestamp)}
-              </Typography>
+              {screenshot.file_path &&
+                renderFile(screenshot.file_path, "image/jpeg")}
             </Paper>
           </ListItem>
         ))}
@@ -206,4 +159,4 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
   );
 };
 
-export default MessagesTab;
+export default ScreenshotsTab;
