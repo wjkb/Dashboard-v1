@@ -1,5 +1,6 @@
 import sys
 
+
 sys.path.append('..')
 from utils.send_utils import send_proactive_queue
 
@@ -7,6 +8,7 @@ from flask import Blueprint, request
 from flask_restx import Api, Resource, fields
 from datetime import datetime
 import json
+import requests
 from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation
 from backend.utils import save_file, safe_parse_timestamp, create_zip
 
@@ -803,16 +805,22 @@ class SendBot(Resource):
             db.session.commit()
 
             scammer_ids = scammer_ids.split(',')
-            for scammer_id in scammer_ids:
+            for scammer_unique_id in scammer_ids:
+                next_response_data = {
+                    "platform": platform,
+                    "bot_id": bot_id,
+                    "scammer_id": scammer_unique_id
+                }
+                response = requests.post('http://localhost:5000/api/get_next_response_message_id', json=next_response_data)
+                next_message_id = response.json().get('next_message_id')
                 message = {
                     "platform": platform,
                     "bot_id": bot_id,
-                    "scammer_id": scammer_id,
-                    "message_text": starting_message
+                    "scammer_id": scammer_unique_id,
+                    "message_text": starting_message,
+                    "message_id": next_message_id
                 }
                 send_proactive_queue(message)
-
-            return {"status": "success","message": "Bot sent successfully"}, 200
 
         except Exception as e:
             return {'status': 'error', 'message': str(e)}, 500
@@ -832,7 +840,7 @@ class SendProactiveMessage(Resource):
             
             data = request.get_json()
             bot_id = data.get('botId')
-            scammer_id = data.get('scammerId')
+            scammer_unique_id = data.get('scammerId')
             platform = platform_mapping[data.get('platform').lower()]
             message = data.get('message')
 
@@ -843,11 +851,20 @@ class SendProactiveMessage(Resource):
             if not bot.pause:
                 return {'status': 'error', 'message': 'Bot is running. Pause first!'}, 400
             
+            next_response_data = {
+                "platform": platform,
+                "bot_id": bot_id,
+                "scammer_id": scammer_unique_id
+            }
+            response = requests.post('http://localhost:5000/api/get_next_response_message_id', json=next_response_data)
+            next_message_id = response.json().get('next_message_id')
+            
             message = {
                 "platform": platform,
                 "bot_id": bot_id,
-                "scammer_id": scammer_id,
-                "message_text": message
+                "scammer_id": scammer_unique_id,
+                "message_text": message,
+                "message_id": next_message_id
             }
             send_proactive_queue(message)
 
