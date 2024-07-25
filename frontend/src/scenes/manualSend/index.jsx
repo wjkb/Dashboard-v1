@@ -43,6 +43,7 @@ const ManualSendForm = () => {
   const [filteredBots, setFilteredBots] = useState([]);
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false); // State for SuccessDialog
   const [error, setError] = useState(null);
+  const [sentBot, setSentBot] = useState(null);
 
   const fetchBots = useCallback(async () => {
     try {
@@ -90,6 +91,7 @@ const ManualSendForm = () => {
       await sendBot(bot.id, scammerIds, platform, typeOfScam, startingMessage);
       // Fetch updated bot list after sending
       await fetchBots();
+      setSentBot(bot);
       setIsSuccessDialogOpen(true);
     } catch (error) {
       console.error("Error sending bot", error);
@@ -364,6 +366,7 @@ const ManualSendForm = () => {
         open={isSuccessDialogOpen}
         onClose={handleCloseSuccessDialog}
         formValues={formValues}
+        sentBot={sentBot}
       />
     </Box>
   );
