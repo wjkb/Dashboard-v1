@@ -7,6 +7,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
 import { DataGrid } from "@mui/x-data-grid";
 import { getAllBots, sendBot } from "../../api";
+import SuccessDialog from "./SuccessDialog";
 import Circle from "@mui/icons-material/Circle";
 import CloseIcon from "@mui/icons-material/Close";
 import SendIcon from "@mui/icons-material/Send";
@@ -40,6 +41,7 @@ const ManualSendForm = () => {
   const [formValues, setFormValues] = useState(initialValues);
   const [activeBots, setActiveBots] = useState([]);
   const [filteredBots, setFilteredBots] = useState([]);
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false); // State for SuccessDialog
   const [error, setError] = useState(null);
 
   const fetchBots = useCallback(async () => {
@@ -88,9 +90,14 @@ const ManualSendForm = () => {
       await sendBot(bot.id, scammerIds, platform, typeOfScam, startingMessage);
       // Fetch updated bot list after sending
       await fetchBots();
+      setIsSuccessDialogOpen(true);
     } catch (error) {
       console.error("Error sending bot", error);
     }
+  };
+
+  const handleCloseSuccessDialog = () => {
+    setIsSuccessDialogOpen(false);
   };
 
   /**
@@ -352,6 +359,12 @@ const ManualSendForm = () => {
           </Box>
         </Box>
       )}
+
+      <SuccessDialog
+        open={isSuccessDialogOpen}
+        onClose={handleCloseSuccessDialog}
+        formValues={formValues}
+      />
     </Box>
   );
 };
