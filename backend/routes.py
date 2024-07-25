@@ -751,10 +751,19 @@ class SendBot(Resource):
     @ns_utils.expect(start_bot_script_model)
     def post(self):
         try:
+            platform_mapping = {
+                'facebook': 'FA',
+                'fb': 'FA',
+                'whatsapp': 'WA',
+                'wa': 'WA',
+                'telegram': 'TG',
+                'tg': 'TG'
+            }
+
             data = request.get_json()
             bot_id = data.get('botPhone')
             scammer_ids = data.get('scammerIds')
-            platform = data.get('platform')
+            platform = platform_mapping[data.get('platform').lower()]
             type_of_scam = data.get('typeOfScam')
 
             if not bot_id or not scammer_ids or not platform or not type_of_scam:
@@ -766,13 +775,10 @@ class SendBot(Resource):
             
             # Update health status to running
             new_health_status = json.loads(bot.health_status)
-            print(new_health_status)
-            new_health_status[platform] = 'running'
-            print(new_health_status)
+            new_health_status[data.get('platform')] = 'running'
             bot.set_health_status(new_health_status)
             db.session.commit()
 
-            print(f"Sending bot {bot_id} for platform {platform} to scammers: {scammer_ids} of type {type_of_scam}")
             scammer_ids = scammer_ids.split(',')
             for scammer_id in scammer_ids:
                 message = {
