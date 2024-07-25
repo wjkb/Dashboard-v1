@@ -1,5 +1,16 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Box, Tabs, Tab, Button } from "@mui/material";
+import {
+  Box,
+  Tabs,
+  Tab,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  TextField,
+} from "@mui/material";
 import { useParams } from "react-router-dom";
 import {
   getBot,
@@ -7,6 +18,7 @@ import {
   getBotConversationExtractedInformation,
   getBotConversationScreenshots,
   toggleBotPause,
+  sendProactiveMessage,
 } from "../../../api";
 import Header from "../../../components/Header";
 import MessagesTab from "../MessagesTab";
@@ -38,6 +50,8 @@ const WhatsappUserMessages = () => {
   const [tabValue, setTabValue] = useState(TAB_MESSAGES);
   const messageRefs = useRef({});
   const [highlightedMessage, setHighlightedMessage] = useState(null);
+  const [openSendMessageDialog, setOpenSendMessageDialog] = useState(false);
+  const [messageText, setMessageText] = useState("");
 
   /**
    * Fetches bot details
@@ -144,6 +158,31 @@ const WhatsappUserMessages = () => {
     }
   };
 
+  const handleSendMessage = async () => {
+    try {
+      await sendProactiveMessage(
+        botId,
+        scammerUniqueId,
+        "whatsapp",
+        messageText
+      );
+      setOpenSendMessageDialog(false);
+      setMessageText("");
+      fetchMessages();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleOpenSendMessageDialog = () => {
+    setOpenSendMessageDialog(true);
+  };
+
+  const handleCloseSendMessageDialog = () => {
+    setOpenSendMessageDialog(false);
+    setMessageText("");
+  };
+
   const handleViewFile = (messageId) => {
     setTabValue(TAB_MESSAGES); // Switch back to the messages tab
     setTimeout(() => {
@@ -209,6 +248,59 @@ const WhatsappUserMessages = () => {
       >
         {bot ? (bot.pause ? "Resume Bot" : "Pause Bot") : "Loading..."}
       </Button>
+      {bot && bot.pause && (
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleOpenSendMessageDialog}
+          style={{ marginBottom: "10px", marginLeft: "10px" }}
+        >
+          Send Message
+        </Button>
+      )}
+
+      <Dialog
+        open={openSendMessageDialog}
+        onClose={handleCloseSendMessageDialog}
+        PaperProps={{
+          style: {
+            width: "50vh", // Customize the width here
+          },
+        }}
+      >
+        <DialogTitle>Send Message</DialogTitle>
+        <DialogContent>
+          <DialogContentText>Type your message below:</DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Message"
+            type="text"
+            fullWidth
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            multiline
+            rows={4} // Initial number of rows
+            maxRows={10} // Maximum number of rows
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseSendMessageDialog}
+            color="primary"
+            variant="contained"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSendMessage}
+            color="primary"
+            variant="contained"
+          >
+            Send
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Box height="75vh" display="flex" flexDirection="column">
         <Tabs

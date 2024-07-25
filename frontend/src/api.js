@@ -154,6 +154,29 @@ export const sendBot = async (
   }
 };
 
+export const sendProactiveMessage = async (
+  botId,
+  scammerId,
+  platform,
+  message
+) => {
+  try {
+    const response = await fetch(`${API_URL}/send_proactive_message`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ botId, scammerId, platform, message }),
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error sending proactive message: ${error.message}`);
+  }
+};
+
 // PUT APIs
 export const editBot = async (botId, updatedData) => {
   try {

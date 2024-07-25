@@ -727,15 +727,20 @@ class GetNextResponseMessageId(Resource):
             bot_id = data.get('bot_id')
             scammer_unique_id = data.get('scammer_id')
 
+            # Get the bot
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {'status': 'error', 'message': 'Bot not found'}, 404
+
             # Get the scammer
             scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform).first()
             if not scammer:
-                return {'status': 'error', 'message': 'Scammer not found'}, 404
+                return {'next_message_id': '1'}, 200
 
-            # Get the conversation
+            # Get the conversation. If no conversation yet, return message_id 1
             conversation = Conversation.query.filter_by(bot_id=bot_id, platform=platform, scammer_id=scammer.id).first()
             if not conversation:
-                return {'status': 'error', 'message': 'Conversation not found'}, 404
+                return {'next_message_id': '1'}, 200
             
             platform_message_classes = {
                 'facebook': FacebookMessage,
@@ -803,12 +808,51 @@ class SendBot(Resource):
                     "platform": platform,
                     "bot_id": bot_id,
                     "scammer_id": scammer_id,
-                    "starting_message": starting_message
+                    "message_text": starting_message
                 }
                 send_proactive_queue(message)
 
             return {"status": "success","message": "Bot sent successfully"}, 200
 
+        except Exception as e:
+            return {'status': 'error', 'message': str(e)}, 500
+        
+@ns_utils.route('/api/send_proactive_message')
+class SendProactiveMessage(Resource):
+    def post(self):
+        try:
+            platform_mapping = {
+                'facebook': 'FA',
+                'fb': 'FA',
+                'whatsapp': 'WA',
+                'wa': 'WA',
+                'telegram': 'TG',
+                'tg': 'TG'
+            }
+            
+            data = request.get_json()
+            bot_id = data.get('botId')
+            scammer_id = data.get('scammerId')
+            platform = platform_mapping[data.get('platform').lower()]
+            message = data.get('message')
+
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {'status': 'error', 'message': 'Bot not found'}, 404
+
+            if not bot.pause:
+                return {'status': 'error', 'message': 'Bot is running. Pause first!'}, 400
+            
+            message = {
+                "platform": platform,
+                "bot_id": bot_id,
+                "scammer_id": scammer_id,
+                "message_text": message
+            }
+            send_proactive_queue(message)
+
+            return {"status": "success", "message": "Proactive message sent successfully"}, 200
+        
         except Exception as e:
             return {'status': 'error', 'message': str(e)}, 500
     
