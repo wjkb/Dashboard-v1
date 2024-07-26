@@ -1,6 +1,5 @@
 import sys
 
-
 sys.path.append('..')
 from utils.send_utils import send_proactive_queue
 
@@ -820,6 +819,7 @@ class SendBot(Resource):
                     "direction": "outgoing",
                     "message_id": next_message_id,
                     "message_text": starting_message,
+                    "message_timestamp": datetime.now().isoformat(timespec='seconds'),
                     "response_status": "Sending"
                 }
                 send_proactive_queue(message)
@@ -835,8 +835,8 @@ class SendProactiveMessage(Resource):
     def post(self):
         try:
             platform_mapping = {
-                'facebook': 'FA',
-                'fb': 'FA',
+                'facebook': 'FB',
+                'fb': 'FB',
                 'whatsapp': 'WA',
                 'wa': 'WA',
                 'telegram': 'TG',
@@ -871,6 +871,7 @@ class SendProactiveMessage(Resource):
                 "direction": "outgoing",
                 "message_id": next_message_id,
                 "message_text": message,
+                "message_timestamp": datetime.now().isoformat(timespec='seconds'),
                 "response_status": "Sending"
             }
             send_proactive_queue(message)
