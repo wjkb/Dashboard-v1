@@ -52,6 +52,8 @@ const PlatformUserMessages = ({ platform }) => {
   const [highlightedMessage, setHighlightedMessage] = useState(null);
   const [openSendMessageDialog, setOpenSendMessageDialog] = useState(false);
   const [messageText, setMessageText] = useState("");
+  const [openPauseDialog, setOpenPauseDialog] = useState(false);
+  const [openResumeDialog, setOpenResumeDialog] = useState(false);
 
   /**
    * Fetches bot details
@@ -149,7 +151,7 @@ const PlatformUserMessages = ({ platform }) => {
     fetchMessages();
   };
 
-  const handlePauseorResumeBot = async () => {
+  const handlePauseorResumeBot = async (action) => {
     try {
       await toggleBotPause(botId);
       fetchBot();
@@ -176,6 +178,32 @@ const PlatformUserMessages = ({ platform }) => {
   const handleCloseSendMessageDialog = () => {
     setOpenSendMessageDialog(false);
     setMessageText("");
+  };
+
+  const handleOpenPauseDialog = () => {
+    setOpenPauseDialog(true);
+  };
+
+  const handleClosePauseDialog = () => {
+    setOpenPauseDialog(false);
+  };
+
+  const handleOpenResumeDialog = () => {
+    setOpenResumeDialog(true);
+  };
+
+  const handleCloseResumeDialog = () => {
+    setOpenResumeDialog(false);
+  };
+
+  const handleConfirmPause = () => {
+    handlePauseorResumeBot("pause");
+    setOpenPauseDialog(false);
+  };
+
+  const handleConfirmResume = () => {
+    handlePauseorResumeBot("resume");
+    setOpenResumeDialog(false);
   };
 
   const handleViewFile = (messageId) => {
@@ -238,7 +266,13 @@ const PlatformUserMessages = ({ platform }) => {
       <Button
         variant="contained"
         color="primary"
-        onClick={handlePauseorResumeBot}
+        onClick={
+          bot
+            ? bot.pause
+              ? handleOpenResumeDialog
+              : handleOpenPauseDialog
+            : null
+        }
         style={{ marginBottom: "10px", marginLeft: "10px" }}
       >
         {bot ? (bot.pause ? "Resume Bot" : "Pause Bot") : "Loading..."}
@@ -293,6 +327,56 @@ const PlatformUserMessages = ({ platform }) => {
             variant="contained"
           >
             Send
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openPauseDialog} onClose={handleClosePauseDialog}>
+        <DialogTitle>Confirm Pause</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to pause the bot?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleClosePauseDialog}
+            color="primary"
+            variant="contained"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmPause}
+            color="primary"
+            variant="contained"
+          >
+            Pause
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openResumeDialog} onClose={handleCloseResumeDialog}>
+        <DialogTitle>Confirm Resume</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to resume the bot?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseResumeDialog}
+            color="primary"
+            variant="contained"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmResume}
+            color="primary"
+            variant="contained"
+          >
+            Resume
           </Button>
         </DialogActions>
       </Dialog>
