@@ -58,6 +58,26 @@ const PlatformUserMessages = ({ platform }) => {
   const [isPaused, setIsPaused] = useState(false);
   const [pauseButtonDisabled, setPauseButtonDisabled] = useState(false);
 
+  useEffect(() => {
+    // Reset state when botId or scammerUniqueId changes
+    setBot(null);
+    setMessages([]);
+    setFiles([]);
+    setScreenshots([]);
+    setExtractedInformation([]);
+    setLoading(true);
+    setError(null);
+    setTabValue(TAB_MESSAGES);
+    setHighlightedMessage(null);
+    setOpenSendMessageDialog(false);
+    setMessageText("");
+    setOpenPauseDialog(false);
+    setOpenResumeDialog(false);
+    setPauseResumeMessages([]);
+    setIsPaused(false);
+    setPauseButtonDisabled(false);
+  }, [botId, scammerUniqueId]);
+
   /**
    * Fetches bot details
    */
