@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append('..')
-from utils.send_utils import send_proactive_queue
+from utils.send_utils import send_proactive_queue, send_main_convo_message
 
 from flask import Blueprint, request
 from flask_restx import Api, Resource, fields
@@ -300,6 +300,58 @@ class TogglePauseBot(Resource):
             
             bot.pause = not bot.pause
             db.session.commit()
+
+            # If bot is resumed, get all conversations related to the bot
+            if not bot.pause:
+                platform_message_classes = {
+                    'Facebook': FacebookMessage,
+                    'WhatsApp': WhatsappMessage,
+                    'Telegram': TelegramMessage
+                }
+                conversations = Conversation.query.filter_by(bot_id=bot_id).all()
+                for conversation in conversations:
+                    # Get bot_id and scammer_unique_id from conversation
+                    bot_id = conversation.bot_id
+                    scammer_unique_id = Scammer.query.get(conversation.scammer_id).unique_id
+
+                    # Get all the last incoming messages up till but not including the last outgoing message, or all incoming messages if no outgoing message, and send them to send_main_convo_message
+                    for platform in ['Facebook', 'WhatsApp', 'Telegram']:
+                        platform_messages = (
+                            db.session.query(platform_message_classes[platform])
+                            .filter_by(conversation_id=conversation.id)
+                            .order_by(platform_message_classes[platform].message_timestamp.asc())
+                            .all()
+                        )
+                        # Get the last outgoing message
+                        last_outgoing_message = (
+                            db.session.query(platform_message_classes[platform])
+                            .filter_by(conversation_id=conversation.id, direction='outgoing')
+                            .order_by(platform_message_classes[platform].message_timestamp.desc())
+                            .first()
+                        )
+                        if last_outgoing_message:
+                            messages_to_send = [msg for msg in platform_messages if msg.direction == 'incoming' and msg.message_timestamp > last_outgoing_message.message_timestamp]
+                        else:
+                            messages_to_send = [msg for msg in platform_messages if msg.direction == 'incoming']
+
+                        # Function to select only wanted fields from the message dictionary
+                        wanted_fields = ['platform', 'bot_id', 'scammer_id', 'direction', 'message_id', 'message_text', 'message_timestamp']
+                        def select_wanted_fields(message: dict, wanted_fields: list = wanted_fields):
+                            return {key: value for key, value in message.items() if key in wanted_fields}
+                        
+                        message_list = []
+                        for message in messages_to_send:
+                            message = message.serialize()
+                            message['platform'] = platform
+                            message['bot_id'] = bot_id
+                            message['scammer_id'] = scammer_unique_id
+                            filtered_message = select_wanted_fields(message, wanted_fields)
+                            message_list.append(filtered_message)
+
+                        if message_list:
+                            send_main_convo_message(message_list)
+
+
             return {"message": "Bot pause status updated successfully to " + str(bot.pause)}, 200
         except Exception as e:
             return {"error": "Internal Server Error"}, 500
