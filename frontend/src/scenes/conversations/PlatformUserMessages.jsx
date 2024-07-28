@@ -54,6 +54,9 @@ const PlatformUserMessages = ({ platform }) => {
   const [messageText, setMessageText] = useState("");
   const [openPauseDialog, setOpenPauseDialog] = useState(false);
   const [openResumeDialog, setOpenResumeDialog] = useState(false);
+  const [pauseResumeMessages, setPauseResumeMessages] = useState([]);
+  const [isPaused, setIsPaused] = useState(false);
+  const [pauseButtonDisabled, setPauseButtonDisabled] = useState(false);
 
   /**
    * Fetches bot details
@@ -181,6 +184,7 @@ const PlatformUserMessages = ({ platform }) => {
   };
 
   const handleOpenPauseDialog = () => {
+    setPauseResumeMessages(getPauseResumeMessages());
     setOpenPauseDialog(true);
   };
 
@@ -189,6 +193,7 @@ const PlatformUserMessages = ({ platform }) => {
   };
 
   const handleOpenResumeDialog = () => {
+    setPauseResumeMessages(getPauseResumeMessages());
     setOpenResumeDialog(true);
   };
 
@@ -198,12 +203,15 @@ const PlatformUserMessages = ({ platform }) => {
 
   const handleConfirmPause = () => {
     handlePauseorResumeBot("pause");
+    setIsPaused(true);
     setOpenPauseDialog(false);
   };
 
   const handleConfirmResume = () => {
     handlePauseorResumeBot("resume");
+    setIsPaused(false);
     setOpenResumeDialog(false);
+    setPauseButtonDisabled(true);
   };
 
   const handleViewFile = (messageId) => {
@@ -225,6 +233,26 @@ const PlatformUserMessages = ({ platform }) => {
   const handleChangeTab = (event, newValue) => {
     setTabValue(newValue);
   };
+
+  const getPauseResumeMessages = () => {
+    const incomingMessages = [];
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].direction === "outgoing") {
+        break;
+      }
+      incomingMessages.unshift(messages[i]);
+    }
+    return incomingMessages;
+  };
+
+  useEffect(() => {
+    if (!isPaused && pauseButtonDisabled) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage && lastMessage.direction === "outgoing") {
+        setPauseButtonDisabled(false);
+      }
+    }
+  }, [messages, isPaused, pauseButtonDisabled]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -274,6 +302,7 @@ const PlatformUserMessages = ({ platform }) => {
             : null
         }
         style={{ marginBottom: "10px", marginLeft: "10px" }}
+        disabled={pauseButtonDisabled && !isPaused}
       >
         {bot ? (bot.pause ? "Resume Bot" : "Pause Bot") : "Loading..."}
       </Button>
@@ -289,54 +318,22 @@ const PlatformUserMessages = ({ platform }) => {
       )}
 
       <Dialog
-        open={openSendMessageDialog}
-        onClose={handleCloseSendMessageDialog}
-        PaperProps={{
-          style: {
-            width: "50vh", // Customize the width here
-          },
-        }}
+        open={openPauseDialog}
+        onClose={handleClosePauseDialog}
+        aria-labelledby="pause-dialog-title"
+        aria-describedby="pause-dialog-description"
       >
-        <DialogTitle>Send Message</DialogTitle>
+        <DialogTitle id="pause-dialog-title">Pause Bot</DialogTitle>
         <DialogContent>
-          <DialogContentText>Type your message below:</DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Message"
-            type="text"
-            fullWidth
-            value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-            multiline
-            rows={4} // Initial number of rows
-            maxRows={10} // Maximum number of rows
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCloseSendMessageDialog}
-            color="primary"
-            variant="contained"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSendMessage}
-            color="primary"
-            variant="contained"
-          >
-            Send
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={openPauseDialog} onClose={handleClosePauseDialog}>
-        <DialogTitle>Confirm Pause</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to pause the bot?
+          <DialogContentText id="pause-dialog-description">
+            The following incoming messages are pending responses. The bot will
+            be paused until these messages are processed:
           </DialogContentText>
+          <ul>
+            {pauseResumeMessages.map((msg) => (
+              <li key={msg.message_id}>{msg.message_text}</li>
+            ))}
+          </ul>
         </DialogContent>
         <DialogActions>
           <Button
@@ -350,18 +347,30 @@ const PlatformUserMessages = ({ platform }) => {
             onClick={handleConfirmPause}
             color="primary"
             variant="contained"
+            autoFocus
           >
-            Pause
+            Confirm Pause
           </Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={openResumeDialog} onClose={handleCloseResumeDialog}>
-        <DialogTitle>Confirm Resume</DialogTitle>
+      <Dialog
+        open={openResumeDialog}
+        onClose={handleCloseResumeDialog}
+        aria-labelledby="resume-dialog-title"
+        aria-describedby="resume-dialog-description"
+      >
+        <DialogTitle id="resume-dialog-title">Resume Bot</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Are you sure you want to resume the bot?
+          <DialogContentText id="resume-dialog-description">
+            The bot will resume processing the following incoming messages
+            without responses:
           </DialogContentText>
+          <ul>
+            {pauseResumeMessages.map((msg) => (
+              <li key={msg.message_id}>{msg.message_text}</li>
+            ))}
+          </ul>
         </DialogContent>
         <DialogActions>
           <Button
@@ -375,26 +384,56 @@ const PlatformUserMessages = ({ platform }) => {
             onClick={handleConfirmResume}
             color="primary"
             variant="contained"
+            autoFocus
           >
-            Resume
+            Confirm Resume
           </Button>
         </DialogActions>
       </Dialog>
 
-      <Box height="75vh" display="flex" flexDirection="column">
-        <Tabs
-          value={tabValue}
-          onChange={handleChangeTab}
-          variant="scrollable"
-          scrollButtons="auto"
-        >
-          <Tab label="Messages" />
-          <Tab label="Files" />
-          <Tab label="Extracted Information" />
-          <Tab label="Screenshots" />
-        </Tabs>
-        {shownTab}
-      </Box>
+      <Dialog
+        open={openSendMessageDialog}
+        onClose={handleCloseSendMessageDialog}
+        PaperProps={{ style: { width: "80%" } }}
+        aria-labelledby="send-message-dialog-title"
+        aria-describedby="send-message-dialog-description"
+      >
+        <DialogTitle id="send-message-dialog-title">Send Message</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="send-message-dialog-description">
+            Type your message below:
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="messageText"
+            label="Message"
+            type="text"
+            fullWidth
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            multiline
+            rows={4}
+            maxRows={10}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseSendMessageDialog} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleSendMessage} color="primary">
+            Send
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Tabs value={tabValue} onChange={handleChangeTab}>
+        <Tab label="Messages" />
+        <Tab label="Files" />
+        <Tab label="Extracted Information" />
+        <Tab label="Screenshots" />
+      </Tabs>
+      {shownTab}
     </Box>
   );
 };
