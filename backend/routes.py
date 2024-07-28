@@ -827,8 +827,8 @@ class SendBot(Resource):
     def post(self):
         try:
             platform_mapping = {
-                'facebook': 'FA',
-                'fb': 'FA',
+                'facebook': 'FB',
+                'fb': 'FB',
                 'whatsapp': 'WA',
                 'wa': 'WA',
                 'telegram': 'TG',
