@@ -14,7 +14,10 @@ import {
   PictureAsPdf as PictureAsPdfIcon,
   Description as DescriptionIcon,
   InsertDriveFile as InsertDriveFileIcon,
+  Pending as PendingIcon,
+  CheckCircle as CheckCircleIcon,
 } from "@mui/icons-material";
+
 import { tokens } from "../../theme";
 import { HOST_URL } from "../../api";
 
@@ -32,6 +35,7 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
   const filteredMessages = messages.filter(
     (message) =>
       message.response_status === null ||
+      message.response_status.toLowerCase() === "sending" ||
       message.response_status.toLowerCase() === "sent"
   );
 
@@ -182,6 +186,7 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
               backgroundColor:
                 highlightedMessage === msg.id ? "yellow" : "inherit",
               transition: "background-color 0.5s ease",
+              position: "relative",
             }}
           >
             <Paper
@@ -197,9 +202,32 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
               {msg.message_text && (
                 <Typography variant="body1">{msg.message_text}</Typography>
               )}
-              <Typography variant="caption" color={colors.grey[500]}>
-                {formatDateTime(msg.message_timestamp)}
-              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginTop: theme.spacing(1),
+                }}
+              >
+                <Typography variant="caption" color={colors.grey[500]}>
+                  {formatDateTime(msg.message_timestamp)}
+                </Typography>
+                {msg.direction === "outgoing" && (
+                  <>
+                    {msg.response_status.toLowerCase() === "sending" && (
+                      <PendingIcon fontSize="small" />
+                    )}
+                    {msg.response_status.toLowerCase() === "sent" && (
+                      <CheckCircleIcon
+                        fontSize="small"
+                        color="success"
+                        sx={{ marginLeft: theme.spacing(1) }}
+                      />
+                    )}
+                  </>
+                )}
+              </Box>
             </Paper>
           </ListItem>
         ))}
