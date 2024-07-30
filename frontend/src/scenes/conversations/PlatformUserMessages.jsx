@@ -172,6 +172,8 @@ const PlatformUserMessages = ({ platform }) => {
   const handleRefresh = () => {
     setLoading(true);
     fetchMessages();
+    fetchExtractedInformation();
+    fetchScreenshots();
   };
 
   const handlePauseorResumeBot = async (action) => {

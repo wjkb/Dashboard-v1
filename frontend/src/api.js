@@ -1,4 +1,8 @@
-const API_URL = "http://localhost:5000/api";
+export const HOST_URL = "http://localhost:5000/";
+const API_URL = HOST_URL + "api";
+
+// const API_URL = "http://172.16.211.3:5000/api";
+// const API_URL = "http://localhost:5000/api";
 
 // GET APIs
 export const getAllBots = async () => {

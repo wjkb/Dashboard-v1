@@ -16,6 +16,7 @@ import {
   InsertDriveFile as InsertDriveFileIcon,
 } from "@mui/icons-material";
 import { tokens } from "../../theme";
+import { HOST_URL } from "../../api";
 
 /**
  * Renders a tab displaying messages with various media types and file attachments.
@@ -72,7 +73,8 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
    * @returns {JSX.Element} - File preview or download link.
    */
   const renderFile = (filePath, fileType, download = false) => {
-    const fullPath = `http://localhost:5000/${filePath}?download=${download}`;
+    // const fullPath = `http://localhost:5000/${filePath}?download=${download}`;
+    const fullPath = `${HOST_URL}${filePath}?download=${download}`;
     const fileName = filePath.split("/").pop();
 
     if (fileType.startsWith("image/")) {
@@ -166,7 +168,7 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
   };
 
   return (
-    <Box overflow="auto">
+    <Box sx={{ height: "70vh", overflowY: "auto" }}>
       <List>
         {filteredMessages.map((msg, index) => (
           <ListItem

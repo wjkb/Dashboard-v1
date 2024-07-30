@@ -22,7 +22,7 @@ const SuccessDialog = ({ open, onClose }) => {
       <DialogTitle>Success</DialogTitle>
       <DialogContent>The bot has been successfully created!</DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="primary">
+        <Button onClick={onClose} color="primary" variant="contained">
           OK
         </Button>
       </DialogActions>

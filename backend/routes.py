@@ -303,6 +303,11 @@ class TogglePauseBot(Resource):
 
             # If bot is resumed, get all conversations related to the bot
             if not bot.pause:
+                platform_mapping = {
+                    'Facebook': 'FB',
+                    'WhatsApp': 'WA',
+                    'Telegram': 'TG'
+                }
                 platform_message_classes = {
                     'Facebook': FacebookMessage,
                     'WhatsApp': WhatsappMessage,
@@ -342,7 +347,7 @@ class TogglePauseBot(Resource):
                         message_list = []
                         for message in messages_to_send:
                             message = message.serialize()
-                            message['platform'] = platform
+                            message['platform'] = platform_mapping[platform]
                             message['bot_id'] = bot_id
                             message['scammer_id'] = scammer_unique_id
                             filtered_message = select_wanted_fields(message, wanted_fields)

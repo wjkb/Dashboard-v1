@@ -44,10 +44,10 @@ const AddConfirmationDialog = ({ open, onClose, onConfirm, values }) => {
         Platforms: {values.platforms.join(", ")}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="primary">
+        <Button onClick={onClose} color="primary" variant="contained">
           Cancel
         </Button>
-        <Button onClick={onConfirm} color="secondary">
+        <Button onClick={onConfirm} color="secondary" variant="contained">
           Submit
         </Button>
       </DialogActions>

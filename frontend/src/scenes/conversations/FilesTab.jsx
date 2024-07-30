@@ -19,6 +19,7 @@ import {
   Description as DescriptionIcon,
   InsertDriveFile as InsertDriveFileIcon,
 } from "@mui/icons-material";
+import { HOST_URL } from "../../api";
 
 /**
  * Renders a tab displaying files related to a conversation, with options for download and preview.
@@ -73,7 +74,8 @@ const FilesTab = ({ files, onViewFile, downloadable }) => {
    */
   const onDownloadFile = (filePath) => {
     const link = document.createElement("a");
-    link.href = `http://localhost:5000/${filePath}?download=${downloadable}`;
+    // link.href = `http://localhost:5000/${filePath}?download=${downloadable}`;
+    link.href = `${HOST_URL}${filePath}?download=${downloadable}`;
     link.download = true;
     link.click();
   };
@@ -101,7 +103,7 @@ const FilesTab = ({ files, onViewFile, downloadable }) => {
    */
   const downloadFiles = async (filePaths) => {
     try {
-      const response = await fetch(`http://localhost:5000/download/zip`, {
+      const response = await fetch(`${HOST_URL}download/zip`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

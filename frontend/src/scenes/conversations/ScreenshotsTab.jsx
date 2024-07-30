@@ -16,6 +16,7 @@ import {
   InsertDriveFile as InsertDriveFileIcon,
 } from "@mui/icons-material";
 import { tokens } from "../../theme";
+import { HOST_URL } from "../../api";
 
 /**
  * Renders a tab displaying screenshots of the conversation.
@@ -37,7 +38,8 @@ const ScreenshotsTab = ({ screenshots }) => {
    * @returns {JSX.Element} - File preview or download link.
    */
   const renderFile = (filePath, fileType, download = false) => {
-    const fullPath = `http://localhost:5000/${filePath}?download=${download}`;
+    // const fullPath = `http://localhost:5000/${filePath}?download=${download}`;
+    const fullPath = `${HOST_URL}${filePath}?download=${download}`;
     const fileName = filePath.split("/").pop();
 
     if (fileType.startsWith("image/")) {

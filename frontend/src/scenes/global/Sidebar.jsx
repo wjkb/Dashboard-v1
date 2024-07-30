@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
+import { ProSidebar, Menu, MenuItem, SubMenu } from "react-pro-sidebar";
 import "react-pro-sidebar/dist/css/styles.css";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
@@ -9,6 +9,16 @@ import AppsOutlinedIcon from "@mui/icons-material/AppsOutlined";
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
+import FacebookIcon from "@mui/icons-material/Facebook";
+import WhatsappIcon from "@mui/icons-material/WhatsApp";
+import TelegramIcon from "@mui/icons-material/Telegram";
+
+// Define platforms to avoid duplication
+const platforms = [
+  { name: "Facebook", icon: <FacebookIcon />, path: "/platforms/facebook" },
+  { name: "WhatsApp", icon: <WhatsappIcon />, path: "/platforms/whatsapp" },
+  { name: "Telegram", icon: <TelegramIcon />, path: "/platforms/telegram" },
+];
 
 /**
  * Menu item component for the sidebar.
@@ -59,7 +69,8 @@ const Sidebar = () => {
     if (path === "/") {
       setSelected("Dashboard");
     } else if (path.startsWith("/platforms")) {
-      setSelected("Manage platforms");
+      const platform = platforms.find((p) => path.startsWith(p.path));
+      setSelected(platform ? platform.name : "Manage platforms");
     } else if (path.startsWith("/managebots")) {
       setSelected("Manage bots");
     } else if (path.startsWith("/manual-send")) {
@@ -147,7 +158,7 @@ const Sidebar = () => {
                   John Doe
                 </Typography>
                 <Typography variant="h5" color={colors.greenAccent}>
-                  Intern, Q Team
+                  Q Team
                 </Typography>
               </Box>
             </Box>
@@ -161,13 +172,22 @@ const Sidebar = () => {
             selected={selected}
             setSelected={setSelected}
           />
-          <Item
+          <SubMenu
             title="Manage platforms"
-            to="/platforms"
             icon={<AppsOutlinedIcon />}
-            selected={selected}
-            setSelected={setSelected}
-          />
+            style={{ color: colors.grey[100] }}
+          >
+            {platforms.map((platform) => (
+              <Item
+                key={platform.name}
+                title={platform.name}
+                to={platform.path}
+                icon={platform.icon}
+                selected={selected}
+                setSelected={setSelected}
+              />
+            ))}
+          </SubMenu>
           <Item
             title="Manage bots"
             to="/managebots"

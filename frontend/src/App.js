@@ -4,16 +4,6 @@ import { Routes, Route } from "react-router-dom";
 import Topbar from "./scenes/global/Topbar";
 import Sidebar from "./scenes/global/Sidebar";
 import Dashboard from "./scenes/dashboard";
-import PlatformSidebar from "./scenes/platforms";
-// import FacebookBots from "./scenes/platformBots/FacebookBots";
-// import WhatsappBots from "./scenes/platformBots/WhatsappBots";
-// import TelegramBots from "./scenes/platformBots/TelegramBots";
-// import FacebookBotConversations from "./scenes/conversations/Facebook/FacebookBotConversations";
-// import WhatsappBotConversations from "./scenes/conversations/Whatsapp/WhatsappBotConversations";
-// import TelegramBotConversations from "./scenes/conversations/Telegram/TelegramBotConversations";
-// import FacebookUserMessages from "./scenes/conversations/Facebook/FacebookUserMessages";
-// import WhatsappUserMessages from "./scenes/conversations/Whatsapp/WhatsappUserMessages";
-// import TelegramUserMessages from "./scenes/conversations/Telegram/TelegramUserMessages";
 import PlatformBots from "./scenes/platformBots/PlatformBots";
 import PlatformBotConversations from "./scenes/conversations/PlatformBotConversations";
 import PlatformUserMessages from "./scenes/conversations/PlatformUserMessages";
@@ -54,7 +44,7 @@ function App() {
             <Topbar />
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/platforms" element={<PlatformSidebar />}>
+              <Route path="/platforms">
                 {platforms.map(generatePlatformRoutes)}
               </Route>
               <Route path="/managebots" element={<ManageBots />} />

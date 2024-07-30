@@ -48,7 +48,7 @@ const SuccessDialog = ({ open, onClose, formValues, sentBot }) => {
         <p>Sent Bot ID: {sentBot?.id}</p> {/* Display the sent bot's id here */}
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleOkClick} color="primary">
+        <Button onClick={handleOkClick} color="primary" variant="contained">
           OK
         </Button>
       </DialogActions>
