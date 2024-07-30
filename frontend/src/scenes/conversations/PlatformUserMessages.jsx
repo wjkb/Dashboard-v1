@@ -11,6 +11,7 @@ import {
   DialogTitle,
   TextField,
 } from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useParams } from "react-router-dom";
 import {
   getBot,
@@ -311,7 +312,7 @@ const PlatformUserMessages = ({ platform }) => {
         onClick={handleRefresh}
         style={{ marginBottom: "10px" }}
       >
-        Refresh Messages
+        <RefreshIcon />
       </Button>
       <Button
         variant="contained"
@@ -452,7 +453,8 @@ const PlatformUserMessages = ({ platform }) => {
       <Tabs value={tabValue} onChange={handleChangeTab}>
         <Tab label="Messages" />
         <Tab label="Files" />
-        <Tab label="Extracted Information" />
+        {/* Disabled Extracted Information Tab below for now, uncomment below to re-enable */}
+        {/* <Tab label="Extracted Information" /> */}
         <Tab label="Screenshots" />
       </Tabs>
       {shownTab}
