@@ -88,6 +88,7 @@ class FacebookMessage(db.Model):
     message_id = db.Column(db.String(255), nullable=True)
     message_text = db.Column(db.Text, nullable=True)
     message_timestamp = db.Column(db.DateTime, nullable=True)
+    use_for_llm = db.Column(db.Boolean, nullable=False, default=True)
 
     file_path = db.Column(db.String(255), nullable=True)
     file_type = db.Column(db.String(50), nullable=True)
@@ -105,6 +106,7 @@ class FacebookMessage(db.Model):
             'message_id': self.message_id,
             'message_text': self.message_text,
             'message_timestamp': self.message_timestamp.isoformat() if self.message_timestamp else None,
+            'use_for_llm': self.use_for_llm,
 
             'file_path': self.file_path,
             'file_type': self.file_type,
@@ -123,6 +125,7 @@ class WhatsappMessage(db.Model):
     message_id = db.Column(db.String(255), nullable=True)
     message_text = db.Column(db.Text, nullable=True)
     message_timestamp = db.Column(db.DateTime, nullable=True)
+    use_for_llm = db.Column(db.Boolean, nullable=False, default=True)
 
     file_path = db.Column(db.String(255), nullable=True)
     file_type = db.Column(db.String(50), nullable=True)
@@ -140,6 +143,7 @@ class WhatsappMessage(db.Model):
             'message_id': self.message_id,
             'message_text': self.message_text,
             'message_timestamp': self.message_timestamp.isoformat() if self.message_timestamp else None,
+            'use_for_llm': self.use_for_llm,
 
             'file_path': self.file_path,
             'file_type': self.file_type,
@@ -158,6 +162,7 @@ class TelegramMessage(db.Model):
     message_id = db.Column(db.String(255), nullable=True)
     message_text = db.Column(db.Text, nullable=True)
     message_timestamp = db.Column(db.DateTime, nullable=True)
+    use_for_llm = db.Column(db.Boolean, nullable=False, default=True)
 
     file_path = db.Column(db.String(255), nullable=True)
     file_type = db.Column(db.String(50), nullable=True)
@@ -175,6 +180,7 @@ class TelegramMessage(db.Model):
             'message_id': self.message_id,
             'message_text': self.message_text,
             'message_timestamp': self.message_timestamp.isoformat() if self.message_timestamp else None,
+            'use_for_llm': self.use_for_llm,
 
             'file_path': self.file_path,
             'file_type': self.file_type,

@@ -19,6 +19,7 @@ import {
   getBotConversationExtractedInformation,
   getBotConversationScreenshots,
   toggleBotPause,
+  llmIgnorePreviousMessages,
   sendProactiveMessage,
 } from "../../api";
 import Header from "../../components/Header";
@@ -58,6 +59,7 @@ const PlatformUserMessages = ({ platform }) => {
   const [pauseResumeMessages, setPauseResumeMessages] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
   const [pauseButtonDisabled, setPauseButtonDisabled] = useState(false);
+  const [openConfirmIgnoreDialog, setOpenConfirmIgnoreDialog] = useState(false);
 
   useEffect(() => {
     // Reset state when botId or scammerUniqueId changes
@@ -175,6 +177,29 @@ const PlatformUserMessages = ({ platform }) => {
     fetchMessages();
     fetchExtractedInformation();
     fetchScreenshots();
+  };
+
+  const handleLLMIgnorePreviousMessages = async () => {
+    try {
+      await llmIgnorePreviousMessages(platform, botId, scammerUniqueId);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleOpenConfirmIgnoreDialog = () => {
+    setOpenConfirmIgnoreDialog(true);
+  };
+
+  const handleCloseConfirmIgnoreDialog = () => {
+    setOpenConfirmIgnoreDialog(false);
+  };
+
+  const handleConfirmIgnore = async () => {
+    setOpenConfirmIgnoreDialog(false);
+    setLoading(true);
+    await handleLLMIgnorePreviousMessages();
+    setLoading(false);
   };
 
   const handlePauseorResumeBot = async (action) => {
@@ -316,6 +341,14 @@ const PlatformUserMessages = ({ platform }) => {
       </Button>
       <Button
         variant="contained"
+        color="error"
+        onClick={handleOpenConfirmIgnoreDialog}
+        style={{ marginBottom: "10px", marginLeft: "10px" }}
+      >
+        Ignore Message History
+      </Button>
+      <Button
+        variant="contained"
         color="primary"
         onClick={
           bot
@@ -340,6 +373,37 @@ const PlatformUserMessages = ({ platform }) => {
         </Button>
       )}
 
+      <Dialog
+        open={openConfirmIgnoreDialog}
+        onClose={handleCloseConfirmIgnoreDialog}
+        aria-labelledby="ignore-dialog-title"
+        arua-describedby="ignore-dialog-description"
+      >
+        <DialogTitle>Confirm Ignore Message History</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want the bot to ignore the message history? This
+            will make the bot ignore previous messages used for context to
+            generate responses, and this action is not reversible.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseConfirmIgnoreDialog}
+            color="primary"
+            variant="contained"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmIgnore}
+            color="error"
+            variant="contained"
+          >
+            Ignore History
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog
         open={openPauseDialog}
         onClose={handleClosePauseDialog}

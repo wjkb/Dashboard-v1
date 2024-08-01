@@ -237,6 +237,28 @@ export const activateBot = async (botId) => {
   }
 };
 
+export const llmIgnorePreviousMessages = async (
+  platform,
+  botId,
+  scammerUniqueId
+) => {
+  try {
+    const response = await fetch(`${API_URL}/llm_ignore_message_history`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ platform, botId, scammerUniqueId }),
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error ignoring previous messages: ${error.message}`);
+  }
+};
+
 export const toggleBotPause = async (botId) => {
   try {
     const response = await fetch(`${API_URL}/bots/${botId}/toggle_pause`, {

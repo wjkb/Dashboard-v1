@@ -82,6 +82,8 @@ message_model = ns_messages.model('Message', {
     'message_id': fields.String(),
     'message_text': fields.String(required=True),
     'message_timestamp': fields.String(),
+    'use_for_llm': fields.Boolean(default=True),
+
     'file_path': fields.String(),
     'file_type': fields.String(),
 
@@ -656,6 +658,58 @@ class ReceiveMessage(Resource):
 
         db.session.commit()
         return {'status': 'success'}, 201
+    
+@ns_messages.route('/api/llm_ignore_message_history')
+class LLMIgnoreMessageHistory(Resource):
+    @ns_messages.doc('llm_ignore_message_history')
+    def put(self):
+        try:
+            platform_mapping = {
+                'facebook': 'Facebook',
+                'fb': 'Facebook',
+                'whatsapp': 'WhatsApp',
+                'wa': 'WhatsApp',
+                'telegram': 'Telegram',
+                'tg': 'Telegram'
+            }
+            data = request.get_json()
+            platform = platform_mapping.get(data.get('platform').lower())
+            if not platform:
+                return {'status': 'error', 'message': 'Unsupported platform'}, 400
+            bot_id = data['botId']
+            scammer_unique_id = data['scammerUniqueId']
+            
+            # Get the bot
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {'status': 'error', 'message': 'Bot not found'}, 404
+            
+            # Get the scammer
+            scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform).first()
+            if not scammer:
+                return {'status': 'error', 'message': 'Scammer not found'}, 404
+            
+            # Get the conversation
+            conversation = Conversation.query.filter_by(bot_id=bot.id, platform=platform, scammer_id=scammer.id).first()
+            if not conversation:
+                return {'status': 'error', 'message': 'Conversation not found'}, 404
+            
+            # Get all messages in the conversation
+            platform_message_classes = {
+                'Facebook': FacebookMessage,
+                'WhatsApp': WhatsappMessage,
+                'Telegram': TelegramMessage
+            }
+            message_class = platform_message_classes.get(platform)
+            messages = message_class.query.filter_by(conversation_id=conversation.id).all()
+
+            # Set use_for_llm to False for all messages
+            for message in messages:
+                message.use_for_llm = False
+            db.session.commit()
+            return {'status': 'success'}, 200
+        except Exception as e:
+            return {'status': 'error', 'message': str(e)}, 500
     
 @ns_messages.route('/api/screenshots')
 class ReceiveScreenshot(Resource):
