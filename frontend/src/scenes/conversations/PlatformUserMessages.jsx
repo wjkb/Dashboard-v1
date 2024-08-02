@@ -12,6 +12,7 @@ import {
   TextField,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import DownloadIcon from "@mui/icons-material/Download";
 import { useParams } from "react-router-dom";
 import {
   getBot,
@@ -19,6 +20,7 @@ import {
   getBotConversationExtractedInformation,
   getBotConversationScreenshots,
   toggleBotPause,
+  downloadEverything,
   llmIgnorePreviousMessages,
   sendProactiveMessage,
 } from "../../api";
@@ -32,8 +34,8 @@ import { tokens } from "../../theme";
 // Constants for tab values
 const TAB_MESSAGES = 0;
 const TAB_FILES = 1;
-const TAB_EXTRACTED_INFORMATION = 2;
-const TAB_SCREENSHOTS = 3;
+const TAB_EXTRACTED_INFORMATION = -999; // Change this to 2 and TAB_SCREENSHOTS to 3 when re-enabling Extracted Information Tab
+const TAB_SCREENSHOTS = 2;
 
 /**
  * Component to display messages and files of a Platform (i.e. Facebook, Whatsapp, etc.) bot conversation with a specific user.
@@ -177,6 +179,27 @@ const PlatformUserMessages = ({ platform }) => {
     fetchMessages();
     fetchExtractedInformation();
     fetchScreenshots();
+  };
+
+  const handleDownloadEverything = async () => {
+    try {
+      const response = await downloadEverything(
+        platform,
+        botId,
+        scammerUniqueId
+      );
+      const { zipFileUrl } = response;
+      if (zipFileUrl) {
+        const link = document.createElement("a");
+        link.href = zipFileUrl;
+        link.download = true;
+        link.click();
+      } else {
+        throw new Error("Error downloading files");
+      }
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   const handleLLMIgnorePreviousMessages = async () => {
@@ -338,6 +361,14 @@ const PlatformUserMessages = ({ platform }) => {
         style={{ marginBottom: "10px" }}
       >
         <RefreshIcon />
+      </Button>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleDownloadEverything}
+        style={{ marginBottom: "10px", marginLeft: "10px" }}
+      >
+        <DownloadIcon />
       </Button>
       <Button
         variant="contained"

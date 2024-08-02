@@ -9,7 +9,7 @@ from datetime import datetime
 import json
 import requests
 from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation
-from backend.utils import save_file, safe_parse_timestamp, create_zip
+from backend.utils import save_file, safe_parse_timestamp, create_zip, create_message_csv
 
 # Initialize Flask-RESTx Api
 api_bp = Blueprint('api', __name__)
@@ -34,6 +34,12 @@ start_bot_script_model = ns_utils.model('StartBotScript', {
 
 download_zip_model = ns_utils.model('DownloadZip', {
     'filePaths': fields.List(fields.String, required=True, description='The list of file paths to include in the zip file', example=['files/Facebook/1/User123/cat.jpg', 'files/Facebook/1/User123/cat.pdf', 'files/Facebook/1/User123/cat.txt']),
+})
+
+download_everything_model = ns_utils.model('DownloadEverything', {
+    'platform': fields.String(required=True, description='The platform the bot is talking on', example='WhatsApp'),
+    'botId': fields.String(required=True, description='The bot phone number', example='90217777'),
+    'scammerUniqueId': fields.String(required=True, description='The scammer unique ID', example='80216666'),
 })
 
 return_next_response_message_id_model = ns_utils.model('ReturnNextResponseMessageId', {
@@ -996,14 +1002,76 @@ class SendProactiveMessage(Resource):
             return {'status': 'error', 'message': str(e)}, 500
     
 @ns_utils.route('/download/zip')
-class DownloadZip(Resource):
+class DownloadFilesZip(Resource):
     @ns_utils.expect(download_zip_model)
     def post(self):
         data = request.get_json()
         file_paths = data.get('filePaths', [])
         try:
-            zip_file_path = create_zip(file_paths)
+            zip_file_path = create_zip(file_paths, 'downloaded_files')
             return {'zipFileUrl': f'http://localhost:5000/{zip_file_path}'}
+        except Exception as e:
+            return {'error': str(e)}, 500
+        
+@ns_utils.route('/download/everything')
+class DownloadEverything(Resource):
+    @ns_utils.expect(download_everything_model)
+    def post(self):
+        try:
+            print("DownloadEverything API was called")
+            data = request.get_json()
+            bot_id = data.get('botId')
+            platform = data.get('platform')
+            scammer_unique_id = data.get('scammerUniqueId')
+
+            platform_mapping = {
+                'facebook': 'Facebook',
+                'whatsapp': 'WhatsApp',
+                'telegram': 'Telegram'
+            }
+
+            platform = platform_mapping.get(platform.lower())
+            if not platform:
+                return {'error': 'Unsupported platform'}, 400
+            
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {'error': 'Bot not found'}, 404
+            
+            scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform).first()
+            if not scammer:
+                return {'error': 'Scammer not found'}, 404
+            
+            conversation = Conversation.query.filter_by(bot_id=bot_id, platform=platform, scammer_id=scammer.id).first()
+            if not conversation:
+                return {'error': 'Conversation not found'}, 404
+            
+            platform_message_classes = {
+                'Facebook': FacebookMessage,
+                'WhatsApp': WhatsappMessage,
+                'Telegram': TelegramMessage
+            }
+            message_class = platform_message_classes.get(platform)
+            messages = message_class.query.filter_by(conversation_id=conversation.id).all()
+
+            # Get all files (i.e. attachments) in the conversation
+            file_paths = [msg.file_path for msg in messages if msg.file_path]
+            zip_file_path = create_zip(file_paths, 'downloaded_files')
+
+            # Get all screenshots in the conversation
+            screenshots = MessageScreenshots.query.filter_by(conversation_id=conversation.id).all()
+            screenshot_file_paths = [screenshot.file_path for screenshot in screenshots]
+            screenshot_zip_file_path = create_zip(screenshot_file_paths, 'downloaded_screenshots')
+            
+            # Get all messages in csv format
+            csv_file_path = create_message_csv(messages)
+
+            # Create a new zip file with all the files
+            all_files = [zip_file_path, screenshot_zip_file_path, csv_file_path]
+            all_files_zip_path = create_zip(all_files, 'downloaded_all_files')
+
+            return {'zipFileUrl': f'http://localhost:5000/{all_files_zip_path}'}
+        
         except Exception as e:
             return {'error': str(e)}, 500
         

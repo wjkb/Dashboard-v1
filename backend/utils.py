@@ -28,10 +28,10 @@ def safe_parse_timestamp(timestamp, date_format='%Y-%m-%dT%H:%M:%S'):
     except (ValueError, TypeError):
         return None
 
-def create_zip(file_path_list):
+def create_zip(file_path_list, zip_filename):
     parent_directory = os.path.dirname(current_app.root_path)
     media_directory = os.path.join(parent_directory, 'media')
-    zip_filename = 'downloaded_files.zip'
+    zip_filename = f"{zip_filename}.zip"
     zip_filepath = os.path.join(media_directory, zip_filename)
 
     with zipfile.ZipFile(zip_filepath, 'w') as zipf:
@@ -43,3 +43,20 @@ def create_zip(file_path_list):
                 print(f"File {absolute_file_path} does not exist")
     
     return zip_filename
+
+def create_message_csv(messages):
+    parent_directory = os.path.dirname(current_app.root_path)
+    media_directory = os.path.join(parent_directory, 'media')
+    csv_filename = 'downloaded_messages.csv'
+    csv_filepath = os.path.join(media_directory, csv_filename)
+
+    with open(csv_filepath, 'w') as csvf:
+        csvf.write('direction,date,time,message\n')
+        for message in messages:
+            timestamp = datetime.fromisoformat(str(message.message_timestamp))
+            date = timestamp.date().isoformat()
+            time = timestamp.time().isoformat()
+            
+            csvf.write(f"{message.direction},{date},{time},\"{message.message_text}\"\n")
+    
+    return csv_filename

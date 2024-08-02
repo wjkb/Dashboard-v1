@@ -128,6 +128,24 @@ export const createBot = async (botData) => {
   }
 };
 
+export const downloadEverything = async (platform, botId, scammerUniqueId) => {
+  try {
+    const response = await fetch(`${HOST_URL}/download/everything`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ platform, botId, scammerUniqueId }),
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error downloading everything: ${error.message}`);
+  }
+};
+
 export const sendBot = async (
   botId,
   scammerIds,
