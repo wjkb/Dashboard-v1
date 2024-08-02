@@ -30,12 +30,13 @@ def safe_parse_timestamp(timestamp, date_format='%Y-%m-%dT%H:%M:%S'):
 
 def create_zip(file_path_list):
     parent_directory = os.path.dirname(current_app.root_path)
-    zip_filename = 'media/downloaded_files.zip'
-    zip_filepath = os.path.join(parent_directory, zip_filename)
+    media_directory = os.path.join(parent_directory, 'media')
+    zip_filename = 'downloaded_files.zip'
+    zip_filepath = os.path.join(media_directory, zip_filename)
 
     with zipfile.ZipFile(zip_filepath, 'w') as zipf:
         for relative_file_path in file_path_list:
-            absolute_file_path = os.path.join(parent_directory, relative_file_path)
+            absolute_file_path = os.path.join(media_directory, relative_file_path)
             if os.path.exists(absolute_file_path):
                 zipf.write(absolute_file_path, os.path.basename(absolute_file_path))
             else:
