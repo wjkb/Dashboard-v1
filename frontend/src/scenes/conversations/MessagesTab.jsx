@@ -16,6 +16,7 @@ import {
   InsertDriveFile as InsertDriveFileIcon,
   Pending as PendingIcon,
   CheckCircle as CheckCircleIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 
 import { tokens } from "../../theme";
@@ -36,7 +37,8 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
     (message) =>
       message.response_status === null ||
       message.response_status.toLowerCase() === "sending" ||
-      message.response_status.toLowerCase() === "sent"
+      message.response_status.toLowerCase() === "sent" ||
+      message.response_status.toLowerCase() === "failed"
   );
 
   const theme = useTheme();
@@ -222,6 +224,13 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                       <CheckCircleIcon
                         fontSize="small"
                         color="success"
+                        sx={{ marginLeft: theme.spacing(1) }}
+                      />
+                    )}
+                    {msg.response_status.toLowerCase() === "failed" && (
+                      <CloseIcon
+                        fontSize="small"
+                        color="error"
                         sx={{ marginLeft: theme.spacing(1) }}
                       />
                     )}
