@@ -262,10 +262,9 @@ const ManageBots = () => {
   };
 
   const columnsActive = [
-    { field: "id", headerName: "ID", flex: 0.5 },
     {
-      field: "phone",
-      headerName: "Phone Number",
+      field: "id",
+      headerName: "ID",
       flex: 1,
       cellClassName: "phone-column--cell",
     },
@@ -354,10 +353,9 @@ const ManageBots = () => {
   ];
 
   const columnsDeactive = [
-    { field: "id", headerName: "ID", flex: 0.5 },
     {
-      field: "phone",
-      headerName: "Phone Number",
+      field: "id",
+      headerName: "ID",
       flex: 1,
       cellClassName: "phone-column--cell",
     },

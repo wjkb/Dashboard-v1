@@ -17,7 +17,7 @@ import * as yup from "yup";
 const platformNames = ["Facebook", "WhatsApp", "Telegram"];
 
 const botSchema = yup.object().shape({
-  phone: yup.string().required("required"),
+  id: yup.string().required("required"),
   name: yup.string().required("required"),
   email: yup.string().email("Invalid email"),
   persona: yup.string().required("required"),
@@ -37,7 +37,7 @@ const botSchema = yup.object().shape({
  */
 const EditBotDialog = ({ open, onClose, bot, onSave }) => {
   const initialValues = {
-    phone: bot ? bot.phone : "",
+    id: bot ? bot.id : "",
     name: bot ? bot.name : "",
     email: bot ? bot.email : "",
     persona: bot ? bot.persona : "",
@@ -74,15 +74,15 @@ const EditBotDialog = ({ open, onClose, bot, onSave }) => {
             <form onSubmit={handleSubmit}>
               <TextField
                 margin="dense"
-                name="phone"
-                label="Phone Number"
+                name="id"
+                label="ID"
                 type="text"
                 fullWidth
-                value={values.phone}
+                value={values.id}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                error={touched.phone && !!errors.phone}
-                helperText={touched.phone && errors.phone}
+                error={touched.id && !!errors.id}
+                helperText={touched.id && errors.id}
               />
               <TextField
                 margin="dense"

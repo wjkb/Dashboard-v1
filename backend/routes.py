@@ -156,13 +156,14 @@ class CreateOrReadBots(Resource):
             print(f"Received data: {data}")
 
             # Check if all required fields are present
-            required_fields = ['phone', 'name', 'persona', 'model', 'platforms']
+            required_fields = ['id', 'name', 'persona', 'model', 'platforms']
             for field in required_fields:
+                print(f"Checking field: {field}")
                 if field not in data:
                     return {"error": f"Missing required field: {field}"}, 400
 
             new_bot = Bot(
-                id=data['phone'],
+                id=data['id'],
                 name=data['name'],
                 email=data.get('email', ''),  # Optional field
                 persona=data['persona'],
@@ -208,7 +209,7 @@ class GetorUpdateOrDeleteBot(Resource):
             data = request.json
 
             # Update bot details
-            bot.id = data.get('phone', bot.id)
+            bot.id = data.get('id', bot.id)
             bot.name = data.get('name', bot.name)
             bot.email = data.get('email', bot.email)
             bot.persona = data.get('persona', bot.persona)

@@ -18,7 +18,7 @@ import SuccessDialog from "./SuccessDialog";
 import { createBot } from "../../api";
 
 const initialValues = {
-  phone: "",
+  id: "",
   name: "",
   email: "",
   persona: "",
@@ -29,7 +29,7 @@ const initialValues = {
 const platformNames = ["Facebook", "WhatsApp", "Telegram"];
 
 const botScheme = yup.object().shape({
-  phone: yup.string().required("required"),
+  id: yup.string().required("required"),
   name: yup.string().required("required"),
   email: yup.string().email("Invalid email"),
   persona: yup.string().required("required"),
@@ -136,19 +136,19 @@ const AddBotForm = () => {
                   "& > div": { gridColumn: isNonMobile ? undefined : "span 4" },
                 }}
               >
-                {/* Phone Number field */}
+                {/* ID field */}
                 <TextField
                   fullWidth
                   variant="filled"
                   type="text"
-                  label="Phone Number"
+                  label="ID"
                   placeholder="e.g. 91234567"
                   onBlur={handleBlur}
                   onChange={handleChange}
-                  value={values.phone}
-                  name="phone"
-                  error={!!touched.phone && !!errors.phone}
-                  helperText={touched.phone && errors.phone}
+                  value={values.id}
+                  name="id"
+                  error={!!touched.id && !!errors.id}
+                  helperText={touched.id && errors.id}
                   sx={{ gridColumn: "span 4" }}
                 />
                 {/* Name field */}

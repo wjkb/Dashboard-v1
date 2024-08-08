@@ -24,7 +24,7 @@ const DeleteBotDialog = ({ bot, open, onClose, onConfirm }) => {
       <DialogContent>
         Are you sure you want to delete the bot with the following details?:
         <br />
-        Phone Number: {bot.phone}
+        ID: {bot.id}
         <br />
         Name: {bot.name}
         <br />
