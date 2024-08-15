@@ -1,6 +1,6 @@
 from datetime import datetime
 from backend import create_app
-from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, ExtractedInformation
+from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation
 
 app = create_app()
 
@@ -12,6 +12,7 @@ with app.app_context():
     db.session.query(FacebookMessage).delete()
     db.session.query(WhatsappMessage).delete()
     db.session.query(TelegramMessage).delete()
+    db.session.query(MessageScreenshots).delete()
     db.session.query(Conversation).delete()
     db.session.query(Platform).delete()
     db.session.query(Scammer).delete()
@@ -144,11 +145,12 @@ with app.app_context():
         (3, 'incoming', '8', None, datetime(2024, 5, 15, 14, 35, 10), 'test/WhatsApp/90000001/90000012/cat.py', 'text/x-python', None),
         (3, 'outgoing', '3', 'Why did you send me random cat stuff??', datetime(2024, 5, 15, 14, 37), None, None, "sent"),
         (3, 'outgoing', '4', 'Hello? Are you there?', datetime(2024, 5, 15, 14, 37, 30), None, None, "sent"),
-        (3, 'incoming', '9', 'OMG! I am so sorry, that was an accident', datetime(2024, 5, 15, 14, 38), None, None, None),
+        (3, 'incoming', '9', 'OMG. I am so sorry, that was an accident', datetime(2024, 5, 15, 14, 38), None, None, None),
         (4, 'outgoing', '5', 'Hey Lim, do you know the store hours for today?', datetime(2024, 5, 15, 15, 30), None, None, "sent"),
         (4, 'incoming', '10', 'Yes, the store is open from 9 AM to 8 PM today.', datetime(2024, 5, 15, 15, 31), None, None, None),
     ]
 
+    # Insert messages into the database
     for conversation_id, direction, message_id, message_text, message_timestamp, file_path, file_type, response_status in whatsapp_messages_data:
         whatsapp_message = WhatsappMessage(
             conversation_id=conversation_id,
@@ -161,6 +163,19 @@ with app.app_context():
             response_status=response_status
         )
         db.session.add(whatsapp_message)
+    
+    # Insert screenshots into the database
+    screenshot_data = [
+        (3, 'test/WhatsApp/90000001/90000012/ss1.jpg'),
+        (3, 'test/WhatsApp/90000001/90000012/ss2.jpg')
+    ]
+    for conversation_id, file_path in screenshot_data:
+        screenshot = MessageScreenshots(
+            conversation_id=conversation_id,
+            file_path=file_path
+        )
+        db.session.add(screenshot)
+
     db.session.commit()
 
     # # Insert Telegram messages
