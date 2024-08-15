@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   useTheme,
@@ -7,14 +7,9 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import {
-  Image as ImageIcon,
-  Audiotrack as AudiotrackIcon,
-  Videocam as VideocamIcon,
-  PictureAsPdf as PictureAsPdfIcon,
-  Description as DescriptionIcon,
-  InsertDriveFile as InsertDriveFileIcon,
-} from "@mui/icons-material";
+import ImageIcon from "@mui/icons-material/Image";
+import Lightbox from "react-image-lightbox";
+import "react-image-lightbox/style.css";
 import { tokens } from "../../theme";
 import { HOST_URL } from "../../api";
 
@@ -28,108 +23,44 @@ import { HOST_URL } from "../../api";
 const ScreenshotsTab = ({ screenshots }) => {
   const theme = useTheme();
   const colors = tokens;
+  const [isOpen, setIsOpen] = useState(false); // State to manage the lightbox open/close
+  const [photoIndex, setPhotoIndex] = useState(0); // State to keep track of the current screenshot index
+
+  /**
+   * Opens the lightbox and sets the current photo index.
+   * @param {number} index - The index of the screenshot to open in the lightbox.
+   */
+  const handleOpenLightbox = (index) => {
+    setPhotoIndex(index);
+    setIsOpen(true);
+  };
 
   /**
    * Renders different file types based on their MIME type.
    *
    * @param {string} filePath - Path to the file.
-   * @param {string} fileType - MIME type of the file.
    * @param {boolean} [download=false] - Indicates if the file should be downloadable.
    * @returns {JSX.Element} - File preview or download link.
    */
-  const renderFile = (filePath, fileType, download = false) => {
-    // const fullPath = `http://localhost:5000/${filePath}?download=${download}`;
-    const fullPath = `${HOST_URL}${filePath}?download=${download}`;
-    const fileName = filePath.split("/").pop();
-
-    if (fileType.startsWith("image/")) {
-      return (
-        <Box display="flex" flexDirection="column">
-          <ImageIcon style={{ marginRight: theme.spacing(1) }} />
-          <img
-            src={fullPath}
-            alt="Attachment"
-            style={{ maxWidth: "100%", marginBottom: theme.spacing(1) }}
-          />
-        </Box>
-      );
-    } else if (fileType.startsWith("audio/")) {
-      return (
-        <Box display="flex" flexDirection="column">
-          <AudiotrackIcon style={{ marginRight: theme.spacing(1) }} />
-          <audio
-            controls
-            src={fullPath}
-            style={{ maxWidth: "100%", marginBottom: theme.spacing(1) }}
-          />
-        </Box>
-      );
-    } else if (fileType.startsWith("video/")) {
-      return (
-        <Box display="flex" flexDirection="column">
-          <VideocamIcon style={{ marginRight: theme.spacing(1) }} />
-          <video
-            controls
-            src={fullPath}
-            style={{ maxWidth: "100%", marginBottom: theme.spacing(1) }}
-          />
-        </Box>
-      );
-    } else if (fileType === "application/pdf") {
-      return (
-        <a
-          href={fullPath}
-          target="_blank"
-          rel="noopener noreferrer"
+  const renderFile = (filePath) => {
+    // Construct the full path to the file
+    const fullPath = `${HOST_URL}${filePath}`;
+    return (
+      <Box display="flex" flexDirection="column">
+        <ImageIcon style={{ marginRight: theme.spacing(1) }} />
+        <img
+          src={fullPath}
+          alt="Attachment"
           style={{
-            textDecoration: "none",
-            display: "flex",
-            alignItems: "center",
+            maxWidth: "100%",
+            marginBottom: theme.spacing(1),
+            cursor: 'pointer', //adding cursor pointer to indicate it's clickable
           }}
-        >
-          <PictureAsPdfIcon style={{ marginRight: theme.spacing(1) }} />
-          <Typography variant="body2" color="primary">
-            {fileName}
-          </Typography>
-        </a>
-      );
-    } else if (fileType === "text/plain") {
-      return (
-        <a
-          href={fullPath}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            textDecoration: "none",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <DescriptionIcon style={{ marginRight: theme.spacing(1) }} />
-          <Typography variant="body2" color="primary">
-            {fileName}
-          </Typography>
-        </a>
-      );
-    } else {
-      return (
-        <a
-          href={fullPath}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            textDecoration: "none",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <InsertDriveFileIcon style={{ marginRight: theme.spacing(1) }} />
-          <Typography variant="body2" color="primary">
-            {fileName}
-          </Typography>
-        </a>
-      );
-    }
+          //find index of the clicked screenshot and open it in the lightbox
+          onClick={() => handleOpenLightbox(screenshots.findIndex(s => s.file_path === filePath))}
+        />
+      </Box>
+    );
   };
 
   return (
@@ -151,12 +82,31 @@ const ScreenshotsTab = ({ screenshots }) => {
                 maxWidth: "60%",
               }}
             >
-              {screenshot.file_path &&
-                renderFile(screenshot.file_path, "image/jpeg")}
+              {screenshot.file_path && renderFile(screenshot.file_path)}
             </Paper>
           </ListItem>
         ))}
       </List>
+      {isOpen && (
+        <Lightbox
+          //main image to be displayed in the lightbox
+          mainSrc={`${HOST_URL}${screenshots[photoIndex].file_path}`}
+          //next image in the sequence
+          nextSrc={`${HOST_URL}${screenshots[(photoIndex + 1) % screenshots.length].file_path}`}
+          //the previous image in the sequence
+          prevSrc={`${HOST_URL}${screenshots[(photoIndex + screenshots.length - 1) % screenshots.length].file_path}`}
+          //close the lightbox
+          onCloseRequest={() => setIsOpen(false)}
+          //navigate to the previous image
+          onMovePrevRequest={() =>
+            setPhotoIndex((photoIndex + screenshots.length - 1) % screenshots.length)
+          }
+          //navigate to the next image
+          onMoveNextRequest={() =>
+            setPhotoIndex((photoIndex + 1) % screenshots.length)
+          }
+        />
+      )}
     </Box>
   );
 };
