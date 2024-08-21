@@ -1,13 +1,11 @@
 from datetime import datetime
 from backend import create_app
-from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation
-
+from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation, Alert
 app = create_app()
 
 with app.app_context():
     
     # Delete existing data
-
     db.session.query(ExtractedInformation).delete()
     db.session.query(FacebookMessage).delete()
     db.session.query(WhatsappMessage).delete()
@@ -17,6 +15,7 @@ with app.app_context():
     db.session.query(Platform).delete()
     db.session.query(Scammer).delete()
     db.session.query(Bot).delete()
+    db.session.query(Alert).delete()
     db.session.commit()
 
     # Insert bots
@@ -81,57 +80,6 @@ with app.app_context():
         db.session.add(conversation)
     db.session.commit()
 
-    # # Insert Facebook messages
-    # facebook_messages_data = [
-    #     (1, datetime(2024, 5, 15, 14, 30), 'Hello, can you help me with my order?', 'incoming', None, None),
-    #     (1, datetime(2024, 5, 15, 14, 31), 'Sure, I\'d be happy to assist. Could you please provide your order number?', 'outgoing', None, None),
-    #     (1, datetime(2024, 5, 15, 14, 32), 'It\'s 12345.', 'incoming', None, None),
-    #     (1, datetime(2024, 5, 15, 14, 33), 'Thank you. I\'ll check the status for you now.', 'outgoing', None, None),
-    #     (1, datetime(2024, 5, 15, 14, 35), None, 'outgoing', 'files/Facebook/1/1/cat.jpg', 'image/jpeg'),
-    #     (1, datetime(2024, 5, 15, 14, 35, 10), 'Same image, but with caption', 'outgoing', 'files/Facebook/1/1/cat.jpg', 'image/jpeg'),
-    #     (1, datetime(2024, 5, 15, 14, 35, 30), None, 'outgoing', 'files/Facebook/1/1/cat.mp4', 'video/mp4'),
-    #     (1, datetime(2024, 5, 15, 14, 36), None, 'outgoing', 'files/Facebook/1/1/cat.mp3', 'audio/mp3'),
-    #     (1, datetime(2024, 5, 15, 14, 36, 30), None, 'outgoing', 'files/Facebook/1/1/cat.pdf', 'application/pdf'),
-    #     (1, datetime(2024, 5, 15, 14, 36, 45), None, 'outgoing', 'files/Facebook/1/1/cat.txt', 'text/plain'),
-    #     (1, datetime(2024, 5, 15, 14, 36, 50), None, 'outgoing', 'files/Facebook/1/1/cat.py', 'text/x-python'),
-    #     (1, datetime(2024, 5, 15, 14, 37), 'Why did you send me random cat stuff??', 'incoming', None, None),
-    #     (1, datetime(2024, 5, 15, 14, 37, 30), 'Hello? Are you there?', 'incoming', None, None),
-    #     (1, datetime(2024, 5, 15, 14, 38), 'OMG! I am so sorry, that was an accident', 'outgoing', None, None),
-    #     (2, datetime(2024, 5, 15, 15, 30), 'Hey Lim, do you know the store hours for today?', 'incoming', None, None),
-    #     (2, datetime(2024, 5, 15, 15, 31), 'Yes, the store is open from 9 AM to 8 PM today.', 'outgoing', None, None),
-    # ]
-
-    # for conversation_id, timestamp, message, direction, file_path, file_type in facebook_messages_data:
-    #     facebook_message = FacebookMessage(
-    #         conversation_id=conversation_id,
-    #         timestamp=timestamp,
-    #         message=message,
-    #         direction=direction,
-    #         file_path=file_path,
-    #         file_type=file_type
-    #     )
-    #     db.session.add(facebook_message)
-    # db.session.commit()
-    
-    # Insert WhatsApp messages
-    # whatsapp_messages_data = [
-    #     (3, 'message_id_1', 'Hello, can you help me with my order?', 'incoming', None, None),
-    #     (3, 'message_id_2', 'Sure, I\'d be happy to assist. Could you please provide your order number?', 'outgoing', None, None),
-    #     (3, 'message_id_3', 'It\'s 12345.', 'incoming', None, None),
-    #     (3, 'message_id_4', 'Thank you. I\'ll check the status for you now.', 'outgoing', None, None),
-    #     (3, 'message_id_5', None, 'outgoing', 'media/WhatsApp/90000001/90000012/cat.jpg', 'image/jpeg'),
-    #     (3, 'message_id_6', None, 'outgoing', 'media/WhatsApp/90000001/90000012/cat.mp4', 'video/mp4'),
-    #     (3, 'message_id_7', None, 'outgoing', 'media/WhatsApp/90000001/90000012/cat.mp3', 'audio/mp3'),
-    #     (3, 'message_id_8', None, 'outgoing', 'media/WhatsApp/90000001/90000012/cat.pdf', 'application/pdf'),
-    #     (3, 'message_id_9', None, 'outgoing', 'media/WhatsApp/90000001/90000012/cat.txt', 'text/plain'),
-    #     (3, 'message_id_10', None, 'outgoing', 'media/WhatsApp/90000001/90000012/cat.py', 'text/x-python'),
-    #     (3, 'message_id_11', 'Why did you send me random cat stuff??', 'incoming', None, None),
-    #     (3, 'message_id_12', 'Hello? Are you there?', 'incoming', None, None),
-    #     (3, 'message_id_13', 'OMG! I am so sorry, that was an accident', 'outgoing', None, None),
-    #     (4, 'message_id_14', 'Hey Lim, do you know the store hours for today?', 'incoming', None, None),
-    #     (4, 'message_id_15', 'Yes, the store is open from 9 AM to 8 PM today.', 'outgoing', None, None),
-    # ]
-
     whatsapp_messages_data = [
         (3, 'incoming', '1', 'Hello, can you help me with my order?', datetime(2024, 5, 15, 14, 30), None, None, None),
         (3, 'outgoing', '1', 'Sure, I\'d be happy to assist. Could you please provide your order number?', datetime(2024, 5, 15, 14, 31), None, None, "sent"),
@@ -178,41 +126,32 @@ with app.app_context():
 
     db.session.commit()
 
-    # # Insert Telegram messages
-    # telegram_messages_data = [
-    #     (5, datetime(2024, 5, 15, 14, 15), 'Hello Chua, can you help me find a good recipe for dinner?', 'incoming', None, None),
-    #     (5, datetime(2024, 5, 15, 14, 16), 'Sure! How about trying a simple stir-fry with vegetables and chicken?', 'outgoing', None, None),
-    #     (5, datetime(2024, 5, 15, 16, 0), 'Here is the recipe image.', 'outgoing', 'files/Telegram/2/5/recipe.jpg', 'image/jpeg'),
-    #     (6, datetime(2024, 5, 15, 15, 45), 'Hi Chua, do you have any tips for meal prepping?', 'incoming', None, None),
-    #     (6, datetime(2024, 5, 15, 15, 46), 'Yes! Start by planning your meals for the week and prepping ingredients in advance.', 'outgoing', None, None),
-    # ]
-
-    # for conversation_id, timestamp, message, direction, file_path, file_type in telegram_messages_data:
-    #     telegram_message = TelegramMessage(
-    #         conversation_id=conversation_id,
-    #         timestamp=timestamp,
-    #         message=message,
-    #         direction=direction,
-    #         file_path=file_path,
-    #         file_type=file_type
-    #     )
-    #     db.session.add(telegram_message)
-    # db.session.commit()
-
-    # # Insert extracted information
-    # extracted_information_data = [
-    #     (1, 'Bank Account Number', '09-912-123456'),
-    #     (1, 'NRIC Number', 'S1234567A'),
-    # ]
-
-    # for conversation_id, key, value in extracted_information_data:
-    #     extracted_information = ExtractedInformation(
-    #         conversation_id=conversation_id,
-    #         key=key,
-    #         value=value
-    #     )
-    #     db.session.add(extracted_information)
-    # db.session.commit()
+    # Insert Alerts
+    whatsapp_message_id = 1
+    scammer_id = 3        
+    alerts_data = [
+        {
+            'scammer_id': scammer_id,
+            'alert_type': 'deleted_message',
+            'alert_message': f"Message '{whatsapp_message.message_text}' was deleted by {scammer.unique_id}",
+            'read_status': False,
+            'timestamp': datetime.utcnow(),
+            'whatsapp_message_id': WhatsappMessage.query.get(whatsapp_message_id).id
+            },
+            ]
+    for alert_data in alerts_data:
+        alert = Alert(
+            scammer_id=alert_data['scammer_id'],
+            alert_type=alert_data['alert_type'],
+            alert_message=alert_data['alert_message'],
+            read_status=alert_data['read_status'],
+            timestamp=alert_data['timestamp'],
+            facebook_message_id=alert_data.get('facebook_message_id'),
+            whatsapp_message_id=alert_data.get('whatsapp_message_id'),
+            telegram_message_id=alert_data.get('telegram_message_id')
+            )
+        db.session.add(alert)
+    
+    db.session.commit()
 
 
-print("Data inserted successfully")

@@ -43,7 +43,7 @@ class Scammer(db.Model):
     def serialize(self):
         return {
             'id': self.id,
-            'unique_id': self.phone,
+            'unique_id': self.unique_id,
             'platform': self.platform,
             'conversations': [conv.id for conv in self.conversations],
         }
@@ -98,6 +98,17 @@ class FacebookMessage(db.Model):
     response_aft_generation_timestamp = db.Column(db.DateTime, nullable=True)
     response_status = db.Column(db.String(10), nullable=True)
 
+    def check_and_create_alert(self):
+        if self.response_status == 'deleted':
+            # Create an alert
+            new_alert = Alert(
+                scammer_id=self.conversation.scammer_id,
+                alert_type='deleted_message',
+                alert_message=f'Message ID {self.message_id} was deleted on Facebook.',
+            )
+            db.session.add(new_alert)
+            db.session.commit()
+
     def serialize(self):
         return {
             'id': self.id,
@@ -135,6 +146,16 @@ class WhatsappMessage(db.Model):
     response_aft_generation_timestamp = db.Column(db.DateTime, nullable=True)
     response_status = db.Column(db.String(10), nullable=True)
 
+    def check_and_create_alert(self):
+        if self.response_status == 'deleted':
+            new_alert = Alert(
+                scammer_id=self.conversation.scammer_id,
+                alert_type='deleted_message',
+                alert_message=f'Message ID {self.message_id} was deleted on Whatsapp.',
+            )
+            db.session.add(new_alert)
+            db.session.commit()
+
     def serialize(self):
         return {
             'id': self.id,
@@ -171,6 +192,16 @@ class TelegramMessage(db.Model):
     response_bef_generation_timestamp = db.Column(db.DateTime, nullable=True)
     response_aft_generation_timestamp = db.Column(db.DateTime, nullable=True)
     response_status = db.Column(db.String(10), nullable=True)
+
+    def check_and_create_alert(self):
+        if self.response_status == 'deleted':
+            new_alert = Alert(
+                scammer_id=self.conversation.scammer_id,
+                alert_type='deleted_message',
+                alert_message=f'Message ID {self.message_id} was deleted on Telegram.',
+            )
+            db.session.add(new_alert)
+            db.session.commit()
 
     def serialize(self):
         return {
@@ -216,3 +247,27 @@ class ExtractedInformation(db.Model):
             'key': self.key,
             'value': self.value
         }
+
+class Alert(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    scammer_id = db.Column(db.Integer, db.ForeignKey('scammer.id'), nullable=False)
+    alert_type = db.Column(db.String(50), nullable=False)
+    alert_message = db.Column(db.Text, nullable=False)
+    read_status = db.Column(db.Boolean, default=False, nullable=False)
+    timestamp = db.Column(db.DateTime, nullable=True)
+
+    facebook_message_id = db.Column(db.Integer, db.ForeignKey('facebook_message.id'), nullable=True)
+    whatsapp_message_id = db.Column(db.Integer, db.ForeignKey('whatsapp_message.id'), nullable=True)
+    telegram_message_id = db.Column(db.Integer, db.ForeignKey('telegram_message.id'), nullable=True)
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'scammer_id': self.scammer_id,
+            'alert_type': self.alert_type,
+            'alert_message': self.alert_message,
+            'read_status': self.read_status,
+            'timestamp': self.timestamp.isoformat() if self.timestamp else None,
+        }
+
+
