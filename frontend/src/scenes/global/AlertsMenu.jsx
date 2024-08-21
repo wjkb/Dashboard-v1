@@ -10,9 +10,9 @@ import {
   ListItemIcon,
 } from "@mui/material";
 import AlertOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
-import { getAlerts, markAlertAsRead, markAllAlertsAsRead, markAlertAsUnread } from "../../api"; // Ensure you have the correct API functions
-import CircleIcon from "@mui/icons-material/FiberManualRecord"; // Icon for the purple circle
-import { tokens } from "../../theme"; // Assuming theme.js is in the parent folder
+import { getAlerts, markAlertAsRead, markAllAlertsAsRead, markAlertAsUnread } from "../../api"; 
+import CircleIcon from "@mui/icons-material/FiberManualRecord";
+import { tokens } from "../../theme";
 
 const AlertsMenu = () => {
   const [alerts, setAlerts] = useState([]);
@@ -24,9 +24,12 @@ const AlertsMenu = () => {
   useEffect(() => {
     const fetchAlerts = async () => {
       try {
-        const { alerts, unread_count } = await getAlerts();
-        setAlerts(alerts);
-        setUnreadCount(unread_count);
+        const data = await getAlerts();
+        if (data) {
+          const { alerts = [], unread_count = 0 } = data;
+          setAlerts(alerts);
+          setUnreadCount(unread_count);
+        }
       } catch (error) {
         console.error("Failed to fetch alerts:", error);
       }
@@ -45,11 +48,13 @@ const AlertsMenu = () => {
 
   const handleAlertItemClick = async (alertId) => {
     try {
-      await markAlertAsRead(alertId); // Mark the alert as read in the backend
-      setAlerts(alerts.map(alert =>
+      await markAlertAsRead(alertId);
+      const updatedAlerts = alerts.map((alert) =>
         alert.id === alertId ? { ...alert, read_status: true } : alert
-      ));
-      setUnreadCount(prevCount => prevCount - 1); // Decrease the unread count
+      );
+      const unreadAlerts = updatedAlerts.filter(alert => !alert.read_status).length;
+      setAlerts(updatedAlerts);
+      setUnreadCount(unreadAlerts);
     } catch (error) {
       console.error("Failed to mark alert as read:", error);
     }
@@ -59,8 +64,9 @@ const AlertsMenu = () => {
   const handleMarkAllAsRead = async () => {
     try {
       await markAllAlertsAsRead();
-      setAlerts(alerts.map(alert => ({ ...alert, read_status: true })));
-      setUnreadCount(0); // Reset unread count to 0
+      const updatedAlerts = alerts.map((alert) => ({ ...alert, read_status: true }));
+      setAlerts(updatedAlerts);
+      setUnreadCount(0);
     } catch (error) {
       console.error("Failed to mark all alerts as read:", error);
     }
@@ -83,11 +89,13 @@ const AlertsMenu = () => {
   const handleMarkAsUnread = async () => {
     if (selectedAlert) {
       try {
-        await markAlertAsUnread(selectedAlert.id); // Assuming you have this API call implemented
-        setAlerts(alerts.map(alert =>
+        await markAlertAsUnread(selectedAlert.id);
+        const updatedAlerts = alerts.map((alert) =>
           alert.id === selectedAlert.id ? { ...alert, read_status: false } : alert
-        ));
-        setUnreadCount(prevCount => prevCount + 1); // Increase the unread count
+        );
+        const unreadAlerts = updatedAlerts.filter(alert => !alert.read_status).length;
+        setAlerts(updatedAlerts);
+        setUnreadCount(unreadAlerts);
       } catch (error) {
         console.error("Failed to mark alert as unread:", error);
       }
@@ -103,11 +111,7 @@ const AlertsMenu = () => {
         </Badge>
       </IconButton>
 
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleAlertClose}
-      >
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleAlertClose}>
         <Box p={2} minWidth="300px">
           <Typography variant="h6">Alerts</Typography>
           <Divider />
@@ -119,8 +123,8 @@ const AlertsMenu = () => {
             alerts.map((alert) => (
               <MenuItem
                 key={alert.id}
-                onClick={() => handleAlertItemClick(alert.id)} // Handle click to mark as read
-                onContextMenu={(e) => handleRightClick(e, alert)} // Capture right-click event
+                onClick={() => handleAlertItemClick(alert.id)}
+                onContextMenu={(e) => handleRightClick(e, alert)}
               >
                 {!alert.read_status && (
                   <ListItemIcon>
@@ -152,7 +156,9 @@ const AlertsMenu = () => {
             : undefined
         }
       >
-        <MenuItem onClick={handleMarkAsUnread}>Mark as unread</MenuItem>
+        {selectedAlert?.read_status && (
+          <MenuItem onClick={handleMarkAsUnread}>Mark as unread</MenuItem>
+        )}
       </Menu>
     </>
   );

@@ -243,7 +243,7 @@ export const markAlertAsRead = async (alertId) => {
       method: "PUT",
     });
     if (!response.ok) {
-      throw new Error("Network response was not ok");
+      throw new Error("Failed to mark alert as read");
     }
     return await response.json();
   } catch (error) {
