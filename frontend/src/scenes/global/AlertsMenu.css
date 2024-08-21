@@ -1,0 +1,14 @@
+@keyframes alarm {
+    0% { transform: scale(1) rotate(0deg); }
+    10% { transform: scale(1.2) rotate(-10deg); }
+    20% { transform: scale(1.2) rotate(10deg); }
+    30% { transform: scale(1.2) rotate(-10deg); }
+    40% { transform: scale(1.2) rotate(10deg); }
+    50% { transform: scale(1) rotate(0deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+  
+  .alarm {
+    animation: alarm 1s ease-in-out infinite;
+  }
+  

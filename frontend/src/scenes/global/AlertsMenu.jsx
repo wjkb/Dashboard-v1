@@ -13,6 +13,7 @@ import AlertOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import { getAlerts, markAlertAsRead, markAllAlertsAsRead, markAlertAsUnread } from "../../api"; 
 import CircleIcon from "@mui/icons-material/FiberManualRecord";
 import { tokens } from "../../theme";
+import "./AlertsMenu.css"; // Assuming you add the CSS in a separate file
 
 const AlertsMenu = () => {
   const [alerts, setAlerts] = useState([]);
@@ -105,7 +106,13 @@ const AlertsMenu = () => {
 
   return (
     <>
-      <IconButton type="button" sx={{ p: 1 }} aria-label="alerts" onClick={handleAlertClick}>
+      <IconButton 
+        type="button" 
+        sx={{ p: 1 }} 
+        aria-label="alerts" 
+        onClick={handleAlertClick}
+        className={unreadCount > 0 ? 'alarm' : ''} // Apply alarm class conditionally
+      >
         <Badge badgeContent={unreadCount} color="error">
           <AlertOutlinedIcon />
         </Badge>

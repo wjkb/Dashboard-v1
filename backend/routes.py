@@ -1190,18 +1190,6 @@ class AlertsResource(Resource):
         except Exception as e:
             return {'error': str(e)}, 500
 
-@ns_alerts.route('/api/alerts')
-class GetAlerts(Resource):
-    def get(self):
-        try:
-            alerts = Alert.query.order_by(Alert.timestamp.desc()).all()
-            unread_count = Alert.query.filter_by(read_status=False).count()
-
-            serialized_alerts = [alert.serialize() for alert in alerts]
-            return {'alerts': serialized_alerts, 'unread_count': unread_count}, 200
-        except Exception as e:
-            return {'error': str(e)}, 500
-
 @ns_alerts.route('/api/alerts/<int:alert_id>/mark_read')
 class MarkAlertAsRead(Resource):
     def put(self, alert_id):
@@ -1214,6 +1202,19 @@ class MarkAlertAsRead(Resource):
             db.session.commit()
 
             return {'message': 'Alert marked as read'}, 200
+        except Exception as e:
+            return {'error': str(e)}, 500
+
+@ns_alerts.route('/api/alerts/mark_all_read')
+class MarkAllAlertsAsRead(Resource):
+    def put(self):
+        try:
+            alerts = Alert.query.filter_by(read_status=False).all()
+            for alert in alerts:
+                alert.read_status = True
+            db.session.commit()
+
+            return {'message': 'All alerts marked as read'}, 200
         except Exception as e:
             return {'error': str(e)}, 500
 
@@ -1232,16 +1233,13 @@ class MarkAlertAsUnread(Resource):
         except Exception as e:
             return {'error': str(e)}, 500
 
-@ns_alerts.route('/api/alerts/mark_all_read')
-class MarkAllAlertsAsRead(Resource):
-    def put(self):
+@ns_alerts.route('/api/alerts/get')
+class GetAlerts(Resource):
+    def get(self):
         try:
-            alerts = Alert.query.filter_by(read_status=False).all()
-            for alert in alerts:
-                alert.read_status = True
-            db.session.commit()
-
-            return {'message': 'All alerts marked as read'}, 200
+            alerts = Alert.query.order_by(Alert.timestamp.desc()).all()
+            unread_count = Alert.query.filter_by(read_status=False).count()
+            serialized_alerts = [alert.serialize() for alert in alerts]
+            return {'alerts': serialized_alerts, 'unread_count': unread_count}, 200
         except Exception as e:
             return {'error': str(e)}, 500
-
