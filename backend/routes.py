@@ -8,7 +8,7 @@ from flask_restx import Api, Resource, fields
 from datetime import datetime
 import json
 import requests
-from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation
+from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation, Alert
 from backend.utils import save_file, safe_parse_timestamp, create_zip, create_message_csv
 
 # Initialize Flask-RESTx Api
@@ -22,6 +22,7 @@ ns_conversations = api.namespace('conversations', description='Conversation oper
 ns_messages = api.namespace('messages', description='Message operations', path='/')
 ns_utils = api.namespace('utils', description='Utility operations', path='/')
 ns_graph_insights = api.namespace('graph_insights', description='Graph Insights operations', path='/')
+ns_alerts = api.namespace('alerts', description='Alert operations', path='/')
 
 # Define models for Swagger documentation
 start_bot_script_model = ns_utils.model('StartBotScript', {
@@ -132,6 +133,14 @@ bot_model_1 = ns_bots.model('Bot1', {
     'pause': fields.Boolean(required=True, default=False)
 })
 
+create_alert_model = ns_alerts.model('CreateAlert', {
+    'scammer_id': fields.Integer(required=True, description='The scammer ID', example=1),
+    'alert_type': fields.String(required=True, description='The type of alert', example='warning'),
+    'alert_message': fields.String(required=True, description='The alert message', example='This scammer has deleted a message.'),
+    'facebook_message_id': fields.Integer(description='The ID of the associated Facebook message', example=123),
+    'whatsapp_message_id': fields.Integer(description='The ID of the associated WhatsApp message', example=456),
+    'telegram_message_id': fields.Integer(description='The ID of the associated Telegram message', example=789),
+})
 
 ##################################################
 # Below are the routes for all the API endpoints #
@@ -611,7 +620,7 @@ class ReceiveMessage(Resource):
         }
         message_class = platform_message_classes.get(platform.lower())
 
-        # Create message object
+        # Create or update message object
         if direction == 'incoming':
             message = message_class.query.filter_by(conversation_id=conversation.id, direction=direction, message_id=message_id).first()
             if not message:
@@ -621,17 +630,18 @@ class ReceiveMessage(Resource):
                     message_id=message_id,
                     message_text=message_text,
                     message_timestamp=safe_parse_timestamp(message_timestamp),
-
                     file_path=file_path,
-                    file_type=file_type
+                    file_type=file_type,
+                    response_status=response_status
                 )
                 db.session.add(message)
             else:
                 message.message_text = message_text
                 message.message_timestamp = safe_parse_timestamp(message_timestamp)
-
                 message.file_path = file_path
                 message.file_type = file_type
+                message.response_status = response_status
+
         elif direction == 'outgoing':
             message = message_class.query.filter_by(conversation_id=conversation.id, direction=direction, message_id=message_id).first()
             if not message:
@@ -641,11 +651,9 @@ class ReceiveMessage(Resource):
                     message_id=message_id,
                     message_text=message_text,
                     message_timestamp=safe_parse_timestamp(message_timestamp),
-
                     file_path=file_path,
                     file_type=file_type,
-
-                    responded_to = responded_to,
+                    responded_to=responded_to,
                     response_bef_generation_timestamp=safe_parse_timestamp(response_bef_generation_timestamp),
                     response_aft_generation_timestamp=safe_parse_timestamp(response_aft_generation_timestamp),
                     response_status=response_status
@@ -654,18 +662,16 @@ class ReceiveMessage(Resource):
             else:
                 message.message_text = message_text
                 message.message_timestamp = safe_parse_timestamp(message_timestamp)
-
                 message.file_path = file_path
                 message.file_type = file_type
-
                 message.responded_to = responded_to
                 message.response_bef_generation_timestamp = safe_parse_timestamp(response_bef_generation_timestamp)
                 message.response_aft_generation_timestamp = safe_parse_timestamp(response_aft_generation_timestamp)
                 message.response_status = response_status
 
+        # Commit the changes to the database
         db.session.commit()
-        return {'status': 'success'}, 201
-    
+
 @ns_messages.route('/api/llm_ignore_message_history')
 class LLMIgnoreMessageHistory(Resource):
     @ns_messages.doc('llm_ignore_message_history')
@@ -1150,5 +1156,90 @@ class RecentMessages(Resource):
             
             return response
         
+        except Exception as e:
+            return {'error': str(e)}, 500
+
+
+@ns_alerts.route('/api/alerts')
+class AlertsResource(Resource):
+    @ns_alerts.expect(create_alert_model)
+    def post(self):
+        try:
+            data = request.get_json()
+            new_alert = Alert(
+                scammer_id=data['scammer_id'],
+                alert_type=data['alert_type'],
+                alert_message=data['alert_message'],
+                facebook_message_id=data.get('facebook_message_id'),
+                whatsapp_message_id=data.get('whatsapp_message_id'),
+                telegram_message_id=data.get('telegram_message_id'),
+            )
+
+            db.session.add(new_alert)
+            db.session.commit()
+
+            return {'message': 'Alert created successfully', 'alert': new_alert.serialize()}, 201
+        except Exception as e:
+            return {'error': str(e)}, 500
+
+    def get(self):
+        try:
+            alerts = Alert.query.order_by(Alert.timestamp.desc()).all()
+            serialized_alerts = [alert.serialize() for alert in alerts]
+            return serialized_alerts, 200
+        except Exception as e:
+            return {'error': str(e)}, 500
+
+@ns_alerts.route('/api/alerts/<int:alert_id>/mark_read')
+class MarkAlertAsRead(Resource):
+    def put(self, alert_id):
+        try:
+            alert = Alert.query.get(alert_id)
+            if not alert:
+                return {'message': 'Alert not found'}, 404
+
+            alert.read_status = True
+            db.session.commit()
+
+            return {'message': 'Alert marked as read'}, 200
+        except Exception as e:
+            return {'error': str(e)}, 500
+
+@ns_alerts.route('/api/alerts/mark_all_read')
+class MarkAllAlertsAsRead(Resource):
+    def put(self):
+        try:
+            alerts = Alert.query.filter_by(read_status=False).all()
+            for alert in alerts:
+                alert.read_status = True
+            db.session.commit()
+
+            return {'message': 'All alerts marked as read'}, 200
+        except Exception as e:
+            return {'error': str(e)}, 500
+
+@ns_alerts.route('/api/alerts/<int:alert_id>/mark_unread')
+class MarkAlertAsUnread(Resource):
+    def put(self, alert_id):
+        try:
+            alert = Alert.query.get(alert_id)
+            if not alert:
+                return {'message': 'Alert not found'}, 404
+
+            alert.read_status = False
+            db.session.commit()
+
+            return {'message': 'Alert marked as unread'}, 200
+        except Exception as e:
+            return {'error': str(e)}, 500
+
+@ns_alerts.route('/api/alerts/get')
+class GetAlerts(Resource):
+    def get(self):
+        try:
+            alerts = Alert.query.order_by(Alert.timestamp.desc()).all()
+            unread_count = Alert.query.filter_by(read_status=False).count()
+            serialized_alerts = [alert.serialize() for alert in alerts]
+            return {'alerts': serialized_alerts, 'unread_count': unread_count}, 200
         except Exception as e:
             return {'error': str(e)}, 500

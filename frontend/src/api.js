@@ -237,6 +237,63 @@ export const deactivateBot = async (botId) => {
   }
 };
 
+export const markAlertAsRead = async (alertId) => {
+  try {
+    const response = await fetch(`${API_URL}/alerts/${alertId}/mark_read`, {
+      method: "PUT",
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error marking alert as read: ${error.message}`);
+  }
+};
+
+export const markAllAlertsAsRead = async () => {
+  try {
+    const response = await fetch(`${API_URL}/alerts/mark_all_read`, {
+      method: "PUT",
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error marking all alerts as read: ${error.message}`);
+  }
+};
+
+export const getAlerts = async () => {
+  try {
+    const response = await fetch(`${API_URL}/alerts/get`);
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json(); // The response contains alerts and unread_count
+  } catch (error) {
+    throw new Error(`Error fetching alerts: ${error.message}`);
+  }
+};
+
+export const markAlertAsUnread = async (alertId) => {
+  try {
+    const response = await fetch(`${API_URL}/alerts/${alertId}/mark_unread`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error marking alert as unread: ${error.message}`);
+  }
+};
+
 export const activateBot = async (botId) => {
   try {
     const response = await fetch(`${API_URL}/bots/${botId}/activate`, {
