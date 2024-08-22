@@ -13,7 +13,7 @@ import AlertOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import { getAlerts, markAlertAsRead, markAllAlertsAsRead, markAlertAsUnread } from "../../api"; 
 import CircleIcon from "@mui/icons-material/FiberManualRecord";
 import { tokens } from "../../theme";
-import "./AlertsMenu.css"; // Assuming you add the CSS in a separate file
+import "./AlertsMenu.css"; 
 
 const AlertsMenu = () => {
   const [alerts, setAlerts] = useState([]);
@@ -49,7 +49,6 @@ const AlertsMenu = () => {
   };
 
   const handleAlertItemClick = async (alert) => {
-    // Mark the alert as read
     try {
       await markAlertAsRead(alert.id);
       const updatedAlerts = alerts.map((a) =>
@@ -62,14 +61,12 @@ const AlertsMenu = () => {
       console.error("Failed to mark alert as read:", error);
     }
 
-    // Redirect to the link and highlight the message
     if (alert.link) {
       window.location.href = alert.link;
     }
 
     if (alert.whatsapp_message_id) {
       setHighlightedMessageId(alert.whatsapp_message_id);
-      // Optionally scroll to the message
       setTimeout(() => {
         const messageElement = document.getElementById(`whatsapp-message-${alert.whatsapp_message_id}`);
         if (messageElement) {
@@ -124,8 +121,8 @@ const AlertsMenu = () => {
   };
 
   const highlightStyle = {
-    border: '2px solid #ff0000', // Red border for highlighting
-    backgroundColor: '#ffffcc', // Light yellow background
+    border: '2px solid #ff0000',
+    backgroundColor: '#ffffcc', 
   };
 
   return (
@@ -135,7 +132,7 @@ const AlertsMenu = () => {
         sx={{ p: 1 }} 
         aria-label="alerts" 
         onClick={handleAlertClick}
-        className={unreadCount > 0 ? 'alarm' : ''} // Apply alarm class conditionally
+        className={unreadCount > 0 ? 'alarm' : ''} 
       >
         <Badge badgeContent={unreadCount} color="error">
           <AlertOutlinedIcon />
@@ -162,7 +159,9 @@ const AlertsMenu = () => {
                     <CircleIcon sx={{ color: tokens.primary, fontSize: 12 }} />
                   </ListItemIcon>
                 )}
-                <Typography variant="body2">{alert.alert_message}</Typography>
+                <Typography variant="body2">
+                  Message '{alert.message_text}' was deleted by {alert.scammer_unique_id}
+                </Typography>
               </MenuItem>
             ))
           )}

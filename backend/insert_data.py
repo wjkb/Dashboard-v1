@@ -79,7 +79,7 @@ with app.app_context():
     db.session.commit()
 
     whatsapp_messages_data = [
-        (3, 'incoming', '1', 'Hello, can you help me with my order?', datetime(2024, 5, 15, 14, 30), None, None, None),
+        (3, 'incoming', '1', 'Hello! can you help me with my order?', datetime(2024, 5, 15, 14, 30), None, None, None),
         (3, 'outgoing', '1', 'Sure, I\'d be happy to assist. Could you please provide your order number?', datetime(2024, 5, 15, 14, 31), None, None, "sent"),
         (3, 'incoming', '2', 'It\'s 12345.', datetime(2024, 5, 15, 14, 32), None, None, None),
         (3, 'outgoing', '2', 'Thank you. I\'ll check the status for you now.', datetime(2024, 5, 15, 14, 33), None, None, "sent"),
@@ -125,34 +125,37 @@ with app.app_context():
     db.session.commit()
 
     # Insert Alerts
-    whatsapp_message_id = 1
-    scammer_id = 3        
     alerts_data = [
         {
-            'scammer_id': scammer_id,
+            'scammer_unique_id': '90000012',
+            'direction': 'outgoing',
             'alert_type': 'deleted_message',
-            'alert_message': f"Message '{whatsapp_message.message_text}' was deleted by {scammer.unique_id}",
+            'platform_type': 'Whatsapp',
+            'message_id': 'msg_123',
+            'message_text': "Hello! can you help me with my order?",
             'read_status': False,
             'timestamp': datetime.utcnow(),
-            'whatsapp_message_id': whatsapp_message.id,
-            'link' : "http://localhost:3000/platforms/whatsapp/90000001/90000012?highlight={alert.whatsapp_message_id}"
+            'bot_id': '90000001'  
         }
     ]
 
     for alert_data in alerts_data:
         alert = Alert(
-            scammer_id=alert_data['scammer_id'],
+            scammer_unique_id=alert_data['scammer_unique_id'],
+            direction=alert_data['direction'],
             alert_type=alert_data['alert_type'],
-            alert_message=alert_data['alert_message'],
+            platform_type=alert_data['platform_type'],
+            message_id=alert_data.get('message_id'),
+            message_text=alert_data['message_text'],
             read_status=alert_data['read_status'],
             timestamp=alert_data['timestamp'],
-            facebook_message_id=alert_data.get('facebook_message_id'),
-            whatsapp_message_id=alert_data.get('whatsapp_message_id'),
-            telegram_message_id=alert_data.get('telegram_message_id'),
-            link=alert_data['link'] 
+            bot_id=alert_data.get('bot_id')
         )
         db.session.add(alert)
 
     db.session.commit()
+
+
+
 
 

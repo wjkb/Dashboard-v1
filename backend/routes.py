@@ -134,13 +134,15 @@ bot_model_1 = ns_bots.model('Bot1', {
 })
 
 create_alert_model = ns_alerts.model('CreateAlert', {
-    'scammer_id': fields.Integer(required=True, description='The scammer ID', example=1),
+    'scammer_unique_id': fields.String(required=True, description='The unique ID of the scammer', example='unique_scammer_123'),
+    'direction': fields.String(required=True, description='The direction of the alert', example='incoming'),
     'alert_type': fields.String(required=True, description='The type of alert', example='warning'),
-    'alert_message': fields.String(required=True, description='The alert message', example='This scammer has deleted a message.'),
-    'facebook_message_id': fields.Integer(description='The ID of the associated Facebook message', example=123),
-    'whatsapp_message_id': fields.Integer(description='The ID of the associated WhatsApp message', example=456),
-    'telegram_message_id': fields.Integer(description='The ID of the associated Telegram message', example=789),
-    'link': fields.String(description='The link associated with the alert', example='http://example.com/alert/123')
+    'platform_type': fields.String(required=True, description='The type of platform', example='Facebook'),
+    'message_id': fields.String(description='The ID of the associated message', example='msg_123'),
+    'message_text': fields.String(required=True, description='The alert message', example='This scammer has deleted a message.'),
+    'read_status': fields.Boolean(description='Whether the alert has been read', example=False),
+    'timestamp': fields.DateTime(description='The timestamp of the alert', example='2024-08-21T14:30:00'),
+    'bot_id': fields.String(description='The ID of the bot associated with the alert', example='bot_001')
 })
 
 
@@ -1168,13 +1170,17 @@ class AlertsResource(Resource):
     def post(self):
         try:
             data = request.get_json()
+
             new_alert = Alert(
-                scammer_id=data['scammer_id'],
+                scammer_unique_id=data['scammer_unique_id'],  # Use scammer_unique_id directly
+                direction=data['direction'],
                 alert_type=data['alert_type'],
-                alert_message=data['alert_message'],
-                facebook_message_id=data.get('facebook_message_id'),
-                whatsapp_message_id=data.get('whatsapp_message_id'),
-                telegram_message_id=data.get('telegram_message_id'),
+                platform_type=data['platform_type'],
+                message_id=data.get('message_id'),
+                message_text=data['message_text'],
+                read_status=data.get('read_status', False),  
+                timestamp=data.get('timestamp'),  
+                bot_id=data.get('bot_id')  
             )
 
             db.session.add(new_alert)
@@ -1245,3 +1251,4 @@ class GetAlerts(Resource):
             return {'alerts': serialized_alerts, 'unread_count': unread_count}, 200
         except Exception as e:
             return {'error': str(e)}, 500
+

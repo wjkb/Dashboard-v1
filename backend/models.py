@@ -219,26 +219,30 @@ class ExtractedInformation(db.Model):
 
 class Alert(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    scammer_id = db.Column(db.Integer, db.ForeignKey('scammer.id'), nullable=False)
+    scammer_unique_id = db.Column(db.String(255), nullable=False)
+    direction = db.Column(db.String(50), nullable=False)
     alert_type = db.Column(db.String(50), nullable=False)
-    alert_message = db.Column(db.Text, nullable=False)
+    platform_type = db.Column(db.String(50), nullable=False)
+    message_id = db.Column(db.String(255), nullable=True)
+    message_text = db.Column(db.Text, nullable=False)
     read_status = db.Column(db.Boolean, default=False, nullable=False)
     timestamp = db.Column(db.DateTime, nullable=True)
-    link = db.Column(db.String(255), nullable=False)
-
-    facebook_message_id = db.Column(db.Integer, db.ForeignKey('facebook_message.id'), nullable=True)
-    whatsapp_message_id = db.Column(db.Integer, db.ForeignKey('whatsapp_message.id'), nullable=True)
-    telegram_message_id = db.Column(db.Integer, db.ForeignKey('telegram_message.id'), nullable=True)
+    bot_id = db.Column(db.String(255), nullable=True)  
 
     def serialize(self):
         return {
             'id': self.id,
-            'scammer_id': self.scammer_id,
+            'scammer_unique_id': self.scammer_unique_id,
+            'direction': self.direction,
             'alert_type': self.alert_type,
-            'alert_message': self.alert_message,
+            'platform_type': self.platform_type,
+            'message_id': self.message_id,
+            'message_text': self.message_text,
             'read_status': self.read_status,
             'timestamp': self.timestamp.isoformat() if self.timestamp else None,
-            'link': self.link
+            'bot_id': self.bot_id
         }
+
+
 
 

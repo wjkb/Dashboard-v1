@@ -271,7 +271,7 @@ export const getAlerts = async () => {
     if (!response.ok) {
       throw new Error("Network response was not ok");
     }
-    return await response.json(); // The response contains alerts and unread_count
+    return await response.json(); 
   } catch (error) {
     throw new Error(`Error fetching alerts: ${error.message}`);
   }
