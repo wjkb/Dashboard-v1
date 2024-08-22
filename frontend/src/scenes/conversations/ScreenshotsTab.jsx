@@ -9,7 +9,6 @@ import {
 import ImageIcon from "@mui/icons-material/Image";
 import Lightbox from "react-image-lightbox";
 import "react-image-lightbox/style.css";
-import { tokens } from "../../theme";
 import { HOST_URL } from "../../api";
 
 /**
@@ -21,7 +20,6 @@ import { HOST_URL } from "../../api";
  */
 const ScreenshotsTab = ({ screenshots }) => {
   const theme = useTheme();
-  const colors = tokens;
   const [isOpen, setIsOpen] = useState(false); 
   const [photoIndex, setPhotoIndex] = useState(0); 
 
@@ -35,10 +33,8 @@ const ScreenshotsTab = ({ screenshots }) => {
   };
 
   /**
-   * Renders different file types based on their MIME type.
-   *
-   * @param {string} filePath - 
-   * @param {boolean} [download=false] 
+   * Renders screenshots with click handler to open in lightbox.
+   * @param {string} filePath 
    * @returns {JSX.Element} 
    */
   const renderFile = (filePath) => {
@@ -52,9 +48,8 @@ const ScreenshotsTab = ({ screenshots }) => {
           style={{
             maxWidth: "100%",
             marginBottom: theme.spacing(1),
-            cursor: 'pointer', //adding cursor pointer to indicate it's clickable
+            cursor: 'pointer', 
           }}
-          //find index of the clicked screenshot and open it in the lightbox
           onClick={() => handleOpenLightbox(screenshots.findIndex(s => s.file_path === filePath))}
         />
       </Box>
@@ -87,22 +82,26 @@ const ScreenshotsTab = ({ screenshots }) => {
       </List>
       {isOpen && (
         <Lightbox
-          //main image to be displayed in the lightbox
           mainSrc={`${HOST_URL}${screenshots[photoIndex].file_path}`}
-          //next image in the sequence
           nextSrc={`${HOST_URL}${screenshots[(photoIndex + 1) % screenshots.length].file_path}`}
-          //the previous image in the sequence
           prevSrc={`${HOST_URL}${screenshots[(photoIndex + screenshots.length - 1) % screenshots.length].file_path}`}
-          //close the lightbox
           onCloseRequest={() => setIsOpen(false)}
-          //navigate to the previous image
           onMovePrevRequest={() =>
             setPhotoIndex((photoIndex + screenshots.length - 1) % screenshots.length)
           }
-          //navigate to the next image
           onMoveNextRequest={() =>
             setPhotoIndex((photoIndex + 1) % screenshots.length)
           }
+          imageTitle={`Image ${photoIndex + 1} of ${screenshots.length}`}
+          imageCaption=""
+          reactModalStyle={{
+            overlay: {
+              zIndex: 2000, 
+            },
+            content: {
+              background: 'transparent', 
+            }
+          }}
         />
       )}
     </Box>

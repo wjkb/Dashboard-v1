@@ -38,7 +38,8 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
       message.response_status === null ||
       message.response_status.toLowerCase() === "sending" ||
       message.response_status.toLowerCase() === "sent" ||
-      message.response_status.toLowerCase() === "failed"
+      message.response_status.toLowerCase() === "failed" ||
+      message.response_status.toLowerCase() === "deleted"
   );
 
   const theme = useTheme();
@@ -79,7 +80,6 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
    * @returns {JSX.Element} - File preview or download link.
    */
   const renderFile = (filePath, fileType, download = false) => {
-    // const fullPath = `http://localhost:5000/${filePath}?download=${download}`;
     const fullPath = `${HOST_URL}${filePath}?download=${download}`;
     const fileName = filePath.split("/").pop();
 
@@ -204,6 +204,15 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
               {msg.message_text && (
                 <Typography variant="body1">{msg.message_text}</Typography>
               )}
+              {msg.response_status?.toLowerCase() === "deleted" && (
+                <Typography
+                  variant="body2"
+                  color="error"
+                  sx={{ fontStyle: "italic", marginTop: theme.spacing(1) }}
+                >
+                  This message has been deleted
+                </Typography>
+              )}
               <Box
                 sx={{
                   display: "flex",
@@ -215,7 +224,7 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                 <Typography variant="caption" color={colors.grey[500]}>
                   {formatDateTime(msg.message_timestamp)}
                 </Typography>
-                {msg.direction === "outgoing" && (
+                {msg.direction === "outgoing" && msg.response_status && (
                   <>
                     {msg.response_status.toLowerCase() === "sending" && (
                       <PendingIcon fontSize="small" />

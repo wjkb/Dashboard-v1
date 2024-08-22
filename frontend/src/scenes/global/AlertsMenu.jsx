@@ -12,7 +12,6 @@ import {
 import AlertOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import { getAlerts, markAlertAsRead, markAllAlertsAsRead, markAlertAsUnread } from "../../api"; 
 import CircleIcon from "@mui/icons-material/FiberManualRecord";
-import { tokens } from "../../theme";
 import "./AlertsMenu.css"; 
 
 const AlertsMenu = () => {
@@ -21,7 +20,7 @@ const AlertsMenu = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
   const [selectedAlert, setSelectedAlert] = useState(null);
-  const [highlightedMessageId, setHighlightedMessageId] = useState(null);
+  const [highlightedMessageId] = useState(null);
 
   useEffect(() => {
     const fetchAlerts = async () => {
@@ -60,23 +59,16 @@ const AlertsMenu = () => {
     } catch (error) {
       console.error("Failed to mark alert as read:", error);
     }
-
+  
     if (alert.link) {
       window.location.href = alert.link;
+    } else if (alert.platform_type && alert.bot_id && alert.scammer_unique_id) {
+      const url = `http://localhost:3000/platforms/${alert.platform_type}/${alert.bot_id}/${alert.scammer_unique_id}`;
+      window.location.href = url;
     }
-
-    if (alert.whatsapp_message_id) {
-      setHighlightedMessageId(alert.whatsapp_message_id);
-      setTimeout(() => {
-        const messageElement = document.getElementById(`whatsapp-message-${alert.whatsapp_message_id}`);
-        if (messageElement) {
-          messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 100);
-    }
-
     setAnchorEl(null);
   };
+  
 
   const handleMarkAllAsRead = async () => {
     try {
@@ -156,7 +148,7 @@ const AlertsMenu = () => {
               >
                 {!alert.read_status && (
                   <ListItemIcon>
-                    <CircleIcon sx={{ color: tokens.primary, fontSize: 12 }} />
+                    <CircleIcon sx={{ color: '#ff0000', fontSize: 12 }} />
                   </ListItemIcon>
                 )}
                 <Typography variant="body2">

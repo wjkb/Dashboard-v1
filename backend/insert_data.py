@@ -91,7 +91,7 @@ with app.app_context():
         (3, 'incoming', '8', None, datetime(2024, 5, 15, 14, 35, 10), 'test/WhatsApp/90000001/90000012/cat.py', 'text/x-python', None),
         (3, 'outgoing', '3', 'Why did you send me random cat stuff??', datetime(2024, 5, 15, 14, 37), None, None, "sent"),
         (3, 'outgoing', '4', 'Hello? Are you there?', datetime(2024, 5, 15, 14, 37, 30), None, None, "sent"),
-        (3, 'incoming', '9', 'OMG. I am so sorry, that was an accident', datetime(2024, 5, 15, 14, 38), None, None, None),
+        (3, 'incoming', '9', 'OMG. I am so sorry, that was an accident', datetime(2024, 5, 15, 14, 38), None, None, "deleted"),
         (4, 'outgoing', '5', 'Hey Lim, do you know the store hours for today?', datetime(2024, 5, 15, 15, 30), None, None, "sent"),
         (4, 'incoming', '10', 'Yes, the store is open from 9 AM to 8 PM today.', datetime(2024, 5, 15, 15, 31), None, None, None),
     ]
@@ -126,30 +126,21 @@ with app.app_context():
 
     # Insert Alerts
     alerts_data = [
-        {
-            'scammer_unique_id': '90000012',
-            'direction': 'outgoing',
-            'alert_type': 'deleted_message',
-            'platform_type': 'Whatsapp',
-            'message_id': 'msg_123',
-            'message_text': "Hello! can you help me with my order?",
-            'read_status': False,
-            'timestamp': datetime.utcnow(),
-            'bot_id': '90000001'  
-        }
+        ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '1', "Hello! can you help me with my order?", False, datetime.utcnow(), '90000001'),
+        ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It\'s 12345.", False, datetime.utcnow(), '90000001')
     ]
 
-    for alert_data in alerts_data:
+    for scammer_unique_id, direction, alert_type, platform_type, message_id, message_text, read_status, timestamp, bot_id in alerts_data:
         alert = Alert(
-            scammer_unique_id=alert_data['scammer_unique_id'],
-            direction=alert_data['direction'],
-            alert_type=alert_data['alert_type'],
-            platform_type=alert_data['platform_type'],
-            message_id=alert_data.get('message_id'),
-            message_text=alert_data['message_text'],
-            read_status=alert_data['read_status'],
-            timestamp=alert_data['timestamp'],
-            bot_id=alert_data.get('bot_id')
+            scammer_unique_id=scammer_unique_id,
+            direction=direction,
+            alert_type=alert_type,
+            platform_type=platform_type,
+            message_id=message_id,
+            message_text=message_text,
+            read_status=read_status,
+            timestamp=timestamp,
+            bot_id=bot_id
         )
         db.session.add(alert)
 
