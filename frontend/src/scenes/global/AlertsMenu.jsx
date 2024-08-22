@@ -21,6 +21,7 @@ const AlertsMenu = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
   const [selectedAlert, setSelectedAlert] = useState(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState(null);
 
   useEffect(() => {
     const fetchAlerts = async () => {
@@ -47,18 +48,36 @@ const AlertsMenu = () => {
     setAnchorEl(null);
   };
 
-  const handleAlertItemClick = async (alertId) => {
+  const handleAlertItemClick = async (alert) => {
+    // Mark the alert as read
     try {
-      await markAlertAsRead(alertId);
-      const updatedAlerts = alerts.map((alert) =>
-        alert.id === alertId ? { ...alert, read_status: true } : alert
+      await markAlertAsRead(alert.id);
+      const updatedAlerts = alerts.map((a) =>
+        a.id === alert.id ? { ...a, read_status: true } : a
       );
-      const unreadAlerts = updatedAlerts.filter(alert => !alert.read_status).length;
+      const unreadAlerts = updatedAlerts.filter(a => !a.read_status).length;
       setAlerts(updatedAlerts);
       setUnreadCount(unreadAlerts);
     } catch (error) {
       console.error("Failed to mark alert as read:", error);
     }
+
+    // Redirect to the link and highlight the message
+    if (alert.link) {
+      window.location.href = alert.link;
+    }
+
+    if (alert.whatsapp_message_id) {
+      setHighlightedMessageId(alert.whatsapp_message_id);
+      // Optionally scroll to the message
+      setTimeout(() => {
+        const messageElement = document.getElementById(`whatsapp-message-${alert.whatsapp_message_id}`);
+        if (messageElement) {
+          messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+
     setAnchorEl(null);
   };
 
@@ -94,7 +113,7 @@ const AlertsMenu = () => {
         const updatedAlerts = alerts.map((alert) =>
           alert.id === selectedAlert.id ? { ...alert, read_status: false } : alert
         );
-        const unreadAlerts = updatedAlerts.filter(alert => !alert.read_status).length;
+        const unreadAlerts = updatedAlerts.filter(a => !a.read_status).length;
         setAlerts(updatedAlerts);
         setUnreadCount(unreadAlerts);
       } catch (error) {
@@ -102,6 +121,11 @@ const AlertsMenu = () => {
       }
     }
     setContextMenu(null);
+  };
+
+  const highlightStyle = {
+    border: '2px solid #ff0000', // Red border for highlighting
+    backgroundColor: '#ffffcc', // Light yellow background
   };
 
   return (
@@ -130,7 +154,7 @@ const AlertsMenu = () => {
             alerts.map((alert) => (
               <MenuItem
                 key={alert.id}
-                onClick={() => handleAlertItemClick(alert.id)}
+                onClick={() => handleAlertItemClick(alert)}
                 onContextMenu={(e) => handleRightClick(e, alert)}
               >
                 {!alert.read_status && (
@@ -167,6 +191,20 @@ const AlertsMenu = () => {
           <MenuItem onClick={handleMarkAsUnread}>Mark as unread</MenuItem>
         )}
       </Menu>
+
+      {/* Example of where messages might be rendered */}
+      <div>
+        {/* Render messages with conditional styling */}
+        {alerts.map(alert => (
+          <div
+            id={`whatsapp-message-${alert.whatsapp_message_id}`}
+            key={alert.whatsapp_message_id}
+            style={highlightedMessageId === alert.whatsapp_message_id ? highlightStyle : {}}
+          >
+            {/* Message content here */}
+          </div>
+        ))}
+      </div>
     </>
   );
 };

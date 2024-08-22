@@ -140,7 +140,9 @@ create_alert_model = ns_alerts.model('CreateAlert', {
     'facebook_message_id': fields.Integer(description='The ID of the associated Facebook message', example=123),
     'whatsapp_message_id': fields.Integer(description='The ID of the associated WhatsApp message', example=456),
     'telegram_message_id': fields.Integer(description='The ID of the associated Telegram message', example=789),
+    'link': fields.String(description='The link associated with the alert', example='http://example.com/alert/123')
 })
+
 
 ##################################################
 # Below are the routes for all the API endpoints #
@@ -515,7 +517,7 @@ class BotConversationScreenshots(Resource):
             if not conversation:
                 return {"error": "Conversation not found"}, 404
             
-            screenshots = MessageScreenshots.query.filter_by(conversation_id=conversation.id).order_by(MessageScreenshots.id.desc()).all()
+            screenshots = MessageScreenshots.query.filter_by(conversation_id=conversation.id).order_by(MessageScreenshots.id).all()
             return [screenshot.serialize() for screenshot in screenshots]
         except Exception as e:
             print(f"Error occurred: {e}")

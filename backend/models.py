@@ -98,17 +98,6 @@ class FacebookMessage(db.Model):
     response_aft_generation_timestamp = db.Column(db.DateTime, nullable=True)
     response_status = db.Column(db.String(10), nullable=True)
 
-    def check_and_create_alert(self):
-        if self.response_status == 'deleted':
-            # Create an alert
-            new_alert = Alert(
-                scammer_id=self.conversation.scammer_id,
-                alert_type='deleted_message',
-                alert_message=f'Message ID {self.message_id} was deleted on Facebook.',
-            )
-            db.session.add(new_alert)
-            db.session.commit()
-
     def serialize(self):
         return {
             'id': self.id,
@@ -146,16 +135,6 @@ class WhatsappMessage(db.Model):
     response_aft_generation_timestamp = db.Column(db.DateTime, nullable=True)
     response_status = db.Column(db.String(10), nullable=True)
 
-    def check_and_create_alert(self):
-        if self.response_status == 'deleted':
-            new_alert = Alert(
-                scammer_id=self.conversation.scammer_id,
-                alert_type='deleted_message',
-                alert_message=f'Message ID {self.message_id} was deleted on Whatsapp.',
-            )
-            db.session.add(new_alert)
-            db.session.commit()
-
     def serialize(self):
         return {
             'id': self.id,
@@ -192,16 +171,6 @@ class TelegramMessage(db.Model):
     response_bef_generation_timestamp = db.Column(db.DateTime, nullable=True)
     response_aft_generation_timestamp = db.Column(db.DateTime, nullable=True)
     response_status = db.Column(db.String(10), nullable=True)
-
-    def check_and_create_alert(self):
-        if self.response_status == 'deleted':
-            new_alert = Alert(
-                scammer_id=self.conversation.scammer_id,
-                alert_type='deleted_message',
-                alert_message=f'Message ID {self.message_id} was deleted on Telegram.',
-            )
-            db.session.add(new_alert)
-            db.session.commit()
 
     def serialize(self):
         return {
@@ -255,6 +224,7 @@ class Alert(db.Model):
     alert_message = db.Column(db.Text, nullable=False)
     read_status = db.Column(db.Boolean, default=False, nullable=False)
     timestamp = db.Column(db.DateTime, nullable=True)
+    link = db.Column(db.String(255), nullable=False)
 
     facebook_message_id = db.Column(db.Integer, db.ForeignKey('facebook_message.id'), nullable=True)
     whatsapp_message_id = db.Column(db.Integer, db.ForeignKey('whatsapp_message.id'), nullable=True)
@@ -268,6 +238,7 @@ class Alert(db.Model):
             'alert_message': self.alert_message,
             'read_status': self.read_status,
             'timestamp': self.timestamp.isoformat() if self.timestamp else None,
+            'link': self.link
         }
 
 

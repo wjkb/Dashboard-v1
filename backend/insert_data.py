@@ -2,9 +2,7 @@ from datetime import datetime
 from backend import create_app
 from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation, Alert
 app = create_app()
-
 with app.app_context():
-    
     # Delete existing data
     db.session.query(ExtractedInformation).delete()
     db.session.query(FacebookMessage).delete()
@@ -136,9 +134,11 @@ with app.app_context():
             'alert_message': f"Message '{whatsapp_message.message_text}' was deleted by {scammer.unique_id}",
             'read_status': False,
             'timestamp': datetime.utcnow(),
-            'whatsapp_message_id': WhatsappMessage.query.get(whatsapp_message_id).id
-            },
-            ]
+            'whatsapp_message_id': whatsapp_message.id,
+            'link' : "http://localhost:3000/platforms/whatsapp/90000001/90000012?highlight={alert.whatsapp_message_id}"
+        }
+    ]
+
     for alert_data in alerts_data:
         alert = Alert(
             scammer_id=alert_data['scammer_id'],
@@ -148,10 +148,11 @@ with app.app_context():
             timestamp=alert_data['timestamp'],
             facebook_message_id=alert_data.get('facebook_message_id'),
             whatsapp_message_id=alert_data.get('whatsapp_message_id'),
-            telegram_message_id=alert_data.get('telegram_message_id')
-            )
+            telegram_message_id=alert_data.get('telegram_message_id'),
+            link=alert_data['link'] 
+        )
         db.session.add(alert)
-    
+
     db.session.commit()
 
 

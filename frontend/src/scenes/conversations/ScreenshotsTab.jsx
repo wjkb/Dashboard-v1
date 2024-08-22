@@ -5,7 +5,6 @@ import {
   List,
   ListItem,
   Paper,
-  Typography,
 } from "@mui/material";
 import ImageIcon from "@mui/icons-material/Image";
 import Lightbox from "react-image-lightbox";
@@ -16,19 +15,19 @@ import { HOST_URL } from "../../api";
 /**
  * Renders a tab displaying screenshots of the conversation.
  * @component
- * @param {Object} props - Component props.
- * @param {Array<Object>} props.screenshots - Array of screenshot objects to display.
- * @returns {JSX.Element} - ScreenshotsTab component.
+ * @param {Object} props 
+ * @param {Array<Object>} props.screenshots 
+ * @returns {JSX.Element} 
  */
 const ScreenshotsTab = ({ screenshots }) => {
   const theme = useTheme();
   const colors = tokens;
-  const [isOpen, setIsOpen] = useState(false); // State to manage the lightbox open/close
-  const [photoIndex, setPhotoIndex] = useState(0); // State to keep track of the current screenshot index
+  const [isOpen, setIsOpen] = useState(false); 
+  const [photoIndex, setPhotoIndex] = useState(0); 
 
   /**
    * Opens the lightbox and sets the current photo index.
-   * @param {number} index - The index of the screenshot to open in the lightbox.
+   * @param {number} index 
    */
   const handleOpenLightbox = (index) => {
     setPhotoIndex(index);
@@ -38,12 +37,11 @@ const ScreenshotsTab = ({ screenshots }) => {
   /**
    * Renders different file types based on their MIME type.
    *
-   * @param {string} filePath - Path to the file.
-   * @param {boolean} [download=false] - Indicates if the file should be downloadable.
-   * @returns {JSX.Element} - File preview or download link.
+   * @param {string} filePath - 
+   * @param {boolean} [download=false] 
+   * @returns {JSX.Element} 
    */
   const renderFile = (filePath) => {
-    // Construct the full path to the file
     const fullPath = `${HOST_URL}${filePath}`;
     return (
       <Box display="flex" flexDirection="column">
