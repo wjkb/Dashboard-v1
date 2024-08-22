@@ -18,18 +18,18 @@ with app.app_context():
 
     # Insert bots
     bots_data = [
-        ('90000001', 'Lim Wei Jie', 'limweijie@gmail.com', 'Middle-aged man', 'Llama 2'),
-        ('90000002', 'Chua Mei Ling', 'chuameiling@gmail.com', 'Middle-aged man', 'Llama 3'),
-        ('90000003', 'Ahmad Yusof', 'ahmadyusof@gmail.com', 'Old man', 'Llama 2'),
-        ('90000004', 'Wong Li Hua', 'wonglihua@gmail.com', 'Young woman', 'Llama 2'),
-        ('90000005', 'Tan Wei', 'tanwei@gmail.com', 'Young man', 'Llama 3'),
-        ('90000006', 'Lim Mei Ling', 'limmeiling@gmail.com', 'Middle-aged woman', 'Llama 2'),
-        ('90000007', 'Rajendra Kumar', 'rajendrakumar@gmail.com', 'Old man', 'Llama 3'),
-        ('90000008', 'Loh Jia Hui', 'lohjiahui@gmail.com', 'Middle-aged woman', 'Llama 2'),
-        ('90000009', 'Soh Wei Lun', 'sohweilun@gmail.com', 'Young man', 'Llama 3')
+        ('90000001', 'Lim Wei Jie', 'limweijie@gmail.com', 'Middle-aged man', 'Llama 2', True),
+        ('90000002', 'Chua Mei Ling', 'chuameiling@gmail.com', 'Middle-aged man', 'Llama 3', False),
+        ('90000003', 'Ahmad Yusof', 'ahmadyusof@gmail.com', 'Old man', 'Llama 2', False),
+        ('90000004', 'Wong Li Hua', 'wonglihua@gmail.com', 'Young woman', 'Llama 2', False),
+        ('90000005', 'Tan Wei', 'tanwei@gmail.com', 'Young man', 'Llama 3', False),
+        ('90000006', 'Lim Mei Ling', 'limmeiling@gmail.com', 'Middle-aged woman', 'Llama 2', False),
+        ('90000007', 'Rajendra Kumar', 'rajendrakumar@gmail.com', 'Old man', 'Llama 3', False),
+        ('90000008', 'Loh Jia Hui', 'lohjiahui@gmail.com', 'Middle-aged woman', 'Llama 2', False),
+        ('90000009', 'Soh Wei Lun', 'sohweilun@gmail.com', 'Young man', 'Llama 3', False)
     ]
 
-    for id, name, email, persona, model in bots_data:
+    for id, name, email, persona, model, pause  in bots_data:
         bot = Bot(id=id, name=name, email=email, persona=persona, model=model)
         db.session.add(bot)
     db.session.commit()
@@ -92,6 +92,7 @@ with app.app_context():
         (3, 'outgoing', '3', 'Why did you send me random cat stuff??', datetime(2024, 5, 15, 14, 37), None, None, "sent"),
         (3, 'outgoing', '4', 'Hello? Are you there?', datetime(2024, 5, 15, 14, 37, 30), None, None, "sent"),
         (3, 'incoming', '9', 'OMG. I am so sorry, that was an accident', datetime(2024, 5, 15, 14, 38), None, None, "deleted"),
+        (3, 'incoming', '10','wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww, dfasdfsadfsadfsafadfafdafdafdafdad', datetime(2024, 5, 15, 14, 40), None, None, "deleted"),
         (4, 'outgoing', '5', 'Hey Lim, do you know the store hours for today?', datetime(2024, 5, 15, 15, 30), None, None, "sent"),
         (4, 'incoming', '10', 'Yes, the store is open from 9 AM to 8 PM today.', datetime(2024, 5, 15, 15, 31), None, None, None),
     ]
@@ -126,8 +127,9 @@ with app.app_context():
 
     # Insert Alerts
     alerts_data = [
-        ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '1', "Hello! can you help me with my order?", False, datetime.utcnow(), '90000001'),
-        ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It\'s 12345.", False, datetime.utcnow(), '90000001')
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '1', "Hello! can you help me with my order?", False, datetime.utcnow(), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime.utcnow(), '90000001'),
+    (None, None, 'manual_intervention_required', 'Whatsapp', None, None, None, datetime.utcnow(), '90000001')  # Ensure None is handled correctly
     ]
 
     for scammer_unique_id, direction, alert_type, platform_type, message_id, message_text, read_status, timestamp, bot_id in alerts_data:

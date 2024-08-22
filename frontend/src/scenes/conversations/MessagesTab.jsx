@@ -22,16 +22,6 @@ import {
 import { tokens } from "../../theme";
 import { HOST_URL } from "../../api";
 
-/**
- * Renders a tab displaying messages with various media types and file attachments.
- *
- * @component
- * @param {Object} props - Component props.
- * @param {Array<Object>} props.messages - Array of message objects to display.
- * @param {Object} props.messageRefs - Refs to messages for scrolling.
- * @param {string | number | null} props.highlightedMessage - ID of the highlighted message.
- * @returns {JSX.Element} - MessagesTab component.
- */
 const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
   const filteredMessages = messages.filter(
     (message) =>
@@ -45,7 +35,6 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
   const theme = useTheme();
   const colors = tokens;
 
-  // Styles for message types
   const messageStyles = {
     incoming: {
       backgroundColor: colors.grey[100],
@@ -59,26 +48,12 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
     },
   };
 
-  /**
-   * Formats timestamp to a readable date and time format.
-   *
-   * @param {number} timestamp - Unix timestamp.
-   * @returns {string} - Formatted date and time string.
-   */
   const formatDateTime = (timestamp) => {
     const date = new Date(timestamp);
     const formattedDateTime = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
     return formattedDateTime;
   };
 
-  /**
-   * Renders different file types based on their MIME type.
-   *
-   * @param {string} filePath - Path to the file.
-   * @param {string} fileType - MIME type of the file.
-   * @param {boolean} [download=false] - Indicates if the file should be downloadable.
-   * @returns {JSX.Element} - File preview or download link.
-   */
   const renderFile = (filePath, fileType, download = false) => {
     const fullPath = `${HOST_URL}${filePath}?download=${download}`;
     const fileName = filePath.split("/").pop();
@@ -202,7 +177,15 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
             >
               {msg.file_path && renderFile(msg.file_path, msg.file_type)}
               {msg.message_text && (
-                <Typography variant="body1">{msg.message_text}</Typography>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    wordBreak: "break-word", 
+                    overflowWrap: "break-word", 
+                  }}
+                >
+                  {msg.message_text}
+                </Typography>
               )}
               {msg.response_status?.toLowerCase() === "deleted" && (
                 <Typography

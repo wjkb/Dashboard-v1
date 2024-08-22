@@ -219,13 +219,13 @@ class ExtractedInformation(db.Model):
 
 class Alert(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    scammer_unique_id = db.Column(db.String(255), nullable=False)
-    direction = db.Column(db.String(50), nullable=False)
-    alert_type = db.Column(db.String(50), nullable=False)
-    platform_type = db.Column(db.String(50), nullable=False)
+    scammer_unique_id = db.Column(db.String(255), nullable=True)
+    direction = db.Column(db.String(50), nullable=True)
+    alert_type = db.Column(db.String(50), nullable=True)
+    platform_type = db.Column(db.String(50), nullable=True)
     message_id = db.Column(db.String(255), nullable=True)
-    message_text = db.Column(db.Text, nullable=False)
-    read_status = db.Column(db.Boolean, default=False, nullable=False)
+    message_text = db.Column(db.Text, nullable=True)
+    read_status = db.Column(db.Boolean, default=False, nullable=True)
     timestamp = db.Column(db.DateTime, nullable=True)
     bot_id = db.Column(db.String(255), nullable=True)  
 

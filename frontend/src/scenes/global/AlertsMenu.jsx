@@ -8,11 +8,12 @@ import {
   Typography,
   Divider,
   ListItemIcon,
+  Tooltip,
 } from "@mui/material";
 import AlertOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import { getAlerts, markAlertAsRead, markAllAlertsAsRead, markAlertAsUnread } from "../../api"; 
 import CircleIcon from "@mui/icons-material/FiberManualRecord";
-import "./AlertsMenu.css"; 
+import "./AlertsMenu.css";
 
 const AlertsMenu = () => {
   const [alerts, setAlerts] = useState([]);
@@ -20,7 +21,6 @@ const AlertsMenu = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
   const [selectedAlert, setSelectedAlert] = useState(null);
-  const [highlightedMessageId] = useState(null);
 
   useEffect(() => {
     const fetchAlerts = async () => {
@@ -53,13 +53,12 @@ const AlertsMenu = () => {
       const updatedAlerts = alerts.map((a) =>
         a.id === alert.id ? { ...a, read_status: true } : a
       );
-      const unreadAlerts = updatedAlerts.filter(a => !a.read_status).length;
       setAlerts(updatedAlerts);
-      setUnreadCount(unreadAlerts);
+      setUnreadCount(updatedAlerts.filter(a => !a.read_status).length);
     } catch (error) {
       console.error("Failed to mark alert as read:", error);
     }
-  
+
     if (alert.link) {
       window.location.href = alert.link;
     } else if (alert.platform_type && alert.bot_id && alert.scammer_unique_id) {
@@ -68,13 +67,11 @@ const AlertsMenu = () => {
     }
     setAnchorEl(null);
   };
-  
 
   const handleMarkAllAsRead = async () => {
     try {
       await markAllAlertsAsRead();
-      const updatedAlerts = alerts.map((alert) => ({ ...alert, read_status: true }));
-      setAlerts(updatedAlerts);
+      setAlerts((alerts) => alerts.map((alert) => ({ ...alert, read_status: true })));
       setUnreadCount(0);
     } catch (error) {
       console.error("Failed to mark all alerts as read:", error);
@@ -102,19 +99,13 @@ const AlertsMenu = () => {
         const updatedAlerts = alerts.map((alert) =>
           alert.id === selectedAlert.id ? { ...alert, read_status: false } : alert
         );
-        const unreadAlerts = updatedAlerts.filter(a => !a.read_status).length;
         setAlerts(updatedAlerts);
-        setUnreadCount(unreadAlerts);
+        setUnreadCount(updatedAlerts.filter(a => !a.read_status).length);
       } catch (error) {
         console.error("Failed to mark alert as unread:", error);
       }
     }
     setContextMenu(null);
-  };
-
-  const highlightStyle = {
-    border: '2px solid #ff0000',
-    backgroundColor: '#ffffcc', 
   };
 
   return (
@@ -141,20 +132,28 @@ const AlertsMenu = () => {
             </Typography>
           ) : (
             alerts.map((alert) => (
-              <MenuItem
+              <Tooltip 
                 key={alert.id}
-                onClick={() => handleAlertItemClick(alert)}
-                onContextMenu={(e) => handleRightClick(e, alert)}
+                title={`Alert type: ${alert.alert_type}`} 
+                arrow
               >
-                {!alert.read_status && (
-                  <ListItemIcon>
-                    <CircleIcon sx={{ color: '#ff0000', fontSize: 12 }} />
-                  </ListItemIcon>
-                )}
-                <Typography variant="body2">
-                  Message '{alert.message_text}' was deleted by {alert.scammer_unique_id}
-                </Typography>
-              </MenuItem>
+                <MenuItem
+                  onClick={() => handleAlertItemClick(alert)}
+                  onContextMenu={(e) => handleRightClick(e, alert)}
+                >
+                  {!alert.read_status && (
+                    <ListItemIcon>
+                      <CircleIcon sx={{ color: '#ff0000', fontSize: 12 }} />
+                    </ListItemIcon>
+                  )}
+                  <Typography variant="body2">
+                    {alert.alert_type === 'manual_intervention_required' 
+                      ? `Manual intervention required for bot ${alert.bot_id} for ${alert.platform_type}`
+                      : `Message '${alert.message_text}' was deleted by ${alert.scammer_unique_id}`
+                    }
+                  </Typography>
+                </MenuItem>
+              </Tooltip>
             ))
           )}
           {alerts.length > 0 && (
@@ -182,20 +181,6 @@ const AlertsMenu = () => {
           <MenuItem onClick={handleMarkAsUnread}>Mark as unread</MenuItem>
         )}
       </Menu>
-
-      {/* Example of where messages might be rendered */}
-      <div>
-        {/* Render messages with conditional styling */}
-        {alerts.map(alert => (
-          <div
-            id={`whatsapp-message-${alert.whatsapp_message_id}`}
-            key={alert.whatsapp_message_id}
-            style={highlightedMessageId === alert.whatsapp_message_id ? highlightStyle : {}}
-          >
-            {/* Message content here */}
-          </div>
-        ))}
-      </div>
     </>
   );
 };

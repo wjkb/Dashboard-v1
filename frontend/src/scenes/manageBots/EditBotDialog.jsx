@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -9,7 +9,6 @@ import {
   Checkbox,
   MenuItem,
   ListItemText,
-  Box,
 } from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
@@ -158,10 +157,16 @@ const EditBotDialog = ({ open, onClose, bot, onSave }) => {
                 ))}
               </TextField>
               <DialogActions>
-                <Button onClick={onClose} color="primary">
+              <Button
+                  onClick={onClose}
+                  sx={{ color: 'white', backgroundColor: '#9c27b0', '&:hover': { backgroundColor: '#ab47bc' } }}
+                >
                   Cancel
                 </Button>
-                <Button type="submit" color="primary">
+                <Button
+                  type="submit"
+                  sx={{ color: 'white', backgroundColor: '#9c27b0', '&:hover': { backgroundColor: '#ab47bc' } }}
+                >
                   Save
                 </Button>
               </DialogActions>
