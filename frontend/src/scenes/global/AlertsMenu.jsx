@@ -11,13 +11,18 @@ import {
   Tooltip,
 } from "@mui/material";
 import AlertOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
-import { getAlerts, markAlertAsRead, markAllAlertsAsRead, markAlertAsUnread } from "../../api"; 
+import {
+  getAlerts,
+  markAlertAsRead,
+  markAllAlertsAsRead,
+  markAlertAsUnread,
+} from "../../api"; 
 import CircleIcon from "@mui/icons-material/FiberManualRecord";
 import "./AlertsMenu.css";
 
 const formatTimestamp = (timestamp) => {
   const date = new Date(timestamp);
-  return date.toLocaleString(); // You can adjust the format here
+  return date.toLocaleString(); 
 };
 
 const AlertsMenu = () => {
@@ -59,7 +64,7 @@ const AlertsMenu = () => {
         a.id === alert.id ? { ...a, read_status: true } : a
       );
       setAlerts(updatedAlerts);
-      setUnreadCount(updatedAlerts.filter(a => !a.read_status).length);
+      setUnreadCount(updatedAlerts.filter((a) => !a.read_status).length);
     } catch (error) {
       console.error("Failed to mark alert as read:", error);
     }
@@ -76,7 +81,9 @@ const AlertsMenu = () => {
   const handleMarkAllAsRead = async () => {
     try {
       await markAllAlertsAsRead();
-      setAlerts((alerts) => alerts.map((alert) => ({ ...alert, read_status: true })));
+      setAlerts((alerts) =>
+        alerts.map((alert) => ({ ...alert, read_status: true }))
+      );
       setUnreadCount(0);
     } catch (error) {
       console.error("Failed to mark all alerts as read:", error);
@@ -105,7 +112,7 @@ const AlertsMenu = () => {
           alert.id === selectedAlert.id ? { ...alert, read_status: false } : alert
         );
         setAlerts(updatedAlerts);
-        setUnreadCount(updatedAlerts.filter(a => !a.read_status).length);
+        setUnreadCount(updatedAlerts.filter((a) => !a.read_status).length);
       } catch (error) {
         console.error("Failed to mark alert as unread:", error);
       }
@@ -121,7 +128,7 @@ const AlertsMenu = () => {
           alert.id === selectedAlert.id ? { ...alert, read_status: true } : alert
         );
         setAlerts(updatedAlerts);
-        setUnreadCount(updatedAlerts.filter(a => !a.read_status).length);
+        setUnreadCount(updatedAlerts.filter((a) => !a.read_status).length);
       } catch (error) {
         console.error("Failed to mark alert as read:", error);
       }
@@ -131,12 +138,12 @@ const AlertsMenu = () => {
 
   return (
     <>
-      <IconButton 
-        type="button" 
-        sx={{ p: 1 }} 
-        aria-label="alerts" 
+      <IconButton
+        type="button"
+        sx={{ p: 1 }}
+        aria-label="alerts"
         onClick={handleAlertClick}
-        className={unreadCount > 0 ? 'alarm' : ''} 
+        className={unreadCount > 0 ? "alarm" : ""}
       >
         <Badge badgeContent={unreadCount} color="error">
           <AlertOutlinedIcon />
@@ -147,43 +154,45 @@ const AlertsMenu = () => {
         <Box p={2} minWidth="300px">
           <Typography variant="h6">Alerts</Typography>
           <Divider />
-          {alerts.length === 0 ? (
-            <Typography variant="body2" sx={{ mt: 2 }}>
-              No alerts.
-            </Typography>
-          ) : (
-            alerts.map((alert) => (
-              <Tooltip 
-                key={alert.id}
-                title={`Alert type: ${alert.alert_type}`} 
-                arrow
-              >
-                <MenuItem
-                  onClick={() => handleAlertItemClick(alert)}
-                  onContextMenu={(e) => handleRightClick(e, alert)}
+          <Box sx={{ maxHeight: "300px", overflowY: "auto" }}>
+            {alerts.length === 0 ? (
+              <Typography variant="body2" sx={{ mt: 2 }}>
+                No alerts.
+              </Typography>
+            ) : (
+              alerts.map((alert) => (
+                <Tooltip 
+                  key={alert.id}
+                  title={`Alert type: ${alert.alert_type}`}  // This is the text that appears when hovering
+                  arrow  // This adds a small arrow to the tooltip pointing to the alert
                 >
-                  {!alert.read_status && (
-                    <ListItemIcon>
-                      <CircleIcon sx={{ color: '#ff0000', fontSize: 12 }} />
-                    </ListItemIcon>
-                  )}
-                  <Box>
-                    <Typography variant="body2">
-                      {alert.alert_type === 'manual_intervention_required' 
-                        ? `Manual intervention required for bot ${alert.bot_id} for ${alert.platform_type}`
-                        : `Message '${alert.message_text}' was deleted by ${alert.scammer_unique_id}`
-                      }
-                    </Typography>
-                    <Typography variant="caption" color="textSecondary">
-                      {formatTimestamp(alert.timestamp)}
-                    </Typography>
-                  </Box>
-                </MenuItem>
-              </Tooltip>
-            ))
-          )}
+                  <MenuItem
+                    onClick={() => handleAlertItemClick(alert)}
+                    onContextMenu={(e) => handleRightClick(e, alert)}
+                  >
+                    {!alert.read_status && (
+                      <ListItemIcon>
+                        <CircleIcon sx={{ color: '#ff0000', fontSize: 12 }} />
+                      </ListItemIcon>
+                    )}
+                    <Box>
+                      <Typography variant="body2">
+                        {alert.alert_type === 'manual_intervention_required' 
+                          ? `Manual intervention required for bot ${alert.bot_id} for ${alert.platform_type}`
+                          : `Message '${alert.message_text}' was deleted by ${alert.scammer_unique_id}`
+                        }
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary">
+                        {formatTimestamp(alert.timestamp)}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                </Tooltip>
+              ))           
+            )}
+          </Box>
           {alerts.length > 0 && (
-            <Box mt={2}>
+            <Box mt={2} sx={{ position: "sticky", bottom: 0}}>
               <Divider />
               <MenuItem onClick={handleMarkAllAsRead}>
                 <Typography variant="body2">Mark all as read</Typography>

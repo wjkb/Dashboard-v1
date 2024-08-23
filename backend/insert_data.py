@@ -129,6 +129,24 @@ with app.app_context():
     alerts_data = [
     ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '1', "Hello! can you help me with my order?", False, datetime(2024, 5, 15, 14, 34, 40), '90000001'),
     ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
     (None, None, 'manual_intervention_required', 'Whatsapp', None, None, None, datetime(2024, 5, 15, 14, 32, 40), '90000001')  
     ]
 
