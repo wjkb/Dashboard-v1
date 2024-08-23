@@ -15,6 +15,11 @@ import { getAlerts, markAlertAsRead, markAllAlertsAsRead, markAlertAsUnread } fr
 import CircleIcon from "@mui/icons-material/FiberManualRecord";
 import "./AlertsMenu.css";
 
+const formatTimestamp = (timestamp) => {
+  const date = new Date(timestamp);
+  return date.toLocaleString(); // You can adjust the format here
+};
+
 const AlertsMenu = () => {
   const [alerts, setAlerts] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -108,6 +113,22 @@ const AlertsMenu = () => {
     setContextMenu(null);
   };
 
+  const handleMarkAsReadFromContext = async () => {
+    if (selectedAlert) {
+      try {
+        await markAlertAsRead(selectedAlert.id);
+        const updatedAlerts = alerts.map((alert) =>
+          alert.id === selectedAlert.id ? { ...alert, read_status: true } : alert
+        );
+        setAlerts(updatedAlerts);
+        setUnreadCount(updatedAlerts.filter(a => !a.read_status).length);
+      } catch (error) {
+        console.error("Failed to mark alert as read:", error);
+      }
+    }
+    setContextMenu(null);
+  };
+
   return (
     <>
       <IconButton 
@@ -146,12 +167,17 @@ const AlertsMenu = () => {
                       <CircleIcon sx={{ color: '#ff0000', fontSize: 12 }} />
                     </ListItemIcon>
                   )}
-                  <Typography variant="body2">
-                    {alert.alert_type === 'manual_intervention_required' 
-                      ? `Manual intervention required for bot ${alert.bot_id} for ${alert.platform_type}`
-                      : `Message '${alert.message_text}' was deleted by ${alert.scammer_unique_id}`
-                    }
-                  </Typography>
+                  <Box>
+                    <Typography variant="body2">
+                      {alert.alert_type === 'manual_intervention_required' 
+                        ? `Manual intervention required for bot ${alert.bot_id} for ${alert.platform_type}`
+                        : `Message '${alert.message_text}' was deleted by ${alert.scammer_unique_id}`
+                      }
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary">
+                      {formatTimestamp(alert.timestamp)}
+                    </Typography>
+                  </Box>
                 </MenuItem>
               </Tooltip>
             ))
@@ -179,6 +205,9 @@ const AlertsMenu = () => {
       >
         {selectedAlert?.read_status && (
           <MenuItem onClick={handleMarkAsUnread}>Mark as unread</MenuItem>
+        )}
+        {!selectedAlert?.read_status && (
+          <MenuItem onClick={handleMarkAsReadFromContext}>Mark as read</MenuItem>
         )}
       </Menu>
     </>
