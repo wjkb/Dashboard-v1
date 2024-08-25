@@ -486,16 +486,14 @@ class getConversationPauseStatus(Resource):
         try:
             try:
                 data = request.get_json()
-                print(data)
+                
             except Exception as e:
                 return {'error': 'Cannot receive data'}, 400
 
             platform = data.get('platform')
             bot_id = data.get('bot_id')
             scammer_unique_id = data.get('scammer_unique_id')
-            print(platform)
-            print(bot_id)
-            print(scammer_unique_id)
+
             platform_mapping = {
                 'facebook': 'Facebook',
                 'whatsapp': 'WhatsApp',
