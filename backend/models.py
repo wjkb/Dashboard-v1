@@ -69,6 +69,7 @@ class Conversation(db.Model):
     whatsapp_messages = db.relationship('WhatsappMessage', backref='conversation', lazy=True)
     telegram_messages = db.relationship('TelegramMessage', backref='conversation', lazy=True)
     message_screenshots = db.relationship('MessageScreenshots', backref='conversation', lazy=True)
+    pause = db.Column(db.Boolean, nullable=False, default=False)
 
     def serialize(self):
         return {
@@ -78,7 +79,8 @@ class Conversation(db.Model):
             'platform': self.platform,
             'facebook_messages': [msg.serialize() for msg in self.facebook_messages],
             'whatsapp_messages': [msg.serialize() for msg in self.whatsapp_messages],
-            'telegram_messages': [msg.serialize() for msg in self.telegram_messages]
+            'telegram_messages': [msg.serialize() for msg in self.telegram_messages],
+            'pause': self.pause
         }
 
 class FacebookMessage(db.Model):

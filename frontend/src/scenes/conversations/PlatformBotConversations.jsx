@@ -3,8 +3,10 @@ import { Box, useTheme, Button } from "@mui/material";
 import { tokens } from "../../theme";
 import { DataGrid } from "@mui/x-data-grid";
 import { useParams, useNavigate, Outlet } from "react-router-dom";
-import { getBotConversations } from "../../api";
+import { getBotConversations, getAlertsSpecific } from "../../api";
 import Header from "../../components/Header";
+import PauseCircleIcon from '@mui/icons-material/PauseCircle';
+import Tooltip from '@mui/material/Tooltip';
 
 const PlatformBotConversations = ({ platform }) => {
   const { botId } = useParams();
@@ -12,13 +14,36 @@ const PlatformBotConversations = ({ platform }) => {
   const theme = useTheme();
   const colors = tokens;
   const [conversations, setConversations] = useState([]);
+  const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const fetchUnreadAlerts = async (platform, botId, scammerUniqueId) => {
+    try {
+      const alerts = await getAlertsSpecific(platform, botId, scammerUniqueId);
+      return alerts.unread_count;
+    } catch (err) {
+      setError(err.message);
+      return 0;
+    }
+  };
 
   useEffect(() => {
     const fetchConversations = async () => {
       try {
         const convData = await getBotConversations(platform, botId);
+        const rowsData = await Promise.all(
+          convData.map(async (conv) => {
+            const unreadCount = await fetchUnreadAlerts(platform, conv.bot_id, conv.scammer_unique_id);
+            return {
+              id: conv.scammer_id,
+              scammerUniqueID: conv.scammer_unique_id,
+              pause: conv.pause,
+              alert: unreadCount,
+            };
+          })
+        );
+        setRows(rowsData);
         setConversations(convData);
       } catch (err) {
         setError(err.message);
@@ -28,9 +53,36 @@ const PlatformBotConversations = ({ platform }) => {
     };
 
     fetchConversations();
-  }, [botId]);
+  }, [botId, platform]);
 
   const columns = [
+    {
+      field: "alert",
+      headerName: "Alert",
+      flex: 0.5,
+      cellClassName: "useralert-column--cell",
+    }, 
+    {
+      field: "pause",
+      headerName: "Paused",
+      flex: 0.5,
+      cellClassName: "userpause-column--cell",
+      renderCell: (params) => (
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          width="100%"
+          height="100%"
+        >
+          {params.value ? (
+            <Tooltip title="Conversation is paused">
+              <PauseCircleIcon />
+            </Tooltip>
+          ) : null}
+        </Box>
+      ),
+    },
     {
       field: "scammerUniqueID",
       headerName: "Scammer Unique ID",
@@ -46,11 +98,7 @@ const PlatformBotConversations = ({ platform }) => {
           variant="contained"
           color="primary"
           onClick={() =>
-            navigate(
-              `/platforms/${platform.toLowerCase()}/${botId}/${
-                params.row.scammerUniqueID
-              }`
-            )
+            navigate(`/platforms/${platform.toLowerCase()}/${botId}/${params.row.scammerUniqueID}`)
           }
         >
           View
@@ -58,11 +106,6 @@ const PlatformBotConversations = ({ platform }) => {
       ),
     },
   ];
-
-  const rows = conversations.map((conv, index) => ({
-    id: conv.scammer_id,
-    scammerUniqueID: conv.scammer_unique_id,
-  }));
 
   if (loading) {
     return <div>Loading...</div>;

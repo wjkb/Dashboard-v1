@@ -199,6 +199,26 @@ export const sendProactiveMessage = async (
   }
 };
 
+export const getAlertsSpecific = async (
+  platform,
+  botId,
+  scammerUniqueId
+) => {
+  try {
+    console.log("Get Alerts SPecific", platform, botId, scammerUniqueId)
+    const response = await fetch(
+      `${API_URL}/alerts/get_specific?platform=${platform}&bot_id=${botId}&scammer_unique_id=${scammerUniqueId}`
+    );
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error fetching data: ${error.message}`);
+  }
+};
+
+
 // PUT APIs
 export const editBot = async (botId, updatedData) => {
   try {
@@ -348,6 +368,50 @@ export const toggleBotPause = async (botId) => {
     return await response.json();
   } catch (error) {
     throw new Error(`Error pausing/resuming bot: ${error.message}`);
+  }
+};
+
+export const toggleConversationPause = async (  
+  platform,
+  botId,
+  scammerUniqueId) => {
+  try {
+    
+    const response = await fetch(`${API_URL}/conversations/toggle_pause`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ 'platform': platform, 'bot_id': botId, 'scammer_unique_id': scammerUniqueId })
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error pausing/resuming conversation: ${error.message}`);
+  }
+};
+
+export const getConversationPauseStatus = async (  
+  platform,
+  botId,
+  scammerUniqueId) => {
+  try {
+    console.log("pausestatus?",platform, botId, scammerUniqueId)
+    const response = await fetch(`${API_URL}/conversations/get_conversation_pause_status`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ 'platform': platform, 'bot_id': botId, 'scammer_unique_id': scammerUniqueId })
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error pausing/resuming conversation: ${error.message}`);
   }
 };
 

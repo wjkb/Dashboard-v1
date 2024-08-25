@@ -19,7 +19,9 @@ import {
   getBotConversationMessages,
   getBotConversationExtractedInformation,
   getBotConversationScreenshots,
+  getConversationPauseStatus,
   toggleBotPause,
+  toggleConversationPause,
   downloadEverything,
   llmIgnorePreviousMessages,
   sendProactiveMessage,
@@ -90,6 +92,25 @@ const PlatformUserMessages = ({ platform }) => {
     try {
       const bot = await getBot(botId);
       setBot(bot);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+  /**
+   * Check if platform is paused
+   */  
+  const checkConversationPauseStatus = async (        
+    platform,
+    botId,
+    scammerUniqueId) => {
+    try {
+      const pause_status = await getConversationPauseStatus(
+        platform,
+        botId,
+        scammerUniqueId
+      );
+      setIsPaused(pause_status.pause_status);
+
     } catch (err) {
       setError(err.message);
     }
@@ -166,6 +187,7 @@ const PlatformUserMessages = ({ platform }) => {
     fetchMessages();
     fetchExtractedInformation();
     fetchScreenshots();
+    checkConversationPauseStatus(platform, botId, scammerUniqueId);
 
     const interval = setInterval(() => {
       fetchMessages();
@@ -179,6 +201,7 @@ const PlatformUserMessages = ({ platform }) => {
     fetchMessages();
     fetchExtractedInformation();
     fetchScreenshots();
+    checkConversationPauseStatus(platform, botId, scammerUniqueId);
   };
 
   const handleDownloadEverything = async () => {
@@ -227,8 +250,9 @@ const PlatformUserMessages = ({ platform }) => {
 
   const handlePauseorResumeBot = async (action) => {
     try {
-      await toggleBotPause(botId);
-      fetchBot();
+      console.log("pausing", platform, botId, scammerUniqueId)
+      await toggleConversationPause(platform, botId, scammerUniqueId);
+      // fetchBot();
     } catch (err) {
       setError(err.message);
     }
@@ -383,7 +407,7 @@ const PlatformUserMessages = ({ platform }) => {
         color="primary"
         onClick={
           bot
-            ? bot.pause
+            ? isPaused
               ? handleOpenResumeDialog
               : handleOpenPauseDialog
             : null
@@ -391,9 +415,9 @@ const PlatformUserMessages = ({ platform }) => {
         style={{ marginBottom: "10px", marginLeft: "10px" }}
         disabled={pauseButtonDisabled && !isPaused}
       >
-        {bot ? (bot.pause ? "Resume Bot" : "Pause Bot") : "Loading..."}
+        {bot ? (isPaused ? "Resume Conversation" : "Pause Conversation") : "Loading..."}
       </Button>
-      {bot && bot.pause && (
+      {bot && isPaused && (
         <Button
           variant="contained"
           color="primary"
