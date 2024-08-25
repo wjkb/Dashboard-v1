@@ -205,7 +205,7 @@ export const getAlertsSpecific = async (
   scammerUniqueId
 ) => {
   try {
-    console.log("Get Alerts SPecific", platform, botId, scammerUniqueId)
+
     const response = await fetch(
       `${API_URL}/alerts/get_specific?platform=${platform}&bot_id=${botId}&scammer_unique_id=${scammerUniqueId}`
     );

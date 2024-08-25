@@ -1393,12 +1393,20 @@ class GetAlerts(Resource):
 @ns_alerts.route('/api/alerts/get_specific')
 class GetAlertsSpecific(Resource):
     @ns_messages.doc('get_alerts_specific')
+
     def get(self):
+        """Uses parameter query string in URL to pass platform, bot_id, scammer_unique_id
+
+        e.g. api/alerts/get_specific?platform=WhatsApp&bot_id=90000001&scammer_unique_id=90000012
+
+        Returns:
+            alerts, unread_count
+        """
         try:
             platform = request.args.get('platform')
             bot_id = request.args.get('bot_id')
             scammer_unique_id = request.args.get('scammer_unique_id')
-            print("in get alerts specific", platform, bot_id, scammer_unique_id)
+
             platform_mapping = {
                 'facebook': 'Facebook',
                 'whatsapp': 'WhatsApp',
@@ -1409,6 +1417,8 @@ class GetAlertsSpecific(Resource):
             if not platform_name:
                 return {'error': 'Invalid platform'}, 400
             try:
+                ### CHANGE THE PLATFORM TYPE NAMING: ###
+                ### IN DB ITS Whatsapp. Everything else is WhatsApp? ###
                 alerts = Alert.query.filter(Alert.bot_id == bot_id, Alert.platform_type == "Whatsapp", Alert.scammer_unique_id == scammer_unique_id)
                 unread_count = alerts.filter_by(read_status=False).count()
                 serialized_alerts = [alert.serialize() for alert in alerts]

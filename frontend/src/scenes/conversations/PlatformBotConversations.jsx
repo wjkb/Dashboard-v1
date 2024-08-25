@@ -58,7 +58,7 @@ const PlatformBotConversations = ({ platform }) => {
   const columns = [
     {
       field: "alert",
-      headerName: "Alert",
+      headerName: "Alerts",
       flex: 0.5,
       cellClassName: "useralert-column--cell",
     }, 
