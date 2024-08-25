@@ -497,8 +497,12 @@ class getConversationPauseStatus(Resource):
             platform_mapping = {
                 'facebook': 'Facebook',
                 'whatsapp': 'WhatsApp',
-                'telegram': 'Telegram'
+                'telegram': 'Telegram',
+                'wa': 'WhatsApp',
+                'tg': 'Telegram',
+                'fb': 'Facebook'
             }
+
             platform_name = platform_mapping.get(platform.lower())
             if not platform_name:
                 return {'error': 'Invalid platform'}, 400
