@@ -18,11 +18,23 @@ api = Api(api_bp, version='1.0', title='Your API', description='API Documentatio
 # Global platform mapping
 platform_mapping = {
     'facebook': 'Facebook',
-    'whatsapp': 'WhatsApp',
-    'telegram': 'Telegram',
     'fb': 'Facebook',
+    'whatsapp': 'WhatsApp',
     'wa': 'WhatsApp',
+    'telegram': 'Telegram',
     'tg': 'Telegram'
+}
+
+API_mapping = {
+    'facebook': 'FB',
+    'fb': 'FB',
+    'whatsapp': 'WA',
+    'wa': 'WA',
+    'telegram': 'TG',
+    'tg': 'TG',
+    'Facebook': 'FB',
+    'WhatsApp': 'WA',
+    'Telegram': 'TG'
 }
 
 # Define namespaces for Swagger documentation
@@ -336,11 +348,6 @@ class TogglePauseBot(Resource):
 
             # If bot is resumed, get all conversations related to the bot
             if not bot.pause:
-                platform_Abbreviations = {
-                    'Facebook': 'FB',
-                    'WhatsApp': 'WA',
-                    'Telegram': 'TG'
-                }
                 platform_message_classes = {
                     'Facebook': FacebookMessage,
                     'WhatsApp': WhatsappMessage,
@@ -380,7 +387,7 @@ class TogglePauseBot(Resource):
                         message_list = []
                         for message in messages_to_send:
                             message = message.serialize()
-                            message['platform'] = platform_Abbreviations[platform]
+                            message['platform'] = API_mapping[platform]
                             message['bot_id'] = bot_id
                             message['scammer_id'] = scammer_unique_id
                             filtered_message = select_wanted_fields(message, wanted_fields)
@@ -431,11 +438,6 @@ class TogglePauseConversation(Resource):
 
             # If bot is resumed, get all conversations related to the bot
             if not conversation.pause:
-                platform_mapping = {
-                    'Facebook': 'FB',
-                    'WhatsApp': 'WA',
-                    'Telegram': 'TG'
-                }
                 platform_message_classes = {
                     'Facebook': FacebookMessage,
                     'WhatsApp': WhatsappMessage,
@@ -475,7 +477,7 @@ class TogglePauseConversation(Resource):
                 message_list = []
                 for message in messages_to_send:
                     message = message.serialize()
-                    message['platform'] = platform_mapping[platform]
+                    message['platform'] = API_mapping[platform]
                     message['bot_id'] = bot_id
                     message['scammer_id'] = scammer_unique_id
                     filtered_message = select_wanted_fields(message, wanted_fields)
@@ -974,7 +976,7 @@ class SendBot(Resource):
             data = request.get_json()
             bot_id = data.get('botId')
             scammer_ids = data.get('scammerIds')
-            platform = platform_mapping[data.get('platform').lower()]
+            platform = API_mapping[data.get('platform').lower()]
             type_of_scam = data.get('typeOfScam')
             starting_message = data.get('startingMessage')
 
@@ -1025,7 +1027,7 @@ class SendProactiveMessage(Resource):
             data = request.get_json()
             bot_id = data.get('botId')
             scammer_unique_id = data.get('scammerId')
-            platform = platform_mapping[data.get('platform').lower()]
+            platform = API_mapping[data.get('platform').lower()]
             message = data.get('message')
 
             bot = Bot.query.get(bot_id)

@@ -30,7 +30,6 @@ import MessagesTab from "./MessagesTab";
 import FilesTab from "./FilesTab";
 import ExtractedInformationTab from "./ExtractedInformationTab";
 import ScreenshotsTab from "./ScreenshotsTab";
-import { tokens } from "../../theme";
 
 // Constants for tab values
 const TAB_MESSAGES = 0;
