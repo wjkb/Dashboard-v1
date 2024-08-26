@@ -68,12 +68,12 @@ with app.app_context():
 
     # Insert conversations
     conversations_data = [
-        (90000001, 'Facebook', 1), (90000001, 'Facebook', 2),
-        (90000001, 'WhatsApp', 3), (90000001, 'WhatsApp', 4),
-        (90000002, 'Telegram', 5), (90000002, 'Telegram', 6),
+        (90000001, 'Facebook', 1, 0), (90000001, 'Facebook', 2, 0),
+        (90000001, 'WhatsApp', 3, 0), (90000001, 'WhatsApp', 4, 0),
+        (90000002, 'Telegram', 5, 0), (90000002, 'Telegram', 6, 0),
     ]
 
-    for bot_id, platform, scammer_id in conversations_data:
+    for bot_id, platform, scammer_id, pause in conversations_data:
         conversation = Conversation(bot_id=bot_id, platform=platform, scammer_id=scammer_id)
         db.session.add(conversation)
     db.session.commit()
@@ -127,27 +127,27 @@ with app.app_context():
 
     # Insert Alerts
     alerts_data = [
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '1', "Hello! can you help me with my order?", False, datetime(2024, 5, 15, 14, 34, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    (None, None, 'manual_intervention_required', 'Whatsapp', None, None, None, datetime(2024, 5, 15, 14, 32, 40), '90000001')  
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '1', "Hello! can you help me with my order?", False, datetime(2024, 5, 15, 14, 34, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
+    (None, None, 'manual_intervention_required', 'WhatsApp', None, None, None, datetime(2024, 5, 15, 14, 32, 40), '90000001')  
     ]
 
     for scammer_unique_id, direction, alert_type, platform_type, message_id, message_text, read_status, timestamp, bot_id in alerts_data:
