@@ -20,7 +20,6 @@ import {
   getBotConversationExtractedInformation,
   getBotConversationScreenshots,
   getConversationPauseStatus,
-  toggleBotPause,
   toggleConversationPause,
   downloadEverything,
   llmIgnorePreviousMessages,
@@ -412,7 +411,7 @@ const PlatformUserMessages = ({ platform }) => {
               : handleOpenPauseDialog
             : null
         }
-        style={{ marginBottom: "10px", marginLeft: "10px" }}
+        style={{ marginBottom: "10px" }}
         disabled={pauseButtonDisabled && !isPaused}
       >
         {bot ? (isPaused ? "Resume Conversation" : "Pause Conversation") : "Loading..."}
