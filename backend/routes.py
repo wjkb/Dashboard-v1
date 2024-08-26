@@ -15,7 +15,7 @@ from backend.utils import save_file, safe_parse_timestamp, create_zip, create_me
 api_bp = Blueprint('api', __name__)
 api = Api(api_bp, version='1.0', title='Your API', description='API Documentation', doc='/api/docs')
 
-# Global platform mapping
+#global platform mappings
 platform_mapping = {
     'facebook': 'Facebook',
     'fb': 'Facebook',
