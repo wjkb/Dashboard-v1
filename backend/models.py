@@ -265,6 +265,36 @@ class Alert(db.Model):
             'active': self.active 
         }
 
+class Edit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    scammer_unique_id = db.Column(db.String(255), nullable=True)
+    conversation_id = db.Column(db.String(255), nullable=True)
+    direction = db.Column(db.String(50), nullable=True)
+    platform_type = db.Column(db.String(50), nullable=True)
+    message_id = db.Column(db.String(255), nullable=True)
+    old_message_text = db.Column(db.Text, nullable=True)
+    edited_message_text = db.Column(db.Text, nullable=True)
+    bot_id = db.Column(db.String(255), nullable=True)
+    read_status = db.Column(db.Boolean, default=False, nullable=True)
+    message_timestamp = db.Column(db.DateTime, nullable=True)
+    edited_timestamp = db.Column(db.DateTime, nullable=True)
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'scammer_unique_id': self.scammer_unique_id,
+            'conversation_id': self.conversation_id,
+            'direction': self.direction,
+            'platform_type': self.platform_type,
+            'message_id': self.message_id,
+            'old_message_text': self.old_message_text,
+            'edited_message_text': self.edited_message_text,
+            'bot_id': self.bot_id,
+            'read_status': self.read_status,
+            'message_timestamp': self.message_timestamp.isoformat() if self.message_timestamp else None,
+            'edited_timestamp': self.edited_timestamp.isoformat() if self.edited_timestamp else None,
+        }
+
 
 
 

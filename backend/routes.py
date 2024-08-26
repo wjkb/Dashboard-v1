@@ -174,6 +174,19 @@ create_alert_model = ns_alerts.model('CreateAlert', {
     'active' : fields.String(description='Whether the alert has been deleted', example=False)
 })
 
+create_edit_model = ns_messages.model('CreateEdit', {
+    'scammer_unique_id': fields.String(required=True, description='The unique ID of the scammer', example='unique_scammer_123'),
+    'conversation_id': fields.String(required=True, description='The ID of the conversation', example='conv_456'),
+    'direction': fields.String(required=True, description='The direction of the edit', example='outgoing'),
+    'platform_type': fields.String(required=True, description='The type of platform', example='WhatsApp'),
+    'message_id': fields.String(description='The ID of the associated message', example='msg_123'),
+    'old_message_text': fields.String(required=True, description='The original message text before editing', example='Original message text.'),
+    'edited_message_text': fields.String(required=True, description='The updated message text after editing', example='Edited message text.'),
+    'bot_id': fields.String(description='The ID of the bot associated with the edit', example='bot_001'),
+    'read_status': fields.Boolean(description='Whether the edit has been read', example=False),
+    'edited_timestamp': fields.DateTime(description='The timestamp of the edit', example='2024-08-21T15:00:00')
+})
+
 
 ##################################################
 # Below are the routes for all the API endpoints #
