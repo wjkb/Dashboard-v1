@@ -1312,7 +1312,7 @@ class AlertsResource(Resource):
             data = request.get_json()
 
             new_alert = Alert(
-                scammer_unique_id=data['scammer_unique_id'],  # Use scammer_unique_id directly
+                scammer_unique_id=data['scammer_unique_id'], 
                 direction=data['direction'],
                 alert_type=data['alert_type'],
                 platform_type=data['platform_type'],
