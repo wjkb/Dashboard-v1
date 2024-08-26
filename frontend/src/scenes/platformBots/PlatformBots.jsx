@@ -128,7 +128,7 @@ const PlatformBots = ({ platform }) => {
         </Box>
         {deactivatedBots.length > 0 && (
           <>
-            <Header title="" subtitle="Deactivated Facebook Bots" />
+            <Header title="" subtitle={`Deactivated ${platform} Bots`} />
             <Box
               height="20vh"
               sx={{

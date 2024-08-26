@@ -45,18 +45,26 @@ def create_zip(file_path_list, zip_filename):
     return zip_filename
 
 def create_message_csv(messages):
+    # print("csv48")
     parent_directory = os.path.dirname(current_app.root_path)
     media_directory = os.path.join(parent_directory, 'media')
     csv_filename = 'downloaded_messages.csv'
     csv_filepath = os.path.join(media_directory, csv_filename)
-
+    # print("csv53")
     with open(csv_filepath, 'w') as csvf:
-        csvf.write('direction,date,time,message\n')
+        csvf.write('direction,message,date,time\n')
         for message in messages:
-            timestamp = datetime.fromisoformat(str(message.message_timestamp))
-            date = timestamp.date().isoformat()
-            time = timestamp.time().isoformat()
-            
-            csvf.write(f"{message.direction},{date},{time},\"{message.message_text}\"\n")
-    
+            try:
+
+                timestamp = datetime.fromisoformat(str(message.message_timestamp))
+                date = timestamp.date().isoformat()
+                time = timestamp.time().isoformat()
+            except:
+                # print("message timestamp doesnt exists")
+                timestamp = ""
+                date = ""
+                time = ""
+            # print("csv60")
+            csvf.write(f"{message.direction},\"{message.message_text}\",{date},{time}\n")
+    # print("csv62")
     return csv_filename

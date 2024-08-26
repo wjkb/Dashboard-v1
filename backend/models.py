@@ -100,6 +100,9 @@ class FacebookMessage(db.Model):
     response_aft_generation_timestamp = db.Column(db.DateTime, nullable=True)
     response_status = db.Column(db.String(10), nullable=True)
 
+    deleted_timestamp = db.Column(db.DateTime, nullable=True)
+    edited_timestamp = db.Column(db.DateTime, nullable=True)
+
     def serialize(self):
         return {
             'id': self.id,
@@ -116,7 +119,10 @@ class FacebookMessage(db.Model):
             'responded_to': self.responded_to,
             'response_bef_generation_timestamp': self.response_bef_generation_timestamp.isoformat() if self.response_bef_generation_timestamp else None,
             'response_aft_generation_timestamp': self.response_aft_generation_timestamp.isoformat() if self.response_aft_generation_timestamp else None,
-            'response_status': self.response_status
+            'response_status': self.response_status,
+
+            'deleted_timestamp': self.deleted_timestamp.isoformat() if self.deleted_timestamp else None,
+            'edited_timestamp': self.edited_timestamp.isoformat() if self.edited_timestamp else None
         }
 
 
@@ -137,6 +143,9 @@ class WhatsappMessage(db.Model):
     response_aft_generation_timestamp = db.Column(db.DateTime, nullable=True)
     response_status = db.Column(db.String(10), nullable=True)
 
+    deleted_timestamp = db.Column(db.DateTime, nullable=True)
+    edited_timestamp = db.Column(db.DateTime, nullable=True)
+
     def serialize(self):
         return {
             'id': self.id,
@@ -153,7 +162,10 @@ class WhatsappMessage(db.Model):
             'responded_to': self.responded_to,
             'response_bef_generation_timestamp': self.response_bef_generation_timestamp.isoformat() if self.response_bef_generation_timestamp else None,
             'response_aft_generation_timestamp': self.response_aft_generation_timestamp.isoformat() if self.response_aft_generation_timestamp else None,
-            'response_status': self.response_status
+            'response_status': self.response_status,
+
+            'deleted_timestamp': self.deleted_timestamp.isoformat() if self.deleted_timestamp else None,
+            'edited_timestamp': self.edited_timestamp.isoformat() if self.edited_timestamp else None
         }
 
 
@@ -174,6 +186,9 @@ class TelegramMessage(db.Model):
     response_aft_generation_timestamp = db.Column(db.DateTime, nullable=True)
     response_status = db.Column(db.String(10), nullable=True)
 
+    deleted_timestamp = db.Column(db.DateTime, nullable=True)
+    edited_timestamp = db.Column(db.DateTime, nullable=True)
+
     def serialize(self):
         return {
             'id': self.id,
@@ -190,7 +205,10 @@ class TelegramMessage(db.Model):
             'responded_to': self.responded_to,
             'response_bef_generation_timestamp': self.response_bef_generation_timestamp.isoformat() if self.response_bef_generation_timestamp else None,
             'response_aft_generation_timestamp': self.response_aft_generation_timestamp.isoformat() if self.response_aft_generation_timestamp else None,
-            'response_status': self.response_status
+            'response_status': self.response_status,
+
+            'deleted_timestamp': self.deleted_timestamp.isoformat() if self.deleted_timestamp else None,
+            'edited_timestamp': self.edited_timestamp.isoformat() if self.edited_timestamp else None
         }
     
 class MessageScreenshots(db.Model):
@@ -229,7 +247,8 @@ class Alert(db.Model):
     message_text = db.Column(db.Text, nullable=True)
     read_status = db.Column(db.Boolean, default=False, nullable=True)
     timestamp = db.Column(db.DateTime, nullable=True)
-    bot_id = db.Column(db.String(255), nullable=True)  
+    bot_id = db.Column(db.String(255), nullable=True)
+    active = db.Column(db.Boolean, default=True, nullable=False) 
 
     def serialize(self):
         return {
@@ -242,8 +261,10 @@ class Alert(db.Model):
             'message_text': self.message_text,
             'read_status': self.read_status,
             'timestamp': self.timestamp.isoformat() if self.timestamp else None,
-            'bot_id': self.bot_id
+            'bot_id': self.bot_id,
+            'active': self.active 
         }
+
 
 
 

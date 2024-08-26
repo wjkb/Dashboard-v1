@@ -101,7 +101,9 @@ receive_message_model = ns_messages.model('ReceiveMessage', {
     'responded_to': fields.String(description='The message IDs that this message is responding to', example='1,2,3'),
     'response_bef_generation_timestamp': fields.String(description='The timestamp before the response is generated', example='2024-07-02T12:31:44'),
     'response_aft_generation_timestamp': fields.String(description='The timestamp after the response is generated', example='2024-07-02T12:32:25'),
-    'response_status': fields.String(description='The status of the response, either Sending, Sent or Failed', example='Sent'),
+    'response_status': fields.String(description='The status of the response, either Sending, Sent, Failed, Deleted', example='Sent'),
+    'deleted_timestamp': fields.String(description='The timestamp when response has been detected to be deleted', example='2024-07-02T12:31:44'),
+    'edited_timestamp': fields.String(description='The timestamp when response has been detected to be deleted', example='2024-07-02T12:31:44')
 })
 
 message_model = ns_messages.model('Message', {
@@ -120,6 +122,9 @@ message_model = ns_messages.model('Message', {
     'response_bef_generation_timestamp': fields.String(),
     'response_aft_generation_timestamp': fields.String(),
     'response_status': fields.String(),
+
+    'deleted_timestamp': fields.String(),
+    'edited_timestamp': fields.String()
 })
 
 conversation_model = ns_conversations.model('Conversation', {
@@ -165,7 +170,8 @@ create_alert_model = ns_alerts.model('CreateAlert', {
     'message_text': fields.String(required=True, description='The alert message', example='This scammer has deleted a message.'),
     'read_status': fields.Boolean(description='Whether the alert has been read', example=False),
     'timestamp': fields.DateTime(description='The timestamp of the alert', example='2024-08-21T14:30:00'),
-    'bot_id': fields.String(description='The ID of the bot associated with the alert', example='bot_001')
+    'bot_id': fields.String(description='The ID of the bot associated with the alert', example='bot_001'),
+    'active' : fields.String(description='Whether the alert has been deleted', example=False)
 })
 
 
@@ -692,6 +698,9 @@ class ReceiveMessage(Resource):
         response_aft_generation_timestamp = data.get('response_aft_generation_timestamp', None)
         response_status = data.get('response_status', None)
 
+        deleted_timestamp = data.get('deleted_timestamp', None)
+        edited_timestamp = data.get('edited_timestamp', None)
+
         # Check if bot exists, if not return an error
         bot = Bot.query.get(bot_id)
         if not bot:
@@ -730,6 +739,7 @@ class ReceiveMessage(Resource):
         # Create or update message object
         if direction == 'incoming':
             message = message_class.query.filter_by(conversation_id=conversation.id, direction=direction, message_id=message_id).first()
+            print(message)
             if not message:
                 message = message_class(
                     conversation_id=conversation.id,
@@ -743,10 +753,17 @@ class ReceiveMessage(Resource):
                 )
                 db.session.add(message)
             else:
+                # This portion accounts for media and update queue if they exists. 
                 message.message_text = message_text
-                message.message_timestamp = safe_parse_timestamp(message_timestamp)
+                
+
+                # message.message_timestamp = safe_parse_timestamp(message_timestamp)
+
                 message.file_path = file_path
                 message.file_type = file_type
+
+                message.deleted_timestamp = safe_parse_timestamp(deleted_timestamp)
+                message.edited_timestamp = safe_parse_timestamp(edited_timestamp)
                 message.response_status = response_status
 
         elif direction == 'outgoing':
@@ -768,7 +785,7 @@ class ReceiveMessage(Resource):
                 db.session.add(message)
             else:
                 message.message_text = message_text
-                message.message_timestamp = safe_parse_timestamp(message_timestamp)
+                # message.message_timestamp = safe_parse_timestamp(message_timestamp)
                 message.file_path = file_path
                 message.file_type = file_type
                 message.responded_to = responded_to
@@ -1000,7 +1017,7 @@ class SendBot(Resource):
                     "bot_id": bot_id,
                     "scammer_id": scammer_unique_id
                 }
-                response = requests.post('http://localhost:5000/api/get_next_response_message_id', json=next_response_data)
+                response = requests.post(f'http://localhost:5000/api/get_next_response_message_id', json=next_response_data)
                 next_message_id = response.json().get('next_message_id')
                 message = {
                     "platform": platform,
@@ -1227,7 +1244,8 @@ class AlertsResource(Resource):
                 message_text=data['message_text'],
                 read_status=data.get('read_status', False),  
                 timestamp=data.get('timestamp'),  
-                bot_id=data.get('bot_id')  
+                bot_id=data.get('bot_id'),
+                active=data.get('active')  
             )
 
             db.session.add(new_alert)
@@ -1239,9 +1257,10 @@ class AlertsResource(Resource):
 
     def get(self):
         try:
-            alerts = Alert.query.order_by(Alert.timestamp.desc()).all()
+            alerts = Alert.query.filter_by(active=True).order_by(Alert.timestamp.desc()).all()
             serialized_alerts = [alert.serialize() for alert in alerts]
-            return serialized_alerts, 200
+            unread_count = Alert.query.filter_by(read_status=False, active=True).count()
+            return {'alerts': serialized_alerts, 'unread_count': unread_count}, 200
         except Exception as e:
             return {'error': str(e)}, 500
 
@@ -1330,3 +1349,34 @@ class GetAlertsSpecific(Resource):
                 return {'alerts': [], 'unread_count': 0}, 200
         except Exception as e:
             return {'error': str(e)}, 500
+
+@ns_alerts.route('/api/alerts/<int:alert_id>/delete')
+class DeleteAlert(Resource):
+    def put(self, alert_id):
+        try:
+            alert = Alert.query.get(alert_id)
+            if not alert:
+                return {'message': 'Alert not found'}, 404
+
+            alert.active = False
+            db.session.commit()
+
+            return {'message': 'Alert deleted'}, 200
+        except Exception as e:
+            return {'error': str(e)}, 500
+        
+@ns_alerts.route('/api/alerts/<int:alert_id>/restore')
+class RestoreAlert(Resource):
+    def put(self, alert_id):
+        try:
+            alert = Alert.query.get(alert_id)
+            if not alert:
+                return {'message': 'Alert not found'}, 404
+
+            alert.active = True
+            db.session.commit()
+
+            return {'message': 'Alert restored'}, 200
+        except Exception as e:
+            return {'error': str(e)}, 500
+
