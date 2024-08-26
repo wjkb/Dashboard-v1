@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Box, useTheme, Button } from "@mui/material";
+import { Tooltip, Box, useTheme, Button } from "@mui/material";
 import { tokens } from "../../theme";
 import { DataGrid } from "@mui/x-data-grid";
 import Header from "../../components/Header";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import { useNavigate, Outlet } from "react-router-dom";
 import { getPlatformBots } from "../../api";
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+
 
 /**
  * Component to manage and display Platform bots.
@@ -27,11 +29,11 @@ const PlatformBots = ({ platform }) => {
       try {
         const botsData = await getPlatformBots(platform);
         console.log("Bots data:", botsData);
-        const activeBotsData = botsData.filter((bot) => bot.active);
-        const deactivatedBotsData = botsData.filter((bot) => !bot.active);
+        // const activeBotsData = botsData.filter((bot) => bot.active);
+        // const deactivatedBotsData = botsData.filter((bot) => !bot.active);
         setBots(botsData);
-        setActiveBots(activeBotsData);
-        setDeactivatedBots(deactivatedBotsData);
+        // setActiveBots(activeBotsData);
+        // setDeactivatedBots(deactivatedBotsData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -43,6 +45,22 @@ const PlatformBots = ({ platform }) => {
   }, [platform]);
 
   const columns = [
+    {
+      field: "active",
+      headerName: "Status",
+      flex: 0.5,
+      renderCell: (params) => {
+        const isActive = params.value;
+        const color = isActive ? 'green' : 'red';
+        const statusText = isActive ? 'Activated' : 'Deactivated';
+  
+        return (
+          <Tooltip title={statusText} arrow>
+            <FiberManualRecordIcon style={{ color, marginTop: '15px' }} />
+          </Tooltip>
+        );
+      }
+    },
     {
       field: "id",
       headerName: "ID/Phone Number",
@@ -59,6 +77,7 @@ const PlatformBots = ({ platform }) => {
       headerName: "Persona",
       flex: 1,
     },
+
     {
       field: "conversations",
       headerName: "Conversations",
@@ -94,10 +113,10 @@ const PlatformBots = ({ platform }) => {
       <Box margin="20px" width="40%">
         <Header
           title={`${platform} Bots`}
-          subtitle={`Active ${platform} Bots`}
+          // subtitle={`${platform} Bots`}
         />
         <Box
-          height={deactivatedBots.length > 0 ? "55vh" : "75vh"}
+          height={"75vh"}
           sx={{
             "& .MuiDataGrid-root": {
               border: "none",
@@ -124,43 +143,17 @@ const PlatformBots = ({ platform }) => {
             },
           }}
         >
-          <DataGrid rows={activeBots} columns={columns} />
+          <DataGrid 
+            rows={bots} 
+            columns={columns}
+            sortModel={[
+              {
+                field: 'active',
+                sort: 'desc', // 'desc' sorts true first, 'asc' sorts false first
+              },
+            ]} />
         </Box>
-        {deactivatedBots.length > 0 && (
-          <>
-            <Header title="" subtitle="Deactivated Facebook Bots" />
-            <Box
-              height="20vh"
-              sx={{
-                "& .MuiDataGrid-root": {
-                  border: "none",
-                },
-                "& .MuiDataGrid-cell": {
-                  borderBottom: "none",
-                },
-                "& .phone-column--cell": {
-                  color: colors.greenAccent,
-                },
-                "& .MuiDataGrid-columnHeader": {
-                  backgroundColor: "#28231d",
-                  borderBottom: "none",
-                },
-                "& .MuiDataGrid-virtualScroller": {
-                  backgroundColor: "#0c0908",
-                },
-                "& .MuiDataGrid-footerContainer": {
-                  borderTop: "none",
-                  backgroundColor: "#28231d",
-                },
-                "& .MuiCheckbox-root": {
-                  color: `${colors.greenAccent} !important`,
-                },
-              }}
-            >
-              <DataGrid rows={deactivatedBots} columns={columns} />
-            </Box>
-          </>
-        )}
+
       </Box>
       <Box flex={1} height="100%">
         <Outlet />
