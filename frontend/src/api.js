@@ -157,6 +157,19 @@ export const getConversationPauseStatus = async (
   }
 };
 
+export const getEditedMessage = async (platform, botId, messageId) => {
+  try {
+      const response = await fetch(
+          `${API_URL}/messages/${platform}/${botId}/${messageId}/edited`
+      );
+      if (!response.ok) {
+          throw new Error("Network response was not ok");
+      }
+      return await response.json();
+  } catch (error) {
+      throw new Error(`Error fetching edited message: ${error.message}`);
+  }
+};
 
 // POST APIs
 export const createBot = async (botData) => {

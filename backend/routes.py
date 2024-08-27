@@ -8,7 +8,7 @@ from flask_restx import Api, Resource, fields
 from datetime import datetime
 import json
 import requests
-from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation, Alert
+from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation, Alert, Edit
 from backend.utils import save_file, safe_parse_timestamp, create_zip, create_message_csv
 
 # Initialize Flask-RESTx Api
@@ -103,7 +103,8 @@ receive_message_model = ns_messages.model('ReceiveMessage', {
     'response_aft_generation_timestamp': fields.String(description='The timestamp after the response is generated', example='2024-07-02T12:32:25'),
     'response_status': fields.String(description='The status of the response, either Sending, Sent, Failed, Deleted', example='Sent'),
     'deleted_timestamp': fields.String(description='The timestamp when response has been detected to be deleted', example='2024-07-02T12:31:44'),
-    'edited_timestamp': fields.String(description='The timestamp when response has been detected to be deleted', example='2024-07-02T12:31:44')
+    'edited_timestamp': fields.String(description='The timestamp when response has been detected to be deleted', example='2024-07-02T12:31:44'),
+    'platform_type': fields.String(description='The platform type of the response', example='WhatsApp')
 })
 
 message_model = ns_messages.model('Message', {
@@ -124,7 +125,8 @@ message_model = ns_messages.model('Message', {
     'response_status': fields.String(),
 
     'deleted_timestamp': fields.String(),
-    'edited_timestamp': fields.String()
+    'edited_timestamp': fields.String(),
+    'platform_type': fields.String()
 })
 
 conversation_model = ns_conversations.model('Conversation', {
@@ -180,10 +182,8 @@ create_edit_model = ns_messages.model('CreateEdit', {
     'direction': fields.String(required=True, description='The direction of the edit', example='outgoing'),
     'platform_type': fields.String(required=True, description='The type of platform', example='WhatsApp'),
     'message_id': fields.String(description='The ID of the associated message', example='msg_123'),
-    'old_message_text': fields.String(required=True, description='The original message text before editing', example='Original message text.'),
     'edited_message_text': fields.String(required=True, description='The updated message text after editing', example='Edited message text.'),
     'bot_id': fields.String(description='The ID of the bot associated with the edit', example='bot_001'),
-    'read_status': fields.Boolean(description='Whether the edit has been read', example=False),
     'edited_timestamp': fields.DateTime(description='The timestamp of the edit', example='2024-08-21T15:00:00')
 })
 
@@ -220,7 +220,7 @@ class CreateOrReadBots(Resource):
             new_bot = Bot(
                 id=data['id'],
                 name=data['name'],
-                email=data.get('email', ''),  # Optional field
+                email=data.get('email', ''), 
                 persona=data['persona'],
                 model=data['model']
             )
@@ -1334,7 +1334,6 @@ class GetAlerts(Resource):
 @ns_alerts.route('/api/alerts/get_specific')
 class GetAlertsSpecific(Resource):
     @ns_messages.doc('get_alerts_specific')
-
     def get(self):
         """Uses parameter query string in URL to pass platform, bot_id, scammer_unique_id
 
@@ -1351,9 +1350,18 @@ class GetAlertsSpecific(Resource):
             platform_name = platform_mapping.get(platform.lower())
             if not platform_name:
                 return {'error': 'Invalid platform'}, 400
+
             try:
-                alerts = Alert.query.filter(Alert.bot_id == bot_id, Alert.platform_type == platform_name, Alert.scammer_unique_id == scammer_unique_id)
-                unread_count = alerts.filter_by(read_status=False).count()
+                # Filter alerts that are unread and active
+                alerts = Alert.query.filter(
+                    Alert.bot_id == bot_id,
+                    Alert.platform_type == platform_name,
+                    Alert.scammer_unique_id == scammer_unique_id,
+                    Alert.read_status == False,  # Only unread alerts
+                    Alert.active == True  # Only active alerts (not deleted)
+                ).all()
+
+                unread_count = len(alerts)  # Since only unread alerts are selected
                 serialized_alerts = [alert.serialize() for alert in alerts]
 
                 return {'alerts': serialized_alerts, 'unread_count': unread_count}, 200
@@ -1362,6 +1370,7 @@ class GetAlertsSpecific(Resource):
                 return {'alerts': [], 'unread_count': 0}, 200
         except Exception as e:
             return {'error': str(e)}, 500
+
 
 @ns_alerts.route('/api/alerts/<int:alert_id>/delete')
 class DeleteAlert(Resource):
@@ -1392,4 +1401,39 @@ class RestoreAlert(Resource):
             return {'message': 'Alert restored'}, 200
         except Exception as e:
             return {'error': str(e)}, 500
+
+@ns_messages.route('/api/messages/edited_message')
+class EditedMessage(Resource):
+    def post(self):
+        try:
+            data = request.get_json()
+            platform_type = data.get('platform_type')
+            conversation_id = data.get('conversation_id')
+            message_id = data.get('message_id')
+
+            # Query the Edit table for all edits related to the message
+            edited_messages = Edit.query.filter_by(
+                platform_type=platform_type,
+                conversation_id=conversation_id,
+                message_id=message_id
+            ).order_by(Edit.edited_timestamp.desc()).all()
+
+            if not edited_messages:
+                return {'error': 'Edited messages not found'}, 404
+
+            # Serialize all edited messages
+            return {'edited_messages': [edit.serialize() for edit in edited_messages]}, 200
+
+        except Exception as e:
+            return {'error': str(e)}, 500
+
+
+
+
+
+
+
+
+
+
 
