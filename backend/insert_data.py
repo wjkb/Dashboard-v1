@@ -138,7 +138,7 @@ with app.app_context():
     ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test5", False, datetime(2024, 5, 15, 14, 35, 16), '90000001'),
     ('90000013', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test6", False, datetime(2024, 5, 15, 14, 35, 17), '90000001'),
     ('90000012', 'incoming', 'edited_message', 'WhatsApp', '1', "Hello! can you help me with my order?", False, datetime(2024, 5, 15, 14, 35, 17), '90000001'),
-    (None, None, 'manual_intervention_required', 'WhatsApp', None, None, None, datetime(2024, 5, 15, 14, 32, 18), '90000001')  
+    ('90000012', None, 'manual_intervention_required', 'WhatsApp', None, None, None, datetime(2024, 5, 15, 14, 32, 18), '90000001')  
     ]
 
     for scammer_unique_id, direction, alert_type, platform_type, message_id, message_text, read_status, timestamp, bot_id in alerts_data:
@@ -204,7 +204,7 @@ with app.app_context():
             edited_timestamp=edited_timestamp
         )
         db.session.add(edit_entry)
-        
+
     db.session.commit()
 
 

@@ -135,28 +135,6 @@ export const getAlerts = async () => {
   }
 };
 
-export const getConversationPauseStatus = async (
-  platform,
-  botId,
-  scammerUniqueId
-) => {
-  try {
-    const response = await fetch(`${API_URL}/conversations/get_conversation_pause_status`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ platform, bot_id: botId, scammer_unique_id: scammerUniqueId }),
-    });
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-    return await response.json();
-  } catch (error) {
-    throw new Error(`Error fetching conversation pause status: ${error.message}`);
-  }
-};
-
 export const getEditedMessage = async (platform, botId, messageId) => {
   try {
       const response = await fetch(
@@ -170,6 +148,7 @@ export const getEditedMessage = async (platform, botId, messageId) => {
       throw new Error(`Error fetching edited message: ${error.message}`);
   }
 };
+
 
 // POST APIs
 export const createBot = async (botData) => {
@@ -261,29 +240,34 @@ export const sendProactiveMessage = async (
   }
 };
 
-export const toggleConversationPause = async (
-  platform,
-  botId,
-  scammerUniqueId
-) => {
+export const getConversationPauseStatus = async (platform, botId, scammerUniqueId) => {
   try {
-    const response = await fetch(`${API_URL}/conversations/toggle_pause`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        platform: platform,
-        bot_id: botId,
-        scammer_unique_id: scammerUniqueId,
-      }),
-    });
+    const response = await fetch(
+      `${API_URL}/conversations/${platform}/${botId}/${scammerUniqueId}/pause_status`
+    );
     if (!response.ok) {
-      throw new Error("Network response was not ok");
+      throw new Error("Failed to fetch conversation pause status");
     }
     return await response.json();
   } catch (error) {
-    throw new Error(`Error pausing/resuming conversation: ${error.message}`);
+    throw new Error(`Error fetching pause status: ${error.message}`);
+  }
+};
+
+export const toggleConversationPause = async (platform, botId, scammerUniqueId) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/conversations/${platform}/${botId}/${scammerUniqueId}/toggle_pause`,
+      {
+        method: "PUT",
+      }
+    );
+    if (!response.ok) {
+      throw new Error("Failed to toggle conversation pause status");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error toggling pause status: ${error.message}`);
   }
 };
 

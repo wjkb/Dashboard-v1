@@ -1423,15 +1423,49 @@ class EditedMessage(Resource):
 
         except Exception as e:
             return {'error': str(e)}, 500
+        
+@ns_conversations.route('/api/conversations/<platform>/<bot_id>/<scammer_unique_id>/pause_status')
+class CheckPauseStatus(Resource):
+    def get(self, platform, bot_id, scammer_unique_id):
+        try:
+            platform_name = platform_mapping.get(platform.lower())
+            if not platform_name:
+                return {'error': 'Invalid platform'}, 400
 
+            conversation = (
+                db.session.query(Conversation)
+                .join(Scammer, Conversation.scammer_id == Scammer.id)
+                .filter(Conversation.bot_id == bot_id, Conversation.platform == platform_name, Scammer.unique_id == scammer_unique_id)
+                .first()
+            )
+            if not conversation:
+                return {"error": "Conversation not found"}, 404
 
+            return {"pause": conversation.pause}, 200
+        except Exception as e:
+            return {"error": "Internal Server Error" + str(e)}, 500
 
+@ns_conversations.route('/api/conversations/<platform>/<bot_id>/<scammer_unique_id>/toggle_pause')
+class TogglePauseConversation(Resource):
+    def put(self, platform, bot_id, scammer_unique_id):
+        try:
+            platform_name = platform_mapping.get(platform.lower())
+            if not platform_name:
+                return {'error': 'Invalid platform'}, 400
 
+            conversation = (
+                db.session.query(Conversation)
+                .join(Scammer, Conversation.scammer_id == Scammer.id)
+                .filter(Conversation.bot_id == bot_id, Conversation.platform == platform_name, Scammer.unique_id == scammer_unique_id)
+                .first()
+            )
+            if not conversation:
+                return {"error": "Conversation not found"}, 404
 
+            conversation.pause = not conversation.pause
+            db.session.commit()
 
-
-
-
-
-
+            return {"message": "Conversation pause status toggled", "pause": conversation.pause}, 200
+        except Exception as e:
+            return {"error": "Internal Server Error" + str(e)}, 500
 

@@ -15,9 +15,9 @@ import {
 import AlertOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import CircleIcon from "@mui/icons-material/FiberManualRecord";
 import DeleteIcon from "@mui/icons-material/Delete";
-import MailOutlineIcon from "@mui/icons-material/MailOutline"; // Unread envelope
-import MailIcon from "@mui/icons-material/Mail"; // Read envelope
-import RefreshIcon from "@mui/icons-material/Refresh"; // Refresh icon for restore
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import MailIcon from "@mui/icons-material/Mail";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import {
   getAlerts,
   markAlertAsRead,
@@ -25,12 +25,14 @@ import {
   markAlertAsUnread,
   deleteAlert,
   restoreAlert,
-} from "../../api"; 
+  getConversationPauseStatus, 
+  toggleConversationPause
+} from "../../api";
 import "./AlertsMenu.css";
 
 const formatTimestamp = (timestamp) => {
   const date = new Date(timestamp);
-  return date.toLocaleString(); 
+  return date.toLocaleString();
 };
 
 const AlertsMenu = () => {
@@ -45,7 +47,7 @@ const AlertsMenu = () => {
       try {
         const data = await getAlerts();
         if (data) {
-          const { alerts = [], unread_count = 0 } = data;
+          const { alerts = [] } = data;
           const activeAlerts = alerts.filter(alert => alert.active);
           const inactiveAlerts = alerts.filter(alert => !alert.active);
 
@@ -117,12 +119,23 @@ const AlertsMenu = () => {
 
   const handleMarkAsUnread = async (alert) => {
     try {
+      // Check if the conversation is paused
+      const response = await getConversationPauseStatus(alert.platform_type, alert.bot_id, alert.scammer_unique_id);
+      const isPaused = response.pause;
+  
+      // If the conversation is not paused, toggle the pause state
+      if (!isPaused) {
+        await toggleConversationPause(alert.platform_type, alert.bot_id, alert.scammer_unique_id);
+      }
+  
+      // Mark the alert as unread
       await markAlertAsUnread(alert.id);
       const updateFunction = activeTab === 2 ? setDeletedAlerts : setAlerts;
       const updatedAlerts = (activeTab === 2 ? deletedAlerts : alerts).map((a) =>
         a.id === alert.id ? { ...a, read_status: false } : a
       );
       updateFunction(updatedAlerts);
+  
       if (activeTab !== 2) {
         setUnreadCount(updatedAlerts.filter((a) => !a.read_status).length);
       }
@@ -130,15 +143,26 @@ const AlertsMenu = () => {
       console.error("Failed to mark alert as unread:", error);
     }
   };
-
+  
   const handleMarkAsReadFromContext = async (alert) => {
     try {
+      // Check if the conversation is paused
+      const response = await getConversationPauseStatus(alert.platform_type, alert.bot_id, alert.scammer_unique_id);
+      const isPaused = response.pause;
+  
+      // If the conversation is paused, toggle the pause state
+      if (isPaused) {
+        await toggleConversationPause(alert.platform_type, alert.bot_id, alert.scammer_unique_id);
+      }
+  
+      // Mark the alert as read
       await markAlertAsRead(alert.id);
       const updateFunction = activeTab === 2 ? setDeletedAlerts : setAlerts;
       const updatedAlerts = (activeTab === 2 ? deletedAlerts : alerts).map((a) =>
         a.id === alert.id ? { ...a, read_status: true } : a
       );
       updateFunction(updatedAlerts);
+  
       if (activeTab !== 2) {
         setUnreadCount(updatedAlerts.filter((a) => !a.read_status).length);
       }
@@ -146,7 +170,7 @@ const AlertsMenu = () => {
       console.error("Failed to mark alert as read:", error);
     }
   };
-
+  
   const handleDeleteAlert = async (alert) => {
     try {
       await deleteAlert(alert.id);
@@ -204,13 +228,13 @@ const AlertsMenu = () => {
             variant="fullWidth"
             TabIndicatorProps={{
               style: {
-                backgroundColor: "white", 
+                backgroundColor: "white",
               },
             }}
             sx={{
               ".MuiTab-root": {
-                minWidth: "unset", 
-                flex: 1, 
+                minWidth: "unset",
+                flex: 1,
                 color: "white",
                 "&.Mui-selected": {
                   color: "white",
@@ -230,17 +254,17 @@ const AlertsMenu = () => {
               </Typography>
             ) : (
               getFilteredAlerts().map((alert) => (
-                <Tooltip 
+                <Tooltip
                   key={alert.id}
-                  title={`Alert type: ${alert.alert_type}`}  
-                  arrow  
+                  title={`Alert type: ${alert.alert_type}`}
+                  arrow
                 >
                   <MenuItem
                     onClick={() => handleAlertItemClick(alert)}
                   >
                     <ListItemIcon>
-                      <CircleIcon 
-                        sx={{ color: alert.read_status ? '#888888' : '#ff0000', fontSize: 12 }} 
+                      <CircleIcon
+                        sx={{ color: alert.read_status ? '#888888' : '#ff0000', fontSize: 12 }}
                       />
                     </ListItemIcon>
                     <Box sx={{ flexGrow: 1 }}>
@@ -257,19 +281,17 @@ const AlertsMenu = () => {
                       </Typography>
                     </Box>
                     <Box>
-                      {activeTab !== 2 && (
-                        <Tooltip title={alert.read_status ? "Mark as unread" : "Mark as read"}>
-                          <IconButton
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              alert.read_status ? handleMarkAsUnread(alert) : handleMarkAsReadFromContext(alert);
-                            }}
-                            sx={{ color: alert.read_status ? "gray" : "green" }}
-                          >
-                            {alert.read_status ? <MailOutlineIcon /> : <MailIcon />}
-                          </IconButton>
-                        </Tooltip>
-                      )}
+                      <Tooltip title={alert.read_status ? "Mark as unread" : "Mark as read"}>
+                        <IconButton
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            alert.read_status ? handleMarkAsUnread(alert) : handleMarkAsReadFromContext(alert);
+                          }}
+                          sx={{ color: alert.read_status ? "gray" : "green" }}
+                        >
+                          {alert.read_status ? <MailOutlineIcon /> : <MailIcon />}
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title={activeTab === 2 ? "Restore alert" : "Delete alert"}>
                         <IconButton
                           onClick={(e) => {
@@ -284,7 +306,7 @@ const AlertsMenu = () => {
                     </Box>
                   </MenuItem>
                 </Tooltip>
-              ))           
+              ))
             )}
           </Box>
           {(activeTab === 2 ? deletedAlerts.length > 0 : alerts.length > 0) && (

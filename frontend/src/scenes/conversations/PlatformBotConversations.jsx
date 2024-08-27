@@ -75,7 +75,7 @@ const PlatformBotConversations = ({ platform }) => {
         <Box
           display="flex"
           alignItems="center"
-          justifyContent="center"
+          justifyContent="flex-start" 
           width="100%"
           height="100%"
         >
@@ -86,7 +86,7 @@ const PlatformBotConversations = ({ platform }) => {
           ) : null}
         </Box>
       ),
-    },
+    },    
     {
       field: "scammerUniqueID",
       headerName: "Scammer Unique ID",
