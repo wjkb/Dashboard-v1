@@ -18,6 +18,8 @@ import EditBotDialog from "./EditBotDialog";
 import DeactivateBotDialog from "./DeactivateBotDialog";
 import ActivateBotDialog from "./ActivateBotDialog";
 import DeleteBotDialog from "./DeleteBotDialog";
+import Tooltip from "@mui/material/Tooltip";
+import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 
 /**
  * Manages the display and operations for bots including editing and deleting.
@@ -30,8 +32,6 @@ const ManageBots = () => {
 
   // All, active and deactive bots
   const [bots, setBots] = useState([]);
-  const [activeBots, setActiveBots] = useState([]);
-  const [deactiveBots, setDeactiveBots] = useState([]);
 
   // Loading and error states
   const [loading, setLoading] = useState(true);
@@ -59,11 +59,9 @@ const ManageBots = () => {
           WhatsApp: bot.platforms.includes("WhatsApp"),
           Telegram: bot.platforms.includes("Telegram"),
         }));
-        const activeBots = transformedData.filter((bot) => bot.active);
-        const deactiveBots = transformedData.filter((bot) => !bot.active);
+        console.log(transformedData);
+
         setBots(transformedData);
-        setActiveBots(activeBots);
-        setDeactiveBots(deactiveBots);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -111,11 +109,9 @@ const ManageBots = () => {
             }
           : bot
       );
-      const activeBots = updatedBots.filter((bot) => bot.active);
-      const deactiveBots = updatedBots.filter((bot) => !bot.active);
+
       setBots(updatedBots);
-      setActiveBots(activeBots);
-      setDeactiveBots(deactiveBots);
+
       handleEditDialogClose();
     } catch (error) {
       setError(error.message);
@@ -149,11 +145,7 @@ const ManageBots = () => {
       const updatedBots = bots.map((bot) =>
         bot.id === selectedBot.id ? { ...bot, active: false } : bot
       );
-      const activeBots = updatedBots.filter((bot) => bot.active);
-      const deactiveBots = updatedBots.filter((bot) => !bot.active);
       setBots(updatedBots);
-      setActiveBots(activeBots);
-      setDeactiveBots(deactiveBots);
       handleDeactivateDialogClose();
     } catch (err) {
       setError(err.message);
@@ -187,11 +179,7 @@ const ManageBots = () => {
       const updatedBots = bots.map((bot) =>
         bot.id === selectedBot.id ? { ...bot, active: true } : bot
       );
-      const activeBots = updatedBots.filter((bot) => bot.active);
-      const deactiveBots = updatedBots.filter((bot) => !bot.active);
       setBots(updatedBots);
-      setActiveBots(activeBots);
-      setDeactiveBots(deactiveBots);
       handleActivateDialogClose();
     } catch (err) {
       setError(err.message);
@@ -223,7 +211,7 @@ const ManageBots = () => {
     try {
       await deleteBot(selectedBot.id);
       setBots(bots.filter((bot) => bot.id !== selectedBot.id));
-      setDeactiveBots(deactiveBots.filter((bot) => bot.id !== selectedBot.id));
+      // setDeactiveBots(deactiveBots.filter((bot) => bot.id !== selectedBot.id));
       handleDeleteDialogClose();
     } catch (err) {
       setError(err.message);
@@ -263,6 +251,22 @@ const ManageBots = () => {
 
   const columnsActive = [
     {
+      field: "active",
+      headerName: "Status",
+      flex: 0.3,
+      renderCell: (params) => {
+        const isActive = params.value;
+        const color = isActive ? "green" : "red";
+        const statusText = isActive ? "Activated" : "Deactivated";
+
+        return (
+          <Tooltip title={statusText} arrow>
+            <FiberManualRecordIcon style={{ color, marginTop: "15px" }} />
+          </Tooltip>
+        );
+      },
+    },
+    {
       field: "id",
       headerName: "ID",
       flex: 1,
@@ -283,11 +287,12 @@ const ManageBots = () => {
       headerName: "Persona",
       flex: 1,
     },
-    {
-      field: "model",
-      headerName: "Model",
-      flex: 1,
-    },
+    // {
+    //   field: "model",
+    //   headerName: "Model",
+    //   flex: 1,
+    // },
+
     {
       field: "Facebook",
       headerName: "Facebook",
@@ -337,122 +342,148 @@ const ManageBots = () => {
             Edit
           </Button>
 
-          {/* Deactivate button */}
-          <Button
-            variant="contained"
-            color="warning"
-            startIcon={<CloseIcon />}
-            style={{ width: "100px", marginRight: "10px" }}
-            onClick={() => handleDeactivateClick(params.row)}
-          >
-            Deactivate
-          </Button>
+          {params.row.active ? (
+            // Deactivate button
+            <Button
+              variant="contained"
+              color="warning"
+              startIcon={<CloseIcon />}
+              style={{ width: "100px", marginRight: "10px" }}
+              onClick={() => handleDeactivateClick(params.row)}
+            >
+              Deactivate
+            </Button>
+          ) : (
+            <>
+              {/* Activate button */}
+              <Button
+                variant="contained"
+                color="success"
+                startIcon={<CheckIcon />}
+                style={{ width: "100px", marginRight: "10px" }}
+                onClick={() => handleActivateClick(params.row)}
+              >
+                Activate
+              </Button>
+
+              {/* Delete button */}
+              <Button
+                variant="contained"
+                color="error"
+                startIcon={<CloseIcon />}
+                style={{ width: "100px", marginRight: "10px" }}
+                onClick={() => handleDeleteClick(params.row)}
+              >
+                Delete
+              </Button>
+            </>
+          )}
         </Box>
       ),
     },
   ];
 
-  const columnsDeactive = [
-    {
-      field: "id",
-      headerName: "ID",
-      flex: 1,
-      cellClassName: "phone-column--cell",
-    },
-    {
-      field: "name",
-      headerName: "Name",
-      flex: 1,
-    },
-    {
-      field: "email",
-      headerName: "Email",
-      flex: 1,
-    },
-    {
-      field: "persona",
-      headerName: "Persona",
-      flex: 1,
-    },
-    {
-      field: "model",
-      headerName: "Model",
-      flex: 1,
-    },
-    {
-      field: "Facebook",
-      headerName: "Facebook",
-      flex: 0.5,
-      renderCell: (params) =>
-        renderHealthIcon(
-          "Facebook",
-          params.row.Facebook,
-          params.row.health_status
-        ),
-    },
-    {
-      field: "WhatsApp",
-      headerName: "WhatsApp",
-      flex: 0.5,
-      renderCell: (params) =>
-        renderHealthIcon(
-          "WhatsApp",
-          params.row.WhatsApp,
-          params.row.health_status
-        ),
-    },
-    {
-      field: "Telegram",
-      headerName: "Telegram",
-      flex: 0.5,
-      renderCell: (params) =>
-        renderHealthIcon(
-          "Telegram",
-          params.row.Telegram,
-          params.row.health_status
-        ),
-    },
-    {
-      headerName: "Actions",
-      flex: 2,
-      renderCell: (params) => (
-        <Box>
-          {/* Edit button */}
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<EditIcon />}
-            style={{ width: "100px", marginRight: "10px" }}
-            onClick={() => handleEditClick(params.row)}
-          >
-            Edit
-          </Button>
+  // const columnsDeactive = [
+  //   {
+  //     field: "id",
+  //     headerName: "ID",
+  //     flex: 1,
+  //     cellClassName: "phone-column--cell",
+  //   },
+  //   {
+  //     field: "name",
+  //     headerName: "Name",
+  //     flex: 1,
+  //   },
+  //   {
+  //     field: "email",
+  //     headerName: "Email",
+  //     flex: 1,
+  //   },
+  //   {
+  //     field: "persona",
+  //     headerName: "Persona",
+  //     flex: 1,
+  //   },
+  //   {
+  //     field: "model",
+  //     headerName: "Model",
+  //     flex: 1,
+  //   },
+  //   {
+  //     field: "Facebook",
+  //     headerName: "Facebook",
+  //     flex: 0.5,
+  //     renderCell: (params) =>
+  //       renderHealthIcon(
+  //         "Facebook",
+  //         params.row.Facebook,
+  //         params.row.health_status
+  //       ),
+  //   },
+  //   {
+  //     field: "WhatsApp",
+  //     headerName: "WhatsApp",
+  //     flex: 0.5,
+  //     renderCell: (params) =>
+  //       renderHealthIcon(
+  //         "WhatsApp",
+  //         params.row.WhatsApp,
+  //         params.row.health_status
+  //       ),
+  //   },
+  //   {
+  //     field: "Telegram",
+  //     headerName: "Telegram",
+  //     flex: 0.5,
+  //     renderCell: (params) =>
+  //       renderHealthIcon(
+  //         "Telegram",
+  //         params.row.Telegram,
+  //         params.row.health_status
+  //       ),
+  //   },
+  //   {
+  //     headerName: "Actions",
+  //     flex: 2,
+  //     renderCell: (params) => (
+  //       <Box>
+  //         {/* Edit button */}
+  //         <Button
+  //           variant="contained"
+  //           color="primary"
+  //           startIcon={<EditIcon />}
+  //           style={{ width: "100px", marginRight: "10px" }}
+  //           onClick={() => handleEditClick(params.row)}
+  //         >
+  //           Edit
+  //         </Button>
 
-          {/* Activate button */}
-          <Button
-            variant="contained"
-            color="success"
-            startIcon={<CheckIcon />}
-            style={{ width: "100px", marginRight: "10px" }}
-            onClick={() => handleActivateClick(params.row)}
-          >
-            Activate
-          </Button>
+  //         {/* Activate button */}
+  //         <Button
+  //           variant="contained"
+  //           color="success"
+  //           startIcon={<CheckIcon />}
+  //           style={{ width: "100px", marginRight: "10px" }}
+  //           onClick={() => handleActivateClick(params.row)}
+  //         >
+  //           Activate
+  //         </Button>
 
-          {/* Delete button */}
-          <Button
-            variant="contained"
-            color="error"
-            startIcon={<CloseIcon />}
-            style={{ width: "100px", marginRight: "10px" }}
-            onClick={() => handleDeleteClick(params.row)}
-          >
-            Delete
-          </Button>
-        </Box>
-      ),
-    },
-  ];
+  //         {/* Delete button */}
+  //         <Button
+  //           variant="contained"
+  //           color="error"
+  //           startIcon={<CloseIcon />}
+  //           style={{ width: "100px", marginRight: "10px" }}
+  //           onClick={() => handleDeleteClick(params.row)}
+  //         >
+  //           Delete
+  //         </Button>
+  //       </Box>
+  //     ),
+  //   },
+  // ];
 
   if (loading) {
     return <div>Loading...</div>;
@@ -464,10 +495,11 @@ const ManageBots = () => {
 
   return (
     <Box margin="20px" width="auto">
-      <Header title="All Bots" subtitle="Managing Active Bots" />
+      <Header title="All Bots" subtitle="Managing All Bots" />
       {/* DataGrid for displaying active bots */}
       <Box
-        height={deactiveBots.length > 0 ? "50vh" : "65vh"}
+        height={"65vh"}
+        width={"100%"}
         sx={{
           "& .MuiDataGrid-root": {
             border: "none",
@@ -494,10 +526,10 @@ const ManageBots = () => {
           },
         }}
       >
-        <DataGrid rows={activeBots} columns={columnsActive} />
+        <DataGrid rows={bots} columns={columnsActive} />
       </Box>
 
-      {/* Conditional rendering of DataGrid for displaying deactivated bots */}
+      {/* Conditional rendering of DataGrid for displaying deactivated bots
       {deactiveBots.length > 0 && (
         <>
           <Header subtitle="Managing Deactivated Bots" />
@@ -532,7 +564,7 @@ const ManageBots = () => {
             <DataGrid rows={deactiveBots} columns={columnsDeactive} />
           </Box>
         </>
-      )}
+      )} */}
 
       {/* Legend for Status Icons */}
       <Box mt={2}>

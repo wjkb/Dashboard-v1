@@ -35,10 +35,10 @@ const ActivateBotDialog = ({ bot, open, onClose, onConfirm }) => {
         Model: {bot.model}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="primary">
+        <Button onClick={onClose} sx={{ color: 'white', backgroundColor: '#9c27b0', '&:hover': { backgroundColor: '#ab47bc' } }}>
           Cancel
         </Button>
-        <Button onClick={onConfirm} color="warning">
+        <Button onClick={onConfirm} sx={{ color: 'white', backgroundColor: '#9c27b0', '&:hover': { backgroundColor: '#ab47bc' } }}>
           Activate
         </Button>
       </DialogActions>
