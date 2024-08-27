@@ -98,11 +98,12 @@ const PlatformUserMessages = ({ platform }) => {
   };
   /**
    * Check if platform is paused
-   */  
-  const checkConversationPauseStatus = async (        
+   */
+  const checkConversationPauseStatus = async (
     platform,
     botId,
-    scammerUniqueId) => {
+    scammerUniqueId
+  ) => {
     try {
       const pause_status = await getConversationPauseStatus(
         platform,
@@ -110,7 +111,6 @@ const PlatformUserMessages = ({ platform }) => {
         scammerUniqueId
       );
       setIsPaused(pause_status.pause_status);
-
     } catch (err) {
       setError(err.message);
     }
@@ -250,7 +250,7 @@ const PlatformUserMessages = ({ platform }) => {
 
   const handlePauseorResumeBot = async (action) => {
     try {
-      console.log("pausing", platform, botId, scammerUniqueId)
+      console.log("pausing", platform, botId, scammerUniqueId);
       await toggleConversationPause(platform, botId, scammerUniqueId);
       // fetchBot();
     } catch (err) {
@@ -373,7 +373,7 @@ const PlatformUserMessages = ({ platform }) => {
     ) : null;
 
   return (
-    <Box margin="20px" width="80%">
+    <div style={{ height: "80%" , paddingTop:"20px"}}>
       <Header
         title={`Messages with ${scammerUniqueId}`}
         subtitle="Conversation details"
@@ -415,7 +415,11 @@ const PlatformUserMessages = ({ platform }) => {
         style={{ marginBottom: "10px", marginLeft: "10px" }}
         disabled={pauseButtonDisabled && !isPaused}
       >
-        {bot ? (isPaused ? "Resume Conversation" : "Pause Conversation") : "Loading..."}
+        {bot
+          ? isPaused
+            ? "Resume Conversation"
+            : "Pause Conversation"
+          : "Loading..."}
       </Button>
       {bot && isPaused && (
         <Button
@@ -577,7 +581,7 @@ const PlatformUserMessages = ({ platform }) => {
         <Tab label="Screenshots" />
       </Tabs>
       {shownTab}
-    </Box>
+    </div>
   );
 };
 
