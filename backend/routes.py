@@ -15,6 +15,28 @@ from backend.utils import save_file, safe_parse_timestamp, create_zip, create_me
 api_bp = Blueprint('api', __name__)
 api = Api(api_bp, version='1.0', title='Your API', description='API Documentation', doc='/api/docs')
 
+#global platform mappings
+platform_mapping = {
+    'facebook': 'Facebook',
+    'fb': 'Facebook',
+    'whatsapp': 'WhatsApp',
+    'wa': 'WhatsApp',
+    'telegram': 'Telegram',
+    'tg': 'Telegram'
+}
+
+API_mapping = {
+    'facebook': 'FB',
+    'fb': 'FB',
+    'whatsapp': 'WA',
+    'wa': 'WA',
+    'telegram': 'TG',
+    'tg': 'TG',
+    'Facebook': 'FB',
+    'WhatsApp': 'WA',
+    'Telegram': 'TG'
+}
+
 # Define namespaces for Swagger documentation
 ns_bots = api.namespace('bots', description='Bot operations', path='/')
 ns_platform_bots = api.namespace('platform_bots', description='Platform Bot operations', path='/')
@@ -79,7 +101,9 @@ receive_message_model = ns_messages.model('ReceiveMessage', {
     'responded_to': fields.String(description='The message IDs that this message is responding to', example='1,2,3'),
     'response_bef_generation_timestamp': fields.String(description='The timestamp before the response is generated', example='2024-07-02T12:31:44'),
     'response_aft_generation_timestamp': fields.String(description='The timestamp after the response is generated', example='2024-07-02T12:32:25'),
-    'response_status': fields.String(description='The status of the response, either Sending, Sent or Failed', example='Sent'),
+    'response_status': fields.String(description='The status of the response, either Sending, Sent, Failed, Deleted', example='Sent'),
+    'deleted_timestamp': fields.String(description='The timestamp when response has been detected to be deleted', example='2024-07-02T12:31:44'),
+    'edited_timestamp': fields.String(description='The timestamp when response has been detected to be deleted', example='2024-07-02T12:31:44')
 })
 
 message_model = ns_messages.model('Message', {
@@ -98,6 +122,9 @@ message_model = ns_messages.model('Message', {
     'response_bef_generation_timestamp': fields.String(),
     'response_aft_generation_timestamp': fields.String(),
     'response_status': fields.String(),
+
+    'deleted_timestamp': fields.String(),
+    'edited_timestamp': fields.String()
 })
 
 conversation_model = ns_conversations.model('Conversation', {
@@ -143,7 +170,21 @@ create_alert_model = ns_alerts.model('CreateAlert', {
     'message_text': fields.String(required=True, description='The alert message', example='This scammer has deleted a message.'),
     'read_status': fields.Boolean(description='Whether the alert has been read', example=False),
     'timestamp': fields.DateTime(description='The timestamp of the alert', example='2024-08-21T14:30:00'),
-    'bot_id': fields.String(description='The ID of the bot associated with the alert', example='bot_001')
+    'bot_id': fields.String(description='The ID of the bot associated with the alert', example='bot_001'),
+    'active' : fields.String(description='Whether the alert has been deleted', example=False)
+})
+
+create_edit_model = ns_messages.model('CreateEdit', {
+    'scammer_unique_id': fields.String(required=True, description='The unique ID of the scammer', example='unique_scammer_123'),
+    'conversation_id': fields.String(required=True, description='The ID of the conversation', example='conv_456'),
+    'direction': fields.String(required=True, description='The direction of the edit', example='outgoing'),
+    'platform_type': fields.String(required=True, description='The type of platform', example='WhatsApp'),
+    'message_id': fields.String(description='The ID of the associated message', example='msg_123'),
+    'old_message_text': fields.String(required=True, description='The original message text before editing', example='Original message text.'),
+    'edited_message_text': fields.String(required=True, description='The updated message text after editing', example='Edited message text.'),
+    'bot_id': fields.String(description='The ID of the bot associated with the edit', example='bot_001'),
+    'read_status': fields.Boolean(description='Whether the edit has been read', example=False),
+    'edited_timestamp': fields.DateTime(description='The timestamp of the edit', example='2024-08-21T15:00:00')
 })
 
 
@@ -326,11 +367,6 @@ class TogglePauseBot(Resource):
 
             # If bot is resumed, get all conversations related to the bot
             if not bot.pause:
-                platform_mapping = {
-                    'Facebook': 'FB',
-                    'WhatsApp': 'WA',
-                    'Telegram': 'TG'
-                }
                 platform_message_classes = {
                     'Facebook': FacebookMessage,
                     'WhatsApp': WhatsappMessage,
@@ -370,7 +406,7 @@ class TogglePauseBot(Resource):
                         message_list = []
                         for message in messages_to_send:
                             message = message.serialize()
-                            message['platform'] = platform_mapping[platform]
+                            message['platform'] = API_mapping[platform]
                             message['bot_id'] = bot_id
                             message['scammer_id'] = scammer_unique_id
                             filtered_message = select_wanted_fields(message, wanted_fields)
@@ -421,11 +457,6 @@ class TogglePauseConversation(Resource):
 
             # If bot is resumed, get all conversations related to the bot
             if not conversation.pause:
-                platform_mapping = {
-                    'Facebook': 'FB',
-                    'WhatsApp': 'WA',
-                    'Telegram': 'TG'
-                }
                 platform_message_classes = {
                     'Facebook': FacebookMessage,
                     'WhatsApp': WhatsappMessage,
@@ -465,7 +496,7 @@ class TogglePauseConversation(Resource):
                 message_list = []
                 for message in messages_to_send:
                     message = message.serialize()
-                    message['platform'] = platform_mapping[platform]
+                    message['platform'] = API_mapping[platform]
                     message['bot_id'] = bot_id
                     message['scammer_id'] = scammer_unique_id
                     filtered_message = select_wanted_fields(message, wanted_fields)
@@ -494,15 +525,6 @@ class getConversationPauseStatus(Resource):
             bot_id = data.get('bot_id')
             scammer_unique_id = data.get('scammer_unique_id')
 
-            platform_mapping = {
-                'facebook': 'Facebook',
-                'whatsapp': 'WhatsApp',
-                'telegram': 'Telegram',
-                'wa': 'WhatsApp',
-                'tg': 'Telegram',
-                'fb': 'Facebook'
-            }
-
             platform_name = platform_mapping.get(platform.lower())
             if not platform_name:
                 return {'error': 'Invalid platform'}, 400
@@ -529,12 +551,6 @@ class PlatformBots(Resource):
     @ns_platform_bots.marshal_list_with(bot_model_1)
     def get(self, platform):
         try:
-            platform_mapping = {
-                'facebook': 'Facebook',
-                'whatsapp': 'WhatsApp',
-                'telegram': 'Telegram'
-            }
-
             platform_name = platform_mapping.get(platform.lower())
             if not platform_name:
                 return {'error': 'Invalid platform'}, 400
@@ -557,12 +573,6 @@ class BotConversations(Resource):
     @ns_conversations.marshal_list_with(conversation_model)
     def get(self, platform, bot_id):
         try:
-            platform_mapping = {
-                'facebook': 'Facebook',
-                'whatsapp': 'WhatsApp',
-                'telegram': 'Telegram'
-            }
-            
             platform_name = platform_mapping.get(platform.lower())
             if not platform_name:
                 return {'error': 'Invalid platform'}, 400
@@ -594,11 +604,6 @@ class BotConversationMessages(Resource):
     @ns_messages.marshal_list_with(message_model)
     def get(self, platform, bot_id, scammer_unique_id):
         try:
-            platform_mapping = {
-                'facebook': 'Facebook',
-                'whatsapp': 'WhatsApp',
-                'telegram': 'Telegram'
-            }
             platform_name = platform_mapping.get(platform.lower())
             if not platform_name:
                 return {'error': 'Invalid platform'}, 400
@@ -619,7 +624,7 @@ class BotConversationMessages(Resource):
             }
             message_class = platform_message_classes.get(platform.lower())
             if not message_class:
-                return {"error": "Unsupported platform"}, 400
+                return {'error': 'Unsupported platform'}, 400
             
             messages = (
                 db.session.query(message_class)
@@ -638,14 +643,6 @@ class BotConversationScreenshots(Resource):
     @ns_messages.doc('get_screenshots')
     def get(self, platform, bot_id, scammer_unique_id):
         try:
-            platform_mapping = {
-                'facebook': 'Facebook',
-                'fb': 'Facebook',
-                'whatsapp': 'WhatsApp',
-                'wa': 'WhatsApp',
-                'telegram': 'Telegram',
-                'tg': 'Telegram'
-            }
             platform_name = platform_mapping.get(platform.lower())
             if not platform_name:
                 return {'error': 'Invalid platform'}, 400
@@ -670,11 +667,6 @@ class BotConversationInformation(Resource):
     @ns_messages.doc('get_conversation_info')
     def get(self, platform, bot_id, scammer_unique_id):
         try:
-            platform_mapping = {
-                'facebook': 'Facebook',
-                'whatsapp': 'WhatsApp',
-                'telegram': 'Telegram'
-            }
             platform_name = platform_mapping.get(platform.lower())
             if not platform_name:
                 return {'error': 'Invalid platform'}, 400
@@ -691,27 +683,17 @@ class BotConversationInformation(Resource):
             extracted_information = ExtractedInformation.query.filter_by(conversation_id=conversation.id).all()
             return [info.serialize() for info in extracted_information]
         except Exception as e:
-            print(f"Error occurred: {e}")
-            return {"error": "Internal Server Error"}, 500
+            return {'error': "Internal Server Error"}, 500
 
 @ns_messages.route('/api/messages')
 class ReceiveMessage(Resource):
     @ns_messages.doc('add_message')
     @ns_messages.expect(receive_message_model)
     def post(self):
-        platform_mapping = {
-            'facebook': 'Facebook',
-            'fb': 'Facebook',
-            'whatsapp': 'WhatsApp',
-            'wa': 'WhatsApp',
-            'telegram': 'Telegram',
-            'tg': 'Telegram'
-        }
-        
         data = request.get_json()
         
-        platform = platform_mapping.get(data['platform'].lower())
-        if not platform:
+        platform_name = platform_mapping.get(data['platform'].lower())
+        if not platform_name:
             return {'status': 'error', 'message': 'Unsupported platform'}, 400
 
         bot_id = data['bot_id']
@@ -729,28 +711,31 @@ class ReceiveMessage(Resource):
         response_aft_generation_timestamp = data.get('response_aft_generation_timestamp', None)
         response_status = data.get('response_status', None)
 
+        deleted_timestamp = data.get('deleted_timestamp', None)
+        edited_timestamp = data.get('edited_timestamp', None)
+
         # Check if bot exists, if not return an error
         bot = Bot.query.get(bot_id)
         if not bot:
             return {'status': 'error', 'message': 'Bot not found'}, 404
         
         # Check if scammer exists, if not create a new scammer
-        scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform).first()
+        scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform_name).first()
         if not scammer:
-            scammer = Scammer(unique_id=scammer_unique_id, platform=platform)
+            scammer = Scammer(unique_id=scammer_unique_id, platform=platform_name)
             db.session.add(scammer)
             db.session.commit()
 
         # Check if conversation exists, if not create a new conversation
         conversation = Conversation.query.filter_by(
             bot_id=bot.id,
-            platform=platform,
+            platform=platform_name,
             scammer_id=scammer.id
         ).first()
         if not conversation:
             conversation = Conversation(
                 bot_id=bot.id,
-                platform=platform,
+                platform=platform_name,
                 scammer_id=scammer.id
             )
             db.session.add(conversation)
@@ -762,11 +747,12 @@ class ReceiveMessage(Resource):
             'whatsapp': WhatsappMessage,
             'telegram': TelegramMessage
         }
-        message_class = platform_message_classes.get(platform.lower())
+        message_class = platform_message_classes.get(platform_name.lower())
 
         # Create or update message object
         if direction == 'incoming':
             message = message_class.query.filter_by(conversation_id=conversation.id, direction=direction, message_id=message_id).first()
+            print(message)
             if not message:
                 message = message_class(
                     conversation_id=conversation.id,
@@ -780,10 +766,17 @@ class ReceiveMessage(Resource):
                 )
                 db.session.add(message)
             else:
+                # This portion accounts for media and update queue if they exists. 
                 message.message_text = message_text
-                message.message_timestamp = safe_parse_timestamp(message_timestamp)
+                
+
+                # message.message_timestamp = safe_parse_timestamp(message_timestamp)
+
                 message.file_path = file_path
                 message.file_type = file_type
+
+                message.deleted_timestamp = safe_parse_timestamp(deleted_timestamp)
+                message.edited_timestamp = safe_parse_timestamp(edited_timestamp)
                 message.response_status = response_status
 
         elif direction == 'outgoing':
@@ -805,7 +798,7 @@ class ReceiveMessage(Resource):
                 db.session.add(message)
             else:
                 message.message_text = message_text
-                message.message_timestamp = safe_parse_timestamp(message_timestamp)
+                # message.message_timestamp = safe_parse_timestamp(message_timestamp)
                 message.file_path = file_path
                 message.file_type = file_type
                 message.responded_to = responded_to
@@ -821,17 +814,9 @@ class LLMIgnoreMessageHistory(Resource):
     @ns_messages.doc('llm_ignore_message_history')
     def put(self):
         try:
-            platform_mapping = {
-                'facebook': 'Facebook',
-                'fb': 'Facebook',
-                'whatsapp': 'WhatsApp',
-                'wa': 'WhatsApp',
-                'telegram': 'Telegram',
-                'tg': 'Telegram'
-            }
             data = request.get_json()
-            platform = platform_mapping.get(data.get('platform').lower())
-            if not platform:
+            platform_name = platform_mapping.get(data.get('platform').lower())
+            if not platform_name:
                 return {'status': 'error', 'message': 'Unsupported platform'}, 400
             bot_id = data['botId']
             scammer_unique_id = data['scammerUniqueId']
@@ -842,12 +827,12 @@ class LLMIgnoreMessageHistory(Resource):
                 return {'status': 'error', 'message': 'Bot not found'}, 404
             
             # Get the scammer
-            scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform).first()
+            scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform_name).first()
             if not scammer:
                 return {'status': 'error', 'message': 'Scammer not found'}, 404
             
             # Get the conversation
-            conversation = Conversation.query.filter_by(bot_id=bot.id, platform=platform, scammer_id=scammer.id).first()
+            conversation = Conversation.query.filter_by(bot_id=bot.id, platform=platform_name, scammer_id=scammer.id).first()
             if not conversation:
                 return {'status': 'error', 'message': 'Conversation not found'}, 404
             
@@ -857,7 +842,7 @@ class LLMIgnoreMessageHistory(Resource):
                 'WhatsApp': WhatsappMessage,
                 'Telegram': TelegramMessage
             }
-            message_class = platform_message_classes.get(platform)
+            message_class = platform_message_classes.get(platform_name)
             messages = message_class.query.filter_by(conversation_id=conversation.id).all()
 
             # Set use_for_llm to False for all messages
@@ -873,19 +858,10 @@ class ReceiveScreenshot(Resource):
     @ns_messages.doc('add_screenshot')
     @ns_messages.expect(receive_screenshot_model)
     def post(self):
-        platform_mapping = {
-            'facebook': 'Facebook',
-            'fb': 'Facebook',
-            'whatsapp': 'WhatsApp',
-            'wa': 'WhatsApp',
-            'telegram': 'Telegram',
-            'tg': 'Telegram'
-        }
-            
         data = request.get_json()
 
-        platform = platform_mapping.get(data['platform'].lower())
-        if not platform:
+        platform_name = platform_mapping.get(data['platform'].lower())
+        if not platform_name:
             return {'status': 'error', 'message': 'Unsupported platform'}, 400
         
         bot_id = data['bot_id']
@@ -898,22 +874,22 @@ class ReceiveScreenshot(Resource):
             return {'status': 'error', 'message': 'Bot not found'}, 404
         
         # Check if scammer exists, if not create a new scammer
-        scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform).first()
+        scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform_name).first()
         if not scammer:
-            scammer = Scammer(unique_id=scammer_unique_id, platform=platform)
+            scammer = Scammer(unique_id=scammer_unique_id, platform=platform_name)
             db.session.add(scammer)
             db.session.commit()
 
         # Check if conversation exists, if not create a new conversation
         conversation = Conversation.query.filter_by(
             bot_id=bot.id,
-            platform=platform,
+            platform=platform_name,
             scammer_id=scammer.id
         ).first()
         if not conversation:
             conversation = Conversation(
                 bot_id=bot.id,
-                platform=platform,
+                platform=platform_name,
                 scammer_id=scammer.id
             )
             db.session.add(conversation)
@@ -932,16 +908,10 @@ class ReceiveExtractedInformation(Resource):
     @ns_messages.doc('add_conversation_info')
     @ns_messages.expect(receive_extracted_information_model)
     def post(self):
-        platform_mapping = {
-            'facebook': 'Facebook',
-            'whatsapp': 'WhatsApp',
-            'telegram': 'Telegram'
-        }
-            
         data = request.get_json()
 
-        platform = platform_mapping.get(data['platform'].lower())
-        if not platform:
+        platform_name = platform_mapping.get(data['platform'].lower())
+        if not platform_name:
             return {'status': 'error', 'message': 'Unsupported platform'}, 400
         
         bot_id = data['bot_id']
@@ -955,13 +925,13 @@ class ReceiveExtractedInformation(Resource):
             return {'status': 'error', 'message': 'Bot not found'}, 404
         
         # Check if scammer exists, if not return an error
-        scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform).first()
+        scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform_name).first()
         if not scammer:
             return {'status': 'error', 'message': 'Scammer not found'}, 404
         
         conversation = Conversation.query.filter_by(
             bot_id=bot.id,
-            platform=platform,
+            platform=platform_name,
             scammer_id=scammer.id).first()
         if not conversation:
             return {'status': 'error', 'message': 'Conversation not found'}, 404
@@ -980,18 +950,9 @@ class GetNextResponseMessageId(Resource):
     @ns_utils.expect(return_next_response_message_id_model)
     def post(self):
         try:
-            platform_mapping = {
-                'facebook': 'Facebook',
-                'fb': 'Facebook',
-                'whatsapp': 'WhatsApp',
-                'wa': 'WhatsApp',
-                'telegram': 'Telegram',
-                'tg': 'Telegram'
-            }
-
             data = request.get_json()
-            platform = platform_mapping.get(data.get('platform').lower())
-            if not platform:
+            platform_name = platform_mapping.get(data.get('platform').lower())
+            if not platform_name:
                 return {'status': 'error', 'message': 'Unsupported platform'}, 400
             bot_id = data.get('bot_id')
             scammer_unique_id = data.get('scammer_id')
@@ -1002,12 +963,12 @@ class GetNextResponseMessageId(Resource):
                 return {'status': 'error', 'message': 'Bot not found'}, 404
 
             # Get the scammer
-            scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform).first()
+            scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform_name).first()
             if not scammer:
                 return {'next_message_id': '1'}, 200
 
             # Get the conversation. If no conversation yet, return message_id 1
-            conversation = Conversation.query.filter_by(bot_id=bot_id, platform=platform, scammer_id=scammer.id).first()
+            conversation = Conversation.query.filter_by(bot_id=bot_id, platform=platform_name, scammer_id=scammer.id).first()
             if not conversation:
                 return {'next_message_id': '1'}, 200
             
@@ -1017,9 +978,9 @@ class GetNextResponseMessageId(Resource):
                 'telegram': TelegramMessage
             }
             
-            print(f"Getting next response message ID for bot {bot_id} on platform {platform} for scammer {scammer_unique_id}")
-            platformMessage = platform_message_classes[platform.lower()]
-            print(f"Platform message class: {platform}")
+            print(f"Getting next response message ID for bot {bot_id} on platform {platform_name} for scammer {scammer_unique_id}")
+            platformMessage = platform_message_classes[platform_name]
+            print(f"Platform message class: {platform_name}")
             # Get the last message sent by the bot
             last_bot_message = (
                 db.session.query(platformMessage)
@@ -1042,19 +1003,10 @@ class SendBot(Resource):
     @ns_utils.expect(start_bot_script_model)
     def post(self):
         try:
-            platform_mapping = {
-                'facebook': 'FB',
-                'fb': 'FB',
-                'whatsapp': 'WA',
-                'wa': 'WA',
-                'telegram': 'TG',
-                'tg': 'TG'
-            }
-
             data = request.get_json()
             bot_id = data.get('botId')
             scammer_ids = data.get('scammerIds')
-            platform = platform_mapping[data.get('platform').lower()]
+            platform = API_mapping[data.get('platform').lower()]
             type_of_scam = data.get('typeOfScam')
             starting_message = data.get('startingMessage')
 
@@ -1078,7 +1030,7 @@ class SendBot(Resource):
                     "bot_id": bot_id,
                     "scammer_id": scammer_unique_id
                 }
-                response = requests.post('http://localhost:5000/api/get_next_response_message_id', json=next_response_data)
+                response = requests.post(f'http://localhost:5000/api/get_next_response_message_id', json=next_response_data)
                 next_message_id = response.json().get('next_message_id')
                 message = {
                     "platform": platform,
@@ -1102,19 +1054,10 @@ class SendBot(Resource):
 class SendProactiveMessage(Resource):
     def post(self):
         try:
-            platform_mapping = {
-                'facebook': 'FB',
-                'fb': 'FB',
-                'whatsapp': 'WA',
-                'wa': 'WA',
-                'telegram': 'TG',
-                'tg': 'TG'
-            }
-            
             data = request.get_json()
             bot_id = data.get('botId')
             scammer_unique_id = data.get('scammerId')
-            platform = platform_mapping[data.get('platform').lower()]
+            platform = API_mapping[data.get('platform').lower()]
             message = data.get('message')
 
             bot = Bot.query.get(bot_id)
@@ -1175,25 +1118,19 @@ class DownloadEverything(Resource):
             platform = data.get('platform')
             scammer_unique_id = data.get('scammerUniqueId')
 
-            platform_mapping = {
-                'facebook': 'Facebook',
-                'whatsapp': 'WhatsApp',
-                'telegram': 'Telegram'
-            }
-
-            platform = platform_mapping.get(platform.lower())
-            if not platform:
+            platform_name = platform_mapping.get(platform.lower())
+            if not platform_name:
                 return {'error': 'Unsupported platform'}, 400
             
             bot = Bot.query.get(bot_id)
             if not bot:
                 return {'error': 'Bot not found'}, 404
             
-            scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform).first()
+            scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform_name).first()
             if not scammer:
                 return {'error': 'Scammer not found'}, 404
             
-            conversation = Conversation.query.filter_by(bot_id=bot_id, platform=platform, scammer_id=scammer.id).first()
+            conversation = Conversation.query.filter_by(bot_id=bot_id, platform=platform_name, scammer_id=scammer.id).first()
             if not conversation:
                 return {'error': 'Conversation not found'}, 404
             
@@ -1202,7 +1139,7 @@ class DownloadEverything(Resource):
                 'WhatsApp': WhatsappMessage,
                 'Telegram': TelegramMessage
             }
-            message_class = platform_message_classes.get(platform)
+            message_class = platform_message_classes.get(platform_name)
             messages = message_class.query.filter_by(conversation_id=conversation.id).all()
 
             # Get all files (i.e. attachments) in the conversation
@@ -1261,12 +1198,12 @@ class MessageCount(Resource):
 class RecentMessages(Resource):
     def get(self, platform):
         try:
-            platform_mapping = {
+            platform_class_mapping = {
                 'facebook': FacebookMessage,
                 'whatsapp': WhatsappMessage,
                 'telegram': TelegramMessage
             }
-            platform_class = platform_mapping.get(platform.lower())
+            platform_class = platform_class_mapping.get(platform.lower())
             if not platform_class:
                 return {'error': 'Unsupported platform'}, 400
             
@@ -1312,7 +1249,7 @@ class AlertsResource(Resource):
             data = request.get_json()
 
             new_alert = Alert(
-                scammer_unique_id=data['scammer_unique_id'],  # Use scammer_unique_id directly
+                scammer_unique_id=data['scammer_unique_id'], 
                 direction=data['direction'],
                 alert_type=data['alert_type'],
                 platform_type=data['platform_type'],
@@ -1320,7 +1257,8 @@ class AlertsResource(Resource):
                 message_text=data['message_text'],
                 read_status=data.get('read_status', False),  
                 timestamp=data.get('timestamp'),  
-                bot_id=data.get('bot_id')  
+                bot_id=data.get('bot_id'),
+                active=data.get('active')  
             )
 
             db.session.add(new_alert)
@@ -1332,9 +1270,10 @@ class AlertsResource(Resource):
 
     def get(self):
         try:
-            alerts = Alert.query.order_by(Alert.timestamp.desc()).all()
+            alerts = Alert.query.filter_by(active=True).order_by(Alert.timestamp.desc()).all()
             serialized_alerts = [alert.serialize() for alert in alerts]
-            return serialized_alerts, 200
+            unread_count = Alert.query.filter_by(read_status=False, active=True).count()
+            return {'alerts': serialized_alerts, 'unread_count': unread_count}, 200
         except Exception as e:
             return {'error': str(e)}, 500
 
@@ -1409,19 +1348,11 @@ class GetAlertsSpecific(Resource):
             bot_id = request.args.get('bot_id')
             scammer_unique_id = request.args.get('scammer_unique_id')
 
-            platform_mapping = {
-                'facebook': 'Facebook',
-                'whatsapp': 'WhatsApp',
-                'telegram': 'Telegram',
-
-            }
             platform_name = platform_mapping.get(platform.lower())
             if not platform_name:
                 return {'error': 'Invalid platform'}, 400
             try:
-                ### CHANGE THE PLATFORM TYPE NAMING: ###
-                ### IN DB ITS Whatsapp. Everything else is WhatsApp? ###
-                alerts = Alert.query.filter(Alert.bot_id == bot_id, Alert.platform_type == "Whatsapp", Alert.scammer_unique_id == scammer_unique_id)
+                alerts = Alert.query.filter(Alert.bot_id == bot_id, Alert.platform_type == platform_name, Alert.scammer_unique_id == scammer_unique_id)
                 unread_count = alerts.filter_by(read_status=False).count()
                 serialized_alerts = [alert.serialize() for alert in alerts]
 
@@ -1429,6 +1360,36 @@ class GetAlertsSpecific(Resource):
             except Exception as e:
                 print(e)
                 return {'alerts': [], 'unread_count': 0}, 200
+        except Exception as e:
+            return {'error': str(e)}, 500
+
+@ns_alerts.route('/api/alerts/<int:alert_id>/delete')
+class DeleteAlert(Resource):
+    def put(self, alert_id):
+        try:
+            alert = Alert.query.get(alert_id)
+            if not alert:
+                return {'message': 'Alert not found'}, 404
+
+            alert.active = False
+            db.session.commit()
+
+            return {'message': 'Alert deleted'}, 200
+        except Exception as e:
+            return {'error': str(e)}, 500
+        
+@ns_alerts.route('/api/alerts/<int:alert_id>/restore')
+class RestoreAlert(Resource):
+    def put(self, alert_id):
+        try:
+            alert = Alert.query.get(alert_id)
+            if not alert:
+                return {'message': 'Alert not found'}, 404
+
+            alert.active = True
+            db.session.commit()
+
+            return {'message': 'Alert restored'}, 200
         except Exception as e:
             return {'error': str(e)}, 500
 

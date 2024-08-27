@@ -9,15 +9,19 @@ import {
   Divider,
   ListItemIcon,
   Tooltip,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import AlertOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
+import CircleIcon from "@mui/icons-material/FiberManualRecord";
 import {
   getAlerts,
   markAlertAsRead,
   markAllAlertsAsRead,
   markAlertAsUnread,
+  deleteAlert,
+  restoreAlert,
 } from "../../api"; 
-import CircleIcon from "@mui/icons-material/FiberManualRecord";
 import "./AlertsMenu.css";
 
 const formatTimestamp = (timestamp) => {
@@ -28,9 +32,11 @@ const formatTimestamp = (timestamp) => {
 const AlertsMenu = () => {
   const [alerts, setAlerts] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [deletedAlerts, setDeletedAlerts] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
   const [selectedAlert, setSelectedAlert] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     const fetchAlerts = async () => {
@@ -38,8 +44,12 @@ const AlertsMenu = () => {
         const data = await getAlerts();
         if (data) {
           const { alerts = [], unread_count = 0 } = data;
-          setAlerts(alerts);
-          setUnreadCount(unread_count);
+          const activeAlerts = alerts.filter(alert => alert.active);
+          const inactiveAlerts = alerts.filter(alert => !alert.active);
+
+          setAlerts(activeAlerts);
+          setDeletedAlerts(inactiveAlerts);
+          setUnreadCount(activeAlerts.filter(alert => !alert.read_status).length);
         }
       } catch (error) {
         console.error("Failed to fetch alerts:", error);
@@ -55,6 +65,10 @@ const AlertsMenu = () => {
 
   const handleAlertClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
   };
 
   const handleAlertItemClick = async (alert) => {
@@ -80,11 +94,19 @@ const AlertsMenu = () => {
 
   const handleMarkAllAsRead = async () => {
     try {
-      await markAllAlertsAsRead();
-      setAlerts((alerts) =>
-        alerts.map((alert) => ({ ...alert, read_status: true }))
-      );
-      setUnreadCount(0);
+      if (activeTab === 2) {
+        const updatedDeletedAlerts = deletedAlerts.map((alert) => ({
+          ...alert,
+          read_status: true,
+        }));
+        setDeletedAlerts(updatedDeletedAlerts);
+      } else {
+        await markAllAlertsAsRead();
+        setAlerts((alerts) =>
+          alerts.map((alert) => ({ ...alert, read_status: true }))
+        );
+        setUnreadCount(0);
+      }
     } catch (error) {
       console.error("Failed to mark all alerts as read:", error);
     }
@@ -108,11 +130,14 @@ const AlertsMenu = () => {
     if (selectedAlert) {
       try {
         await markAlertAsUnread(selectedAlert.id);
-        const updatedAlerts = alerts.map((alert) =>
+        const updateFunction = activeTab === 2 ? setDeletedAlerts : setAlerts;
+        const updatedAlerts = (activeTab === 2 ? deletedAlerts : alerts).map((alert) =>
           alert.id === selectedAlert.id ? { ...alert, read_status: false } : alert
         );
-        setAlerts(updatedAlerts);
-        setUnreadCount(updatedAlerts.filter((a) => !a.read_status).length);
+        updateFunction(updatedAlerts);
+        if (activeTab !== 2) {
+          setUnreadCount(updatedAlerts.filter((a) => !a.read_status).length);
+        }
       } catch (error) {
         console.error("Failed to mark alert as unread:", error);
       }
@@ -124,16 +149,59 @@ const AlertsMenu = () => {
     if (selectedAlert) {
       try {
         await markAlertAsRead(selectedAlert.id);
-        const updatedAlerts = alerts.map((alert) =>
+        const updateFunction = activeTab === 2 ? setDeletedAlerts : setAlerts;
+        const updatedAlerts = (activeTab === 2 ? deletedAlerts : alerts).map((alert) =>
           alert.id === selectedAlert.id ? { ...alert, read_status: true } : alert
         );
-        setAlerts(updatedAlerts);
-        setUnreadCount(updatedAlerts.filter((a) => !a.read_status).length);
+        updateFunction(updatedAlerts);
+        if (activeTab !== 2) {
+          setUnreadCount(updatedAlerts.filter((a) => !a.read_status).length);
+        }
       } catch (error) {
         console.error("Failed to mark alert as read:", error);
       }
     }
     setContextMenu(null);
+  };
+
+  const handleDeleteAlert = async () => {
+    if (selectedAlert) {
+      try {
+        await deleteAlert(selectedAlert.id);
+        setAlerts(alerts.filter((alert) => alert.id !== selectedAlert.id));
+        setDeletedAlerts([...deletedAlerts, { ...selectedAlert, active: false }]);
+
+        if (!selectedAlert.read_status) {
+          setUnreadCount((prevCount) => prevCount - 1);
+        }
+      } catch (error) {
+        console.error("Failed to delete alert:", error);
+      }
+    }
+    setContextMenu(null);
+  };
+
+  const handleRestoreAlert = async () => {
+    if (selectedAlert) {
+      try {
+        await restoreAlert(selectedAlert.id);
+        setDeletedAlerts(deletedAlerts.filter(alert => alert.id !== selectedAlert.id));
+        setAlerts([...alerts, { ...selectedAlert, active: true }]);
+      } catch (error) {
+        console.error("Failed to restore alert:", error);
+      }
+    }
+    setContextMenu(null);
+  };
+
+  const getFilteredAlerts = () => {
+    if (activeTab === 0) {
+      return alerts.filter((alert) => !alert.read_status);
+    } else if (activeTab === 2) {
+      return deletedAlerts;
+    } else {
+      return alerts;
+    }
   };
 
   return (
@@ -153,18 +221,42 @@ const AlertsMenu = () => {
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleAlertClose}>
         <Box p={2} minWidth="300px">
           <Typography variant="h6">Alerts</Typography>
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            variant="fullWidth"
+            TabIndicatorProps={{
+              style: {
+                backgroundColor: "white", 
+              },
+            }}
+            sx={{
+              ".MuiTab-root": {
+                minWidth: "unset", 
+                flex: 1, 
+                color: "white",
+                "&.Mui-selected": {
+                  color: "white",
+                },
+              },
+            }}
+          >
+            <Tab label="Unread" />
+            <Tab label="All" />
+            <Tab label="Deleted" />
+          </Tabs>
           <Divider />
           <Box sx={{ maxHeight: "300px", overflowY: "auto" }}>
-            {alerts.length === 0 ? (
+            {getFilteredAlerts().length === 0 ? (
               <Typography variant="body2" sx={{ mt: 2 }}>
                 No alerts.
               </Typography>
             ) : (
-              alerts.map((alert) => (
+              getFilteredAlerts().map((alert) => (
                 <Tooltip 
                   key={alert.id}
-                  title={`Alert type: ${alert.alert_type}`}  // This is the text that appears when hovering
-                  arrow  // This adds a small arrow to the tooltip pointing to the alert
+                  title={`Alert type: ${alert.alert_type}`}  
+                  arrow  
                 >
                   <MenuItem
                     onClick={() => handleAlertItemClick(alert)}
@@ -191,8 +283,8 @@ const AlertsMenu = () => {
               ))           
             )}
           </Box>
-          {alerts.length > 0 && (
-            <Box mt={2} sx={{ position: "sticky", bottom: 0}}>
+          {(activeTab === 2 ? deletedAlerts.length > 0 : alerts.length > 0) && (
+            <Box mt={2} sx={{ position: "sticky", bottom: 0 }}>
               <Divider />
               <MenuItem onClick={handleMarkAllAsRead}>
                 <Typography variant="body2">Mark all as read</Typography>
@@ -212,11 +304,16 @@ const AlertsMenu = () => {
             : undefined
         }
       >
-        {selectedAlert?.read_status && (
+        {selectedAlert?.read_status ? (
           <MenuItem onClick={handleMarkAsUnread}>Mark as unread</MenuItem>
-        )}
-        {!selectedAlert?.read_status && (
+        ) : (
           <MenuItem onClick={handleMarkAsReadFromContext}>Mark as read</MenuItem>
+        )}
+        {activeTab !== 2 && (
+          <MenuItem onClick={handleDeleteAlert}>Delete alert</MenuItem>
+        )}
+        {activeTab === 2 && (
+          <MenuItem onClick={handleRestoreAlert}>Restore alert</MenuItem>
         )}
       </Menu>
     </>

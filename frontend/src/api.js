@@ -109,6 +109,55 @@ export const getBotConversationScreenshots = async (
   }
 };
 
+export const getAlertsSpecific = async (platform, botId, scammerUniqueId) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/alerts/get_specific?platform=${platform}&bot_id=${botId}&scammer_unique_id=${scammerUniqueId}`
+    );
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error fetching data: ${error.message}`);
+  }
+};
+
+export const getAlerts = async () => {
+  try {
+    const response = await fetch(`${API_URL}/alerts/get`);
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error fetching alerts: ${error.message}`);
+  }
+};
+
+export const getConversationPauseStatus = async (
+  platform,
+  botId,
+  scammerUniqueId
+) => {
+  try {
+    const response = await fetch(`${API_URL}/conversations/get_conversation_pause_status`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ platform, bot_id: botId, scammer_unique_id: scammerUniqueId }),
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error fetching conversation pause status: ${error.message}`);
+  }
+};
+
+
 // POST APIs
 export const createBot = async (botData) => {
   try {
@@ -199,25 +248,31 @@ export const sendProactiveMessage = async (
   }
 };
 
-export const getAlertsSpecific = async (
+export const toggleConversationPause = async (
   platform,
   botId,
   scammerUniqueId
 ) => {
   try {
-
-    const response = await fetch(
-      `${API_URL}/alerts/get_specific?platform=${platform}&bot_id=${botId}&scammer_unique_id=${scammerUniqueId}`
-    );
+    const response = await fetch(`${API_URL}/conversations/toggle_pause`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        platform: platform,
+        bot_id: botId,
+        scammer_unique_id: scammerUniqueId,
+      }),
+    });
     if (!response.ok) {
       throw new Error("Network response was not ok");
     }
     return await response.json();
   } catch (error) {
-    throw new Error(`Error fetching data: ${error.message}`);
+    throw new Error(`Error pausing/resuming conversation: ${error.message}`);
   }
 };
-
 
 // PUT APIs
 export const editBot = async (botId, updatedData) => {
@@ -257,6 +312,24 @@ export const deactivateBot = async (botId) => {
   }
 };
 
+export const activateBot = async (botId) => {
+  try {
+    const response = await fetch(`${API_URL}/bots/${botId}/activate`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ active: true }),
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error activating bot: ${error.message}`);
+  }
+};
+
 export const markAlertAsRead = async (alertId) => {
   try {
     const response = await fetch(`${API_URL}/alerts/${alertId}/mark_read`, {
@@ -285,18 +358,6 @@ export const markAllAlertsAsRead = async () => {
   }
 };
 
-export const getAlerts = async () => {
-  try {
-    const response = await fetch(`${API_URL}/alerts/get`);
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-    return await response.json(); 
-  } catch (error) {
-    throw new Error(`Error fetching alerts: ${error.message}`);
-  }
-};
-
 export const markAlertAsUnread = async (alertId) => {
   try {
     const response = await fetch(`${API_URL}/alerts/${alertId}/mark_unread`, {
@@ -314,21 +375,20 @@ export const markAlertAsUnread = async (alertId) => {
   }
 };
 
-export const activateBot = async (botId) => {
+export const restoreAlert = async (alertId) => {
   try {
-    const response = await fetch(`${API_URL}/bots/${botId}/activate`, {
+    const response = await fetch(`${API_URL}/alerts/${alertId}/restore`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ active: true }),
     });
     if (!response.ok) {
-      throw new Error("Network response was not ok");
+      throw new Error("Failed to restore alert");
     }
     return await response.json();
   } catch (error) {
-    throw new Error(`Error activating bot: ${error.message}`);
+    throw new Error(`Error restoring alert: ${error.message}`);
   }
 };
 
@@ -371,49 +431,6 @@ export const toggleBotPause = async (botId) => {
   }
 };
 
-export const toggleConversationPause = async (  
-  platform,
-  botId,
-  scammerUniqueId) => {
-  try {
-    
-    const response = await fetch(`${API_URL}/conversations/toggle_pause`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ 'platform': platform, 'bot_id': botId, 'scammer_unique_id': scammerUniqueId })
-    });
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-    return await response.json();
-  } catch (error) {
-    throw new Error(`Error pausing/resuming conversation: ${error.message}`);
-  }
-};
-
-export const getConversationPauseStatus = async (  
-  platform,
-  botId,
-  scammerUniqueId) => {
-  try {
-    console.log("pausestatus?",platform, botId, scammerUniqueId)
-    const response = await fetch(`${API_URL}/conversations/get_conversation_pause_status`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ 'platform': platform, 'bot_id': botId, 'scammer_unique_id': scammerUniqueId })
-    });
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-    return await response.json();
-  } catch (error) {
-    throw new Error(`Error pausing/resuming conversation: ${error.message}`);
-  }
-};
 
 // DELETE APIs
 export const deleteBot = async (botId) => {
@@ -429,3 +446,21 @@ export const deleteBot = async (botId) => {
     throw new Error(`Error deleting bot: ${error.message}`);
   }
 };
+
+export const deleteAlert = async (alertId) => {
+  try {
+    const response = await fetch(`${API_URL}/alerts/${alertId}/delete`, {
+      method: "PUT", 
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      throw new Error("Failed to delete alert");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error deleting alert: ${error.message}`);
+  }
+};
+

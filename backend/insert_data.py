@@ -68,37 +68,37 @@ with app.app_context():
 
     # Insert conversations
     conversations_data = [
-        (90000001, 'Facebook', 1), (90000001, 'Facebook', 2),
-        (90000001, 'WhatsApp', 3), (90000001, 'WhatsApp', 4),
-        (90000002, 'Telegram', 5), (90000002, 'Telegram', 6),
+        (90000001, 'Facebook', 1, 0), (90000001, 'Facebook', 2, 0),
+        (90000001, 'WhatsApp', 3, 0), (90000001, 'WhatsApp', 4, 0),
+        (90000002, 'Telegram', 5, 0), (90000002, 'Telegram', 6, 0),
     ]
 
-    for bot_id, platform, scammer_id in conversations_data:
+    for bot_id, platform, scammer_id, pause in conversations_data:
         conversation = Conversation(bot_id=bot_id, platform=platform, scammer_id=scammer_id)
         db.session.add(conversation)
     db.session.commit()
 
     whatsapp_messages_data = [
-        (3, 'incoming', '1', 'Hello! can you help me with my order?', datetime(2024, 5, 15, 14, 30), None, None, None),
-        (3, 'outgoing', '1', 'Sure, I\'d be happy to assist. Could you please provide your order number?', datetime(2024, 5, 15, 14, 31), None, None, "sent"),
-        (3, 'incoming', '2', 'It\'s 12345.', datetime(2024, 5, 15, 14, 32), None, None, "deleted"),
-        (3, 'outgoing', '2', 'Thank you. I\'ll check the status for you now.', datetime(2024, 5, 15, 14, 33), None, None, "sent"),
-        (3, 'incoming', '3', None, datetime(2024, 5, 15, 14, 34, 10), 'test/WhatsApp/90000001/90000012/cat.jpg', 'image/jpeg', None),
-        (3, 'incoming', '4', None, datetime(2024, 5, 15, 14, 34, 20), 'test/WhatsApp/90000001/90000012/cat.mp4', 'video/mp4', None),
-        (3, 'incoming', '5', None, datetime(2024, 5, 15, 14, 34, 30), 'test/WhatsApp/90000001/90000012/cat.mp3', 'audio/mp3', None),
-        (3, 'incoming', '6', None, datetime(2024, 5, 15, 14, 34, 40), 'test/WhatsApp/90000001/90000012/cat.pdf', 'application/pdf', None),
-        (3, 'incoming', '7', None, datetime(2024, 5, 15, 14, 34, 50), 'test/WhatsApp/90000001/90000012/cat.txt', 'text/plain', None),
-        (3, 'incoming', '8', None, datetime(2024, 5, 15, 14, 35, 10), 'test/WhatsApp/90000001/90000012/cat.py', 'text/x-python', None),
-        (3, 'outgoing', '3', 'Why did you send me random cat stuff??', datetime(2024, 5, 15, 14, 37), None, None, "sent"),
-        (3, 'outgoing', '4', 'Hello? Are you there?', datetime(2024, 5, 15, 14, 37, 30), None, None, "sent"),
-        (3, 'incoming', '9', 'OMG. I am so sorry, that was an accident', datetime(2024, 5, 15, 14, 38), None, None, "deleted"),
-        (3, 'incoming', '10','wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww, dfasdfsadfsadfsafadfafdafdafdafdad', datetime(2024, 5, 15, 14, 40), None, None, None),
-        (4, 'outgoing', '5', 'Hey Lim, do you know the store hours for today?', datetime(2024, 5, 15, 15, 30), None, None, "sent"),
-        (4, 'incoming', '10', 'Yes, the store is open from 9 AM to 8 PM today.', datetime(2024, 5, 15, 15, 31), None, None, None),
+        (3, 'incoming', '1', 'Hello! can you help me with my order?', datetime(2024, 5, 15, 14, 30), None, None, None, None),
+        (3, 'outgoing', '1', 'Sure, I\'d be happy to assist. Could you please provide your order number?', datetime(2024, 5, 15, 14, 31), None, None, "sent", None),
+        (3, 'incoming', '2', 'It\'s 12345.', datetime(2024, 5, 15, 14, 32), None, None, "deleted", datetime(2024, 5, 15, 14, 33)),
+        (3, 'outgoing', '2', 'Thank you. I\'ll check the status for you now.', datetime(2024, 5, 15, 14, 33), None, None, "sent", None),
+        (3, 'incoming', '3', None, datetime(2024, 5, 15, 14, 34, 10), 'test/WhatsApp/90000001/90000012/cat.jpg', 'image/jpeg', None, None),
+        (3, 'incoming', '4', None, datetime(2024, 5, 15, 14, 34, 20), 'test/WhatsApp/90000001/90000012/cat.mp4', 'video/mp4', None, None),
+        (3, 'incoming', '5', None, datetime(2024, 5, 15, 14, 34, 30), 'test/WhatsApp/90000001/90000012/cat.mp3', 'audio/mp3', None, None),
+        (3, 'incoming', '6', None, datetime(2024, 5, 15, 14, 34, 40), 'test/WhatsApp/90000001/90000012/cat.pdf', 'application/pdf', None, None),
+        (3, 'incoming', '7', None, datetime(2024, 5, 15, 14, 34, 50), 'test/WhatsApp/90000001/90000012/cat.txt', 'text/plain', None, None),
+        (3, 'incoming', '8', None, datetime(2024, 5, 15, 14, 35, 10), 'test/WhatsApp/90000001/90000012/cat.py', 'text/x-python', None, None),
+        (3, 'outgoing', '3', 'Why did you send me random cat stuff??', datetime(2024, 5, 15, 14, 37), None, None, "sent", None),
+        (3, 'outgoing', '4', 'Hello? Are you there?', datetime(2024, 5, 15, 14, 37, 30), None, None, "sent", None),
+        (3, 'incoming', '9', 'OMG. I am so sorry, that was an accident', datetime(2024, 5, 15, 14, 38), None, None, "deleted", datetime(2024, 5, 15, 14, 33)),
+        (3, 'incoming', '10','wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww, dfasdfsadfsadfsafadfafdafdafdafdad', datetime(2024, 5, 15, 14, 40), None, None, None, None),
+        (4, 'outgoing', '5', 'Hey Lim, do you know the store hours for today?', datetime(2024, 5, 15, 15, 30), None, None, "sent", None),
+        (4, 'incoming', '10', 'Yes, the store is open from 9 AM to 8 PM today.', datetime(2024, 5, 15, 15, 31), None, None, None, None),
     ]
 
     # Insert messages into the database
-    for conversation_id, direction, message_id, message_text, message_timestamp, file_path, file_type, response_status in whatsapp_messages_data:
+    for conversation_id, direction, message_id, message_text, message_timestamp, file_path, file_type, response_status, deleted_timestamp in whatsapp_messages_data:
         whatsapp_message = WhatsappMessage(
             conversation_id=conversation_id,
             direction=direction,
@@ -107,7 +107,8 @@ with app.app_context():
             message_timestamp=message_timestamp,
             file_path=file_path,
             file_type=file_type,
-            response_status=response_status
+            response_status=response_status,
+            deleted_timestamp=deleted_timestamp
         )
         db.session.add(whatsapp_message)
     
@@ -127,27 +128,15 @@ with app.app_context():
 
     # Insert Alerts
     alerts_data = [
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '1', "Hello! can you help me with my order?", False, datetime(2024, 5, 15, 14, 34, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'Whatsapp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 40), '90000001'),
-    (None, None, 'manual_intervention_required', 'Whatsapp', None, None, None, datetime(2024, 5, 15, 14, 32, 40), '90000001')  
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '1', "Hello! can you help me with my order?", False, datetime(2024, 5, 15, 14, 34, 40), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "It's 12345.", False, datetime(2024, 5, 15, 14, 35, 11), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test1", False, datetime(2024, 5, 15, 14, 35, 12), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test2", False, datetime(2024, 5, 15, 14, 35, 13), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test3", False, datetime(2024, 5, 15, 14, 35, 14), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test4", False, datetime(2024, 5, 15, 14, 35, 15), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test5", False, datetime(2024, 5, 15, 14, 35, 16), '90000001'),
+    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test6", False, datetime(2024, 5, 15, 14, 35, 17), '90000001'),
+    (None, None, 'manual_intervention_required', 'WhatsApp', None, None, None, datetime(2024, 5, 15, 14, 32, 18), '90000001')  
     ]
 
     for scammer_unique_id, direction, alert_type, platform_type, message_id, message_text, read_status, timestamp, bot_id in alerts_data:
