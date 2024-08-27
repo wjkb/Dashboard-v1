@@ -431,6 +431,22 @@ export const toggleBotPause = async (botId) => {
   }
 };
 
+export const toggleBotPauseSelectively = async (botId) => {
+  try {
+    const response = await fetch(`${API_URL}/bots/${botId}/toggle_pause_selectively`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error pausing/resuming bot: ${error.message}`);
+  }
+};
 
 // DELETE APIs
 export const deleteBot = async (botId) => {

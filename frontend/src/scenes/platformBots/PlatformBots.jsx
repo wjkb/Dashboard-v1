@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Tooltip, Box, useTheme, Button, Collapse } from "@mui/material";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Typography,
+  Tooltip,
+  Box,
+  useTheme,
+  Button,
+  Collapse,
+} from "@mui/material";
 import { tokens } from "../../theme";
 import { DataGrid } from "@mui/x-data-grid";
 import Header from "../../components/Header";
@@ -9,7 +20,7 @@ import { getPlatformBots } from "../../api";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import PauseIcon from "@mui/icons-material/Pause";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import { toggleBotPause } from "../../api";
+import { toggleBotPauseSelectively } from "../../api";
 
 /**
  * Component to manage and display Platform bots.
@@ -17,13 +28,15 @@ import { toggleBotPause } from "../../api";
  * @returns {JSX.Element} The PlatformBots component.
  */
 const PlatformBots = ({ platform }) => {
-  const theme = useTheme();
   const colors = tokens;
   const navigate = useNavigate();
   const [bots, setBots] = useState([]);
   const [hideMainTable, setHideMainTable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [openPauseDialog, setOpenPauseDialog] = useState(false);
+  const [openResumeDialog, setOpenResumeDialog] = useState(false);
+  const [currentBotId, setCurrentBotId] = useState(null);
 
   const toggleMainTableVisibility = () => {
     setHideMainTable((prev) => !prev);
@@ -33,12 +46,9 @@ const PlatformBots = ({ platform }) => {
     const fetchBots = async () => {
       try {
         const botsData = await getPlatformBots(platform);
-        console.log("Bots data:", botsData);
-        // const activeBotsData = botsData.filter((bot) => bot.active);
-        // const deactivatedBotsData = botsData.filter((bot) => !bot.active);
+        // console.log("Bots data:", botsData);
+
         setBots(botsData);
-        // setActiveBots(activeBotsData);
-        // setDeactivatedBots(deactivatedBotsData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -49,21 +59,124 @@ const PlatformBots = ({ platform }) => {
     fetchBots();
   }, [platform]);
 
+  // Define dialog content for pausing
+  const PauseDialog = ({ open, onClose, onConfirm }) => (
+    <Dialog open={open} onClose={onClose}>
+      <DialogTitle sx={{ fontSize: "h3.fontSize" }}>Pause Bot</DialogTitle>
+      <DialogContent>
+        <Typography>Pausing bot. Will not reply to messages.</Typography>
+      </DialogContent>
+      <DialogActions>
+        <Button
+          onClick={onClose}
+          sx={{
+            color: "white",
+            backgroundColor: "#9c27b0",
+            "&:hover": { backgroundColor: "#ab47bc" },
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={onConfirm}
+          sx={{
+            color: "white",
+            backgroundColor: "#9c27b0",
+            "&:hover": { backgroundColor: "#ab47bc" },
+          }}
+        >
+          Confirm
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+
+  // Define dialog content for resuming
+  const ResumeDialog = ({ open, onClose, onConfirm }) => (
+    <Dialog open={open} onClose={onClose}>
+      <DialogTitle sx={{ fontSize: "h3.fontSize" }}>Resume Bot</DialogTitle>
+      <DialogContent>
+        <Typography>
+          Resuming bot. Conversations that were previously paused and
+          conversations with pending incoming messages will be paused.
+        </Typography>
+
+        <Typography>
+          Manually unpause the conversation to generate a response.
+        </Typography>
+      </DialogContent>
+      <DialogActions>
+        <Button
+          onClick={onClose}
+          sx={{
+            color: "white",
+            backgroundColor: "#9c27b0",
+            "&:hover": { backgroundColor: "#ab47bc" },
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={onConfirm}
+          sx={{
+            color: "white",
+            backgroundColor: "#9c27b0",
+            "&:hover": { backgroundColor: "#ab47bc" },
+          }}
+        >
+          Confirm
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+
+  // Pausing/Unpausing
+
   const togglePause = async (botId) => {
     try {
-      await toggleBotPause(botId);
+      await toggleBotPauseSelectively(botId);
 
       const updatedBots = bots.map((bot) =>
-        bot.id === botId
-          ? { ...bot, pause: !bot.pause }
-          : bot
+        bot.id === botId ? { ...bot, pause: !bot.pause } : bot
       );
-      console.log(updatedBots);
+      // console.log(updatedBots);
       setBots(updatedBots);
     } catch (error) {
       console.error("Failed to toggle pause state:", error);
       setError("Failed to update bot state. Please try again.");
     }
+  };
+
+  // Handle open dialog
+  const handleOpenPauseDialog = (id) => {
+    setCurrentBotId(id);
+    setOpenPauseDialog(true);
+  };
+
+  const handleClosePauseDialog = () => {
+    setOpenPauseDialog(false);
+  };
+
+  const handlePauseConfirm = () => {
+    // Call your pause function here with currentBotId
+    togglePause(currentBotId);
+    handleClosePauseDialog();
+  };
+
+  const handleOpenResumeDialog = (id) => {
+    setCurrentBotId(id);
+    setOpenResumeDialog(true);
+  };
+
+  const handleCloseResumeDialog = () => {
+    setOpenResumeDialog(false);
+    setCurrentBotId(null);
+  };
+
+  const handleResumeConfirm = () => {
+    // Call your resume function here with currentBotId
+    togglePause(currentBotId);
+    handleCloseResumeDialog();
   };
 
   const columns = [
@@ -134,7 +247,7 @@ const PlatformBots = ({ platform }) => {
                   variant="contained"
                   color="success"
                   startIcon={<PlayArrowIcon />}
-                  onClick={() => togglePause(params.row.id)}
+                  onClick={() => handleOpenResumeDialog(params.row.id)}
                   sx={{
                     width: "50%",
                     margin: "10px",
@@ -156,7 +269,7 @@ const PlatformBots = ({ platform }) => {
                   variant="contained"
                   color="warning"
                   startIcon={<PauseIcon />}
-                  onClick={() => togglePause(params.row.id)}
+                  onClick={() => handleOpenPauseDialog(params.row.id)}
                   sx={{
                     width: "50%",
                     margin: "10px",
@@ -205,50 +318,64 @@ const PlatformBots = ({ platform }) => {
               // marginBottom: "10px"
             }}
           >
-            {hideMainTable ?  `Show ${platform} bots`: `Hide ${platform} bots`}
+            {hideMainTable ? `Show ${platform} bots` : `Hide ${platform} bots`}
           </Button>
-          {!hideMainTable && 
-          <Box
-            height={"50vh"}
-            marginTop={"10px"}
-            sx={{
-              "& .MuiDataGrid-root": {
-                border: "none",
-              },
-              "& .MuiDataGrid-cell": {
-                borderBottom: "none",
-              },
-              "& .phone-column--cell": {
-                color: colors.greenAccent,
-              },
-              "& .MuiDataGrid-columnHeader": {
-                backgroundColor: "#28231d",
-                borderBottom: "none",
-              },
-              "& .MuiDataGrid-virtualScroller": {
-                backgroundColor: "#0c0908",
-              },
-              "& .MuiDataGrid-footerContainer": {
-                borderTop: "none",
-                backgroundColor: "#28231d",
-              },
-              "& .MuiCheckbox-root": {
-                color: `${colors.greenAccent} !important`,
-              },
-            }}
-          >
-            <DataGrid
-              rows={bots}
-              columns={columns}
-              sortModel={[
-                {
-                  field: "active",
-                  sort: "desc", // 'desc' sorts true first, 'asc' sorts false first
+          {!hideMainTable && (
+            <Box
+              height={"50vh"}
+              marginTop={"10px"}
+              sx={{
+                "& .MuiDataGrid-root": {
+                  border: "none",
                 },
-              ]}
-            />
-          </Box>}
+                "& .MuiDataGrid-cell": {
+                  borderBottom: "none",
+                },
+                "& .phone-column--cell": {
+                  color: colors.greenAccent,
+                },
+                "& .MuiDataGrid-columnHeader": {
+                  backgroundColor: "#28231d",
+                  borderBottom: "none",
+                },
+                "& .MuiDataGrid-virtualScroller": {
+                  backgroundColor: "#0c0908",
+                },
+                "& .MuiDataGrid-footerContainer": {
+                  borderTop: "none",
+                  backgroundColor: "#28231d",
+                },
+                "& .MuiCheckbox-root": {
+                  color: `${colors.greenAccent} !important`,
+                },
+              }}
+            >
+              <DataGrid
+                rows={bots}
+                columns={columns}
+                sortModel={[
+                  {
+                    field: "active",
+                    sort: "desc", // 'desc' sorts true first, 'asc' sorts false first
+                  },
+                ]}
+              />
+            </Box>
+          )}
         </div>
+        {/* Pause Dialog */}
+        <PauseDialog
+          open={openPauseDialog}
+          onClose={handleClosePauseDialog}
+          onConfirm={handlePauseConfirm}
+        />
+
+        {/* Resume Dialog */}
+        <ResumeDialog
+          open={openResumeDialog}
+          onClose={handleCloseResumeDialog}
+          onConfirm={handleResumeConfirm}
+        />
         <Outlet />
       </div>
     </div>

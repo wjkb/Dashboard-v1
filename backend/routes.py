@@ -420,6 +420,58 @@ class TogglePauseBot(Resource):
         except Exception as e:
             return {"error": "Internal Server Error"}, 500
             
+@ns_bots.route('/api/bots/<bot_id>/toggle_pause_selectively')
+class TogglePauseBotSelectively(Resource):
+    @ns_bots.doc('toggle_pause_bot_selectively')
+    def put(self, bot_id):
+        try:
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {"error": "Bot not found"}, 404
+            
+            bot.pause = not bot.pause
+            db.session.commit()
+
+            # If bot is resumed, get all conversations related to the bot
+            if not bot.pause:
+                platform_message_classes = {
+                    'Facebook': FacebookMessage,
+                    'WhatsApp': WhatsappMessage,
+                    'Telegram': TelegramMessage
+                }
+                conversations = Conversation.query.filter_by(bot_id=bot_id).all()
+                print(443)
+                # Look through all conversations, pause the conversations where the last message is incoming.
+                for conversation in conversations:
+                    
+                    # Get platform, bot_id and scammer_unique_id from conversation
+                    bot_id = conversation.bot_id
+                    scammer_unique_id = Scammer.query.get(conversation.scammer_id).unique_id
+                    platform = conversation.platform
+
+                    # Check if there are any incoming messages
+                    pause_conversation = False
+
+                    platform_messages = (
+                        db.session.query(platform_message_classes[platform])
+                        .filter_by(conversation_id=conversation.id)
+                        .order_by(platform_message_classes[platform].message_timestamp.desc())
+                        .first()
+                    )
+                    
+                    # Pause conversation for where last message is incoming
+                    if platform_messages and platform_messages.direction == "incoming":
+                        pause_conversation = True
+
+                    # Don't unpause conversation which is originally paused
+                    if conversation.pause == False:
+                        conversation.pause = pause_conversation
+                    # print(f"Pausing/Not pausing for {conversation.id}: {pause_conversation}")
+                    db.session.commit()
+
+            return {"message": "Bot pause status updated successfully to " + str(bot.pause)}, 200
+        except Exception as e:
+            return {"error": "Internal Server Error"}, 500
 
 @ns_conversations.route('/api/conversations/toggle_pause')
 class TogglePauseConversation(Resource):
