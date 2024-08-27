@@ -157,11 +157,11 @@ with app.app_context():
     db.session.commit()
 
 
-# Insert Edit data
+    # Insert Edit data
     edits_data = [
         (
             '90000012', 
-            3, 
+            'Hello! can you help me with my order?',  
             'incoming',  
             'WhatsApp',  
             '1',  
@@ -171,7 +171,7 @@ with app.app_context():
         ),
         (
             '90000012',  
-            3,  
+            'Hello! can you help me with my order?',  
             'incoming',  
             'WhatsApp',  
             '1',  
@@ -179,12 +179,22 @@ with app.app_context():
             '90000001',  
             datetime(2024, 5, 15, 14, 35, 24)  
         ),
+        (
+            '90000012',  
+            'Hello! can you help me with my order?',  
+            'incoming',  
+            'WhatsApp',  
+            '1',  
+            'Hello4 can you help me with my order?',  
+            '90000001',  
+            datetime(2024, 5, 15, 14, 35, 39)  
+        ),
     ]
 
-    for scammer_unique_id, conversation_id, direction, platform_type, message_id, edited_message_text, bot_id, edited_timestamp in edits_data:
+    for scammer_unique_id, message_text, direction, platform_type, message_id, edited_message_text, bot_id, edited_timestamp in edits_data:
         edit_entry = Edit(
             scammer_unique_id=scammer_unique_id,
-            conversation_id=conversation_id,
+            message_text=message_text,  # Updated field name
             direction=direction,
             platform_type=platform_type,
             message_id=message_id,
@@ -196,6 +206,7 @@ with app.app_context():
 
     # Commit all changes to the database
     db.session.commit()
+
 
 
 
