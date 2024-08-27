@@ -7,7 +7,9 @@ import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import { useNavigate, Outlet } from "react-router-dom";
 import { getPlatformBots } from "../../api";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
-import PlatformBotConversations from "../conversations/PlatformBotConversations";
+import PauseIcon from "@mui/icons-material/Pause";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import { toggleBotPause } from "../../api";
 
 /**
  * Component to manage and display Platform bots.
@@ -46,6 +48,23 @@ const PlatformBots = ({ platform }) => {
 
     fetchBots();
   }, [platform]);
+
+  const togglePause = async (botId) => {
+    try {
+      await toggleBotPause(botId);
+
+      const updatedBots = bots.map((bot) =>
+        bot.id === botId
+          ? { ...bot, pause: !bot.pause }
+          : bot
+      );
+      console.log(updatedBots);
+      setBots(updatedBots);
+    } catch (error) {
+      console.error("Failed to toggle pause state:", error);
+      setError("Failed to update bot state. Please try again.");
+    }
+  };
 
   const columns = [
     {
@@ -101,6 +120,63 @@ const PlatformBots = ({ platform }) => {
         </Box>
       ),
     },
+    {
+      field: "pause",
+      headerName: "Pause/Resume Bot",
+      flex: 1,
+      renderCell: (params) => {
+        const isPaused = params.row.pause; // Adjust based on your bot state
+        return (
+          <Box>
+            {isPaused ? (
+              <Tooltip title="Resume Bot" arrow>
+                <Button
+                  variant="contained"
+                  color="success"
+                  startIcon={<PlayArrowIcon />}
+                  onClick={() => togglePause(params.row.id)}
+                  sx={{
+                    width: "50%",
+                    margin: "10px",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    padding: "5px", // Adjust padding to fit text
+                    display: "flex",
+                    justifyContent: "center", // Center text
+                    alignItems: "center", // Center text
+                  }}
+                >
+                  Resume Bot
+                </Button>
+              </Tooltip>
+            ) : (
+              <Tooltip title="Pause Bot" arrow>
+                <Button
+                  variant="contained"
+                  color="warning"
+                  startIcon={<PauseIcon />}
+                  onClick={() => togglePause(params.row.id)}
+                  sx={{
+                    width: "50%",
+                    margin: "10px",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    padding: "5px", // Adjust padding to fit text
+                    display: "flex",
+                    justifyContent: "center", // Center text
+                    alignItems: "center", // Center text
+                  }}
+                >
+                  Pause Bot
+                </Button>
+              </Tooltip>
+            )}
+          </Box>
+        );
+      },
+    },
   ];
 
   if (loading) {
@@ -119,11 +195,13 @@ const PlatformBots = ({ platform }) => {
             onClick={toggleMainTableVisibility}
             style={{
               display: "flex",
+              width: "100%",
               fontSize: "0.8rem", // Equivalent to h1 size
               backgroundColor: "#808080", // Grey background
               color: "#ffffff", // White font color
               borderRadius: "8px", // Slightly rounded edges
               padding: "5px 10px", // Larger padding for a big button
+              border: "3px solid #ffffff", // Thick white border
               // marginBottom: "10px"
             }}
           >
