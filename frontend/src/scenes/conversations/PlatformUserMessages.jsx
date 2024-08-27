@@ -373,7 +373,7 @@ const PlatformUserMessages = ({ platform }) => {
     ) : null;
 
   return (
-    <div style={{ height: "80%" , paddingTop:"20px"}}>
+    <div style={{ height: "80%", paddingTop: "20px" }}>
       <Header
         title={`Messages with ${scammerUniqueId}`}
         subtitle="Conversation details"
@@ -574,11 +574,38 @@ const PlatformUserMessages = ({ platform }) => {
       </Dialog>
 
       <Tabs value={tabValue} onChange={handleChangeTab}>
-        <Tab label="Messages" />
-        <Tab label="Files" />
+        <Tab
+          label="Messages"
+          sx={{
+            "&.Mui-selected": {
+              backgroundColor: "#D3D3D3", // Light grey background
+              fontWeight: "bold", // Bold text
+              borderRadius: "2px", // Slightly rounded corners
+            },
+          }}
+        />
+        <Tab
+          label="Files"
+          sx={{
+            "&.Mui-selected": {
+              backgroundColor: "#D3D3D3", // Light grey background
+              fontWeight: "bold", // Bold text
+              borderRadius: "2px", // Slightly rounded corners
+            },
+          }}
+        />
         {/* Disabled Extracted Information Tab below for now, uncomment below to re-enable */}
         {/* <Tab label="Extracted Information" /> */}
-        <Tab label="Screenshots" />
+        <Tab
+          label="Screenshots"
+          sx={{
+            "&.Mui-selected": {
+              backgroundColor: "#D3D3D3", // Light grey background
+              fontWeight: "bold", // Bold text
+              borderRadius: "2px", // Slightly rounded corners
+            },
+          }}
+        />
       </Tabs>
       {shownTab}
     </div>
