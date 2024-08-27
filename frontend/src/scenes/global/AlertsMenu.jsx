@@ -269,8 +269,10 @@ const AlertsMenu = () => {
                     )}
                     <Box>
                       <Typography variant="body2">
-                        {alert.alert_type === 'manual_intervention_required' 
-                          ? `Manual intervention required for bot ${alert.bot_id} for ${alert.platform_type}`
+                        {alert.alert_type === 'manual_intervention_required'
+                          ? `Manual intervention required for bot ${alert.bot_id} on ${alert.platform_type}`
+                          : alert.alert_type === 'edited_message'
+                          ? `Message '${alert.message_text}' was edited by ${alert.scammer_unique_id}`
                           : `Message '${alert.message_text}' was deleted by ${alert.scammer_unique_id}`
                         }
                       </Typography>

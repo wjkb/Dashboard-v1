@@ -137,6 +137,7 @@ with app.app_context():
     ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test4", False, datetime(2024, 5, 15, 14, 35, 15), '90000001'),
     ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test5", False, datetime(2024, 5, 15, 14, 35, 16), '90000001'),
     ('90000013', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test6", False, datetime(2024, 5, 15, 14, 35, 17), '90000001'),
+    ('90000012', 'incoming', 'edited_message', 'WhatsApp', '1', "Hello! can you help me with my order?", False, datetime(2024, 5, 15, 14, 35, 17), '90000001'),
     (None, None, 'manual_intervention_required', 'WhatsApp', None, None, None, datetime(2024, 5, 15, 14, 32, 18), '90000001')  
     ]
 
