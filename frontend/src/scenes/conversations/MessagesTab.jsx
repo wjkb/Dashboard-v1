@@ -50,7 +50,7 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
         },
         body: JSON.stringify({
           platform_type: msg.platform_type,
-          message_text: msg.message_text,
+          original_message_text: msg.message_text,
           message_id: msg.message_id,
         }),
       });

@@ -192,10 +192,10 @@ with app.app_context():
         ),
     ]
 
-    for scammer_unique_id, message_text, direction, platform_type, message_id, edited_message_text, bot_id, edited_timestamp in edits_data:
+    for scammer_unique_id, original_message_text, direction, platform_type, message_id, edited_message_text, bot_id, edited_timestamp in edits_data:
         edit_entry = Edit(
             scammer_unique_id=scammer_unique_id,
-            message_text=message_text,  # Updated field name
+            original_message_text=original_message_text,  
             direction=direction,
             platform_type=platform_type,
             message_id=message_id,
@@ -204,8 +204,7 @@ with app.app_context():
             edited_timestamp=edited_timestamp
         )
         db.session.add(edit_entry)
-
-    # Commit all changes to the database
+        
     db.session.commit()
 
 

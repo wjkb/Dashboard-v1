@@ -178,7 +178,7 @@ create_alert_model = ns_alerts.model('CreateAlert', {
 
 create_edit_model = ns_messages.model('CreateEdit', {
     'scammer_unique_id': fields.String(required=True, description='The unique ID of the scammer', example='unique_scammer_123'),
-    'message_text': fields.String(required=True, description='The text of the original message', example='Hello, how are you?'),  # Changed from conversation_id to message_text
+    'original_message_text': fields.String(required=True, description='The text of the original message', example='Hello, how are you?'),  # Changed from conversation_id to message_text
     'direction': fields.String(required=True, description='The direction of the edit', example='outgoing'),
     'platform_type': fields.String(required=True, description='The type of platform', example='WhatsApp'),
     'message_id': fields.String(description='The ID of the associated message', example='msg_123'),
@@ -1407,12 +1407,12 @@ class EditedMessage(Resource):
         try:
             data = request.get_json()
             platform_type = data.get('platform_type')
-            message_text = data.get('message_text')  
+            original_message_text = data.get('original_message_text')  
             message_id = data.get('message_id')
 
             edited_messages = Edit.query.filter_by(
                 platform_type=platform_type,
-                message_text=message_text, 
+                original_message_text=original_message_text,  
                 message_id=message_id
             ).order_by(Edit.edited_timestamp.desc()).all()
 
