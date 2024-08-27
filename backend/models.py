@@ -103,6 +103,8 @@ class FacebookMessage(db.Model):
     deleted_timestamp = db.Column(db.DateTime, nullable=True)
     edited_timestamp = db.Column(db.DateTime, nullable=True)
 
+    platform_type = db.Column(db.String(50), nullable=False, default='Facebook')
+
     def serialize(self):
         return {
             'id': self.id,
@@ -122,7 +124,8 @@ class FacebookMessage(db.Model):
             'response_status': self.response_status,
 
             'deleted_timestamp': self.deleted_timestamp.isoformat() if self.deleted_timestamp else None,
-            'edited_timestamp': self.edited_timestamp.isoformat() if self.edited_timestamp else None
+            'edited_timestamp': self.edited_timestamp.isoformat() if self.edited_timestamp else None,
+            'platform_type': self.platform_type 
         }
 
 
@@ -146,6 +149,8 @@ class WhatsappMessage(db.Model):
     deleted_timestamp = db.Column(db.DateTime, nullable=True)
     edited_timestamp = db.Column(db.DateTime, nullable=True)
 
+    platform_type = db.Column(db.String(50), nullable=False, default='WhatsApp')
+
     def serialize(self):
         return {
             'id': self.id,
@@ -165,7 +170,8 @@ class WhatsappMessage(db.Model):
             'response_status': self.response_status,
 
             'deleted_timestamp': self.deleted_timestamp.isoformat() if self.deleted_timestamp else None,
-            'edited_timestamp': self.edited_timestamp.isoformat() if self.edited_timestamp else None
+            'edited_timestamp': self.edited_timestamp.isoformat() if self.edited_timestamp else None,
+            'platform_type': self.platform_type  
         }
 
 
@@ -189,6 +195,8 @@ class TelegramMessage(db.Model):
     deleted_timestamp = db.Column(db.DateTime, nullable=True)
     edited_timestamp = db.Column(db.DateTime, nullable=True)
 
+    platform_type = db.Column(db.String(50), nullable=False, default='Telegram')
+
     def serialize(self):
         return {
             'id': self.id,
@@ -208,8 +216,10 @@ class TelegramMessage(db.Model):
             'response_status': self.response_status,
 
             'deleted_timestamp': self.deleted_timestamp.isoformat() if self.deleted_timestamp else None,
-            'edited_timestamp': self.edited_timestamp.isoformat() if self.edited_timestamp else None
+            'edited_timestamp': self.edited_timestamp.isoformat() if self.edited_timestamp else None,
+            'platform_type': self.platform_type 
         }
+
     
 class MessageScreenshots(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -272,11 +282,8 @@ class Edit(db.Model):
     direction = db.Column(db.String(50), nullable=True)
     platform_type = db.Column(db.String(50), nullable=True)
     message_id = db.Column(db.String(255), nullable=True)
-    old_message_text = db.Column(db.Text, nullable=True)
     edited_message_text = db.Column(db.Text, nullable=True)
     bot_id = db.Column(db.String(255), nullable=True)
-    read_status = db.Column(db.Boolean, default=False, nullable=True)
-    message_timestamp = db.Column(db.DateTime, nullable=True)
     edited_timestamp = db.Column(db.DateTime, nullable=True)
 
     def serialize(self):
@@ -287,11 +294,8 @@ class Edit(db.Model):
             'direction': self.direction,
             'platform_type': self.platform_type,
             'message_id': self.message_id,
-            'old_message_text': self.old_message_text,
             'edited_message_text': self.edited_message_text,
             'bot_id': self.bot_id,
-            'read_status': self.read_status,
-            'message_timestamp': self.message_timestamp.isoformat() if self.message_timestamp else None,
             'edited_timestamp': self.edited_timestamp.isoformat() if self.edited_timestamp else None,
         }
 

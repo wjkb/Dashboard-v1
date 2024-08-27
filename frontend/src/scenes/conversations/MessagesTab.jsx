@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   useTheme,
@@ -6,6 +6,12 @@ import {
   ListItem,
   Paper,
   Typography,
+  Link,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
 } from "@mui/material";
 import {
   Image as ImageIcon,
@@ -23,39 +29,57 @@ import { tokens } from "../../theme";
 import { HOST_URL } from "../../api";
 
 const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
-  const filteredMessages = messages.filter(
-    (message) =>
-      message.response_status === null ||
-      message.response_status.toLowerCase() === "sending" ||
-      message.response_status.toLowerCase() === "sent" ||
-      message.response_status.toLowerCase() === "failed" ||
-      message.response_status.toLowerCase() === "deleted"
-  );
+  const [selectedMessage, setSelectedMessage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [editedMessages, setEditedMessages] = useState([]);
 
   const theme = useTheme();
   const colors = tokens;
 
-  const messageStyles = {
-    incoming: {
-      backgroundColor: colors.grey[100],
-      color: colors.black,
-      marginRight: "auto",
-    },
-    outgoing: {
-      backgroundColor: colors.greenAccent,
-      color: colors.black,
-      marginLeft: "auto",
-    },
+  const handleViewMore = async (msg) => {
+    setSelectedMessage(msg.message_id);
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(`${HOST_URL}/api/messages/edited_message`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          platform_type: msg.platform_type,
+          conversation_id: msg.conversation_id,
+          message_id: msg.message_id,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch the edited messages.");
+      }
+
+      const data = await response.json();
+      const fetchedEditedMessages = data.edited_messages || [];
+
+      if (Array.isArray(fetchedEditedMessages)) {
+        fetchedEditedMessages.sort(
+          (a, b) => new Date(b.edited_timestamp) - new Date(a.edited_timestamp)
+        );
+        setEditedMessages(fetchedEditedMessages);
+      } else {
+        setEditedMessages([]);
+      }
+
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      setError(err.message);
+    }
   };
 
-  const formatDateTime = (timestamp) => {
-    const date = new Date(timestamp);
-    const formattedDateTime = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-    return formattedDateTime;
-  };
-
-  const renderFile = (filePath, fileType, download = false) => {
-    const fullPath = `${HOST_URL}${filePath}?download=${download}`;
+  const renderFile = (filePath, fileType) => {
+    const fullPath = `${HOST_URL}${filePath}`;
     const fileName = filePath.split("/").pop();
 
     if (fileType.startsWith("image/")) {
@@ -151,7 +175,7 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
   return (
     <Box sx={{ height: "70vh", overflowY: "auto" }}>
       <List>
-        {filteredMessages.map((msg, index) => (
+        {messages.map((msg, index) => (
           <ListItem
             key={index}
             ref={(el) => (messageRefs.current[msg.id] = el)}
@@ -172,7 +196,10 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                 padding: theme.spacing(1),
                 borderRadius: theme.shape.borderRadius,
                 maxWidth: "60%",
-                ...messageStyles[msg.direction],
+                backgroundColor:
+                  msg.direction === "incoming"
+                    ? colors.grey[100]
+                    : colors.greenAccent,
               }}
             >
               {msg.file_path && renderFile(msg.file_path, msg.file_type)}
@@ -180,8 +207,9 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                 <Typography
                   variant="body1"
                   sx={{
-                    wordBreak: "break-word", 
-                    overflowWrap: "break-word", 
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
+                    color: "black", // Ensure all message text is black
                   }}
                 >
                   {msg.message_text}
@@ -196,6 +224,48 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                   This message has been deleted
                 </Typography>
               )}
+              {msg.response_status?.toLowerCase() === "edited" && (
+                <>
+                  <Typography
+                    variant="body2"
+                    color="error"
+                    sx={{ fontStyle: "italic", marginTop: theme.spacing(1) }}
+                  >
+                    This message has been edited. Click{" "}
+                    <Link
+                      component="button"
+                      variant="body2"
+                      onClick={() => handleViewMore(msg)}
+                      sx={{
+                        fontStyle: "italic",
+                        color: "primary.main",
+                        cursor: "pointer",
+                      }}
+                    >
+                      here
+                    </Link>{" "}
+                    to view more
+                  </Typography>
+                  {selectedMessage === msg.message_id && editedMessages.length > 0 && (
+                    <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+                      <Table size="small">
+                        <TableBody>
+                          {editedMessages.map((edit, idx) => (
+                            <TableRow key={idx}>
+                              <TableCell sx={{ color: "white" }}>
+                                Edited Message ({new Date(edit.edited_timestamp).toLocaleString()}):
+                              </TableCell>
+                              <TableCell sx={{ color: "white" }}>
+                                {edit.edited_message_text}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  )}
+                </>
+              )}
               <Box
                 sx={{
                   display: "flex",
@@ -205,7 +275,7 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                 }}
               >
                 <Typography variant="caption" color={colors.grey[500]}>
-                  {formatDateTime(msg.message_timestamp)}
+                  {new Date(msg.message_timestamp).toLocaleString()}
                 </Typography>
                 {msg.direction === "outgoing" && msg.response_status && (
                   <>
@@ -233,6 +303,12 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
           </ListItem>
         ))}
       </List>
+      {loading && <Typography variant="body2">Loading...</Typography>}
+      {error && (
+        <Typography variant="body2" color="error">
+          {error}
+        </Typography>
+      )}
     </Box>
   );
 };

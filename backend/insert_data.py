@@ -1,6 +1,6 @@
 from datetime import datetime
 from backend import create_app
-from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation, Alert
+from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation, Alert, Edit
 app = create_app()
 with app.app_context():
     # Delete existing data
@@ -14,6 +14,7 @@ with app.app_context():
     db.session.query(Scammer).delete()
     db.session.query(Bot).delete()
     db.session.query(Alert).delete()
+    db.session.query(Edit).delete()
     db.session.commit()
 
     # Insert bots
@@ -79,7 +80,7 @@ with app.app_context():
     db.session.commit()
 
     whatsapp_messages_data = [
-        (3, 'incoming', '1', 'Hello! can you help me with my order?', datetime(2024, 5, 15, 14, 30), None, None, None, None),
+        (3, 'incoming', '1', 'Hello! can you help me with my order?', datetime(2024, 5, 15, 14, 30), None, None, "edited", None),
         (3, 'outgoing', '1', 'Sure, I\'d be happy to assist. Could you please provide your order number?', datetime(2024, 5, 15, 14, 31), None, None, "sent", None),
         (3, 'incoming', '2', 'It\'s 12345.', datetime(2024, 5, 15, 14, 32), None, None, "deleted", datetime(2024, 5, 15, 14, 33)),
         (3, 'outgoing', '2', 'Thank you. I\'ll check the status for you now.', datetime(2024, 5, 15, 14, 33), None, None, "sent", None),
@@ -135,7 +136,7 @@ with app.app_context():
     ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test3", False, datetime(2024, 5, 15, 14, 35, 14), '90000001'),
     ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test4", False, datetime(2024, 5, 15, 14, 35, 15), '90000001'),
     ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test5", False, datetime(2024, 5, 15, 14, 35, 16), '90000001'),
-    ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test6", False, datetime(2024, 5, 15, 14, 35, 17), '90000001'),
+    ('90000013', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test6", False, datetime(2024, 5, 15, 14, 35, 17), '90000001'),
     (None, None, 'manual_intervention_required', 'WhatsApp', None, None, None, datetime(2024, 5, 15, 14, 32, 18), '90000001')  
     ]
 
@@ -155,6 +156,46 @@ with app.app_context():
 
     db.session.commit()
 
+
+# Insert Edit data
+    edits_data = [
+        (
+            '90000012', 
+            3, 
+            'incoming',  
+            'WhatsApp',  
+            '1',  
+            'Hello? can you help me with my order?',  
+            '90000001', 
+            datetime(2024, 5, 15, 14, 35, 17) 
+        ),
+        (
+            '90000012',  
+            3,  
+            'incoming',  
+            'WhatsApp',  
+            '1',  
+            'Hello3 can you help me with my order?',  
+            '90000001',  
+            datetime(2024, 5, 15, 14, 35, 24)  
+        ),
+    ]
+
+    for scammer_unique_id, conversation_id, direction, platform_type, message_id, edited_message_text, bot_id, edited_timestamp in edits_data:
+        edit_entry = Edit(
+            scammer_unique_id=scammer_unique_id,
+            conversation_id=conversation_id,
+            direction=direction,
+            platform_type=platform_type,
+            message_id=message_id,
+            edited_message_text=edited_message_text,
+            bot_id=bot_id,
+            edited_timestamp=edited_timestamp
+        )
+        db.session.add(edit_entry)
+
+    # Commit all changes to the database
+    db.session.commit()
 
 
 
