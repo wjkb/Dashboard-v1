@@ -285,6 +285,47 @@ class Edit(db.Model):
     edited_message_text = db.Column(db.Text, nullable=True)
     bot_id = db.Column(db.String(255), nullable=True)
     edited_timestamp = db.Column(db.DateTime, nullable=True)
+    
+    conversation_id = db.Column(db.Integer, nullable=False)
+    previous_timestamp = db.Column(db.DateTime, nullable=True)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if 'conversation_id' not in kwargs or kwargs['conversation_id'] is None:
+            self.conversation_id = self.get_conversation_id()
+
+        if 'previous_timestamp' not in kwargs or kwargs['previous_timestamp'] is None:
+            self.previous_timestamp = self.get_previous_timestamp()
+
+    def get_conversation_id(self):
+        conversation = db.session.query(Conversation).filter_by(
+            bot_id=self.bot_id,
+            platform=self.platform_type
+        ).first()
+        return conversation.id if conversation else None
+
+    def get_previous_timestamp(self):
+        message = None
+        if self.platform_type == 'WhatsApp':
+            message = db.session.query(WhatsappMessage).filter_by(
+                message_id=self.message_id,
+                direction=self.direction,
+                conversation_id=self.conversation_id
+            ).first()
+        elif self.platform_type == 'Facebook':
+            message = db.session.query(FacebookMessage).filter_by(
+                message_id=self.message_id,
+                direction=self.direction,
+                conversation_id=self.conversation_id
+            ).first()
+        elif self.platform_type == 'Telegram':
+            message = db.session.query(TelegramMessage).filter_by(
+                message_id=self.message_id,
+                direction=self.direction,
+                conversation_id=self.conversation_id
+            ).first()
+
+        return message.message_timestamp if message else None
 
     def serialize(self):
         return {
@@ -297,10 +338,9 @@ class Edit(db.Model):
             'edited_message_text': self.edited_message_text,
             'bot_id': self.bot_id,
             'edited_timestamp': self.edited_timestamp.isoformat() if self.edited_timestamp else None,
+            'conversation_id': self.conversation_id,
+            'previous_timestamp': self.previous_timestamp.isoformat() if self.previous_timestamp else None,
         }
-
-
-
 
 
 

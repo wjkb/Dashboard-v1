@@ -50,8 +50,9 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
         },
         body: JSON.stringify({
           platform_type: msg.platform_type,
-          original_message_text: msg.message_text,
+          conversation_id: msg.conversation_id,
           message_id: msg.message_id,
+          direction: msg.direction,
         }),
       });
 
@@ -64,7 +65,8 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
 
       if (Array.isArray(fetchedEditedMessages)) {
         fetchedEditedMessages.sort(
-          (a, b) => new Date(b.edited_timestamp) - new Date(a.edited_timestamp)
+          (a, b) =>
+            new Date(b.previous_timestamp) - new Date(a.previous_timestamp)
         );
         setEditedMessages(fetchedEditedMessages);
       } else {
@@ -175,140 +177,154 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
   return (
     <Box sx={{ height: "70vh", overflowY: "auto" }}>
       <List>
-        {messages.map((msg, index) => (
-          <ListItem
-            key={index}
-            ref={(el) => (messageRefs.current[msg.id] = el)}
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems:
-                msg.direction === "incoming" ? "flex-start" : "flex-end",
-              backgroundColor:
-                highlightedMessage === msg.id ? "yellow" : "inherit",
-              transition: "background-color 0.5s ease",
-              position: "relative",
-            }}
-          >
-            <Paper
-              elevation={1}
+        {messages.map((msg, index) => {
+          const isEdited = msg.response_status?.toLowerCase() === "edited";
+          const mostRecentEdit = isEdited
+            ? editedMessages[0]?.edited_message_text
+            : msg.message_text;
+          const editedAtTimestamp = isEdited
+            ? editedMessages[0]?.previous_timestamp
+            : null;
+
+          return (
+            <ListItem
+              key={index}
+              ref={(el) => (messageRefs.current[msg.id] = el)}
               sx={{
-                padding: theme.spacing(1),
-                borderRadius: theme.shape.borderRadius,
-                maxWidth: "60%",
+                display: "flex",
+                flexDirection: "column",
+                alignItems:
+                  msg.direction === "incoming" ? "flex-start" : "flex-end",
                 backgroundColor:
-                  msg.direction === "incoming"
-                    ? colors.grey[100]
-                    : colors.greenAccent,
+                  highlightedMessage === msg.id ? "yellow" : "inherit",
+                transition: "background-color 0.5s ease",
+                position: "relative",
               }}
             >
-              {msg.file_path && renderFile(msg.file_path, msg.file_type)}
-              {msg.message_text && (
-                <Typography
-                  variant="body1"
-                  sx={{
-                    wordBreak: "break-word",
-                    overflowWrap: "break-word",
-                    color: "black", // Ensure all message text is black
-                  }}
-                >
-                  {msg.message_text}
-                </Typography>
-              )}
-              {msg.response_status?.toLowerCase() === "deleted" && (
-                <Typography
-                  variant="body2"
-                  color="error"
-                  sx={{ fontStyle: "italic", marginTop: theme.spacing(1) }}
-                >
-                  This message has been deleted
-                </Typography>
-              )}
-              {msg.response_status?.toLowerCase() === "edited" && (
-                <>
-                  <Typography
-                    variant="body2"
-                    color="error"
-                    sx={{ fontStyle: "italic", marginTop: theme.spacing(1) }}
-                  >
-                    This message has been edited. Click{" "}
-                    <Link
-                      component="button"
-                      variant="body2"
-                      onClick={() => handleViewMore(msg)}
-                      sx={{
-                        fontStyle: "italic",
-                        color: "primary.main",
-                        cursor: "pointer",
-                      }}
-                    >
-                      here
-                    </Link>{" "}
-                    to view more
-                  </Typography>
-                  {selectedMessage === msg.message_id &&
-                    editedMessages.length > 0 && (
-                      <TableContainer component={Paper} sx={{ marginTop: 2 }}>
-                        <Table size="small">
-                          <TableBody>
-                            {editedMessages.map((edit, idx) => (
-                              <TableRow key={idx}>
-                                <TableCell sx={{ color: "white" }}>
-                                  {idx === 0
-                                    ? `Current Message (${new Date(
-                                        edit.edited_timestamp
-                                      ).toLocaleString()}):`
-                                    : `Previous Edited Message (${new Date(
-                                        edit.edited_timestamp
-                                      ).toLocaleString()}):`}
-                                </TableCell>
-                                <TableCell sx={{ color: "white" }}>
-                                  {edit.edited_message_text}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    )}
-                </>
-              )}
-              <Box
+              <Paper
+                elevation={1}
                 sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginTop: theme.spacing(1),
+                  padding: theme.spacing(1),
+                  borderRadius: theme.shape.borderRadius,
+                  maxWidth: "60%",
+                  backgroundColor:
+                    msg.direction === "incoming"
+                      ? colors.grey[100]
+                      : colors.greenAccent,
                 }}
               >
-                <Typography variant="caption" color={colors.grey[500]}>
-                  {new Date(msg.message_timestamp).toLocaleString()}
-                </Typography>
-                {msg.direction === "outgoing" && msg.response_status && (
+                {msg.file_path && renderFile(msg.file_path, msg.file_type)}
+                {mostRecentEdit && (
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                      color: "black", // Ensure all message text is black
+                    }}
+                  >
+                    {mostRecentEdit}
+                  </Typography>
+                )}
+                {isEdited && (
                   <>
-                    {msg.response_status.toLowerCase() === "sending" && (
-                      <PendingIcon fontSize="small" />
-                    )}
-                    {msg.response_status.toLowerCase() === "sent" && (
-                      <CheckCircleIcon
-                        fontSize="small"
-                        color="success"
-                        sx={{ marginLeft: theme.spacing(1) }}
-                      />
-                    )}
-                    {msg.response_status.toLowerCase() === "failed" && (
-                      <CloseIcon
-                        fontSize="small"
-                        color="error"
-                        sx={{ marginLeft: theme.spacing(1) }}
-                      />
-                    )}
+                    <Typography
+                      variant="body2"
+                      color="error"
+                      sx={{ fontStyle: "italic", marginTop: theme.spacing(1) }}
+                    >
+                      This message has been edited. Click{" "}
+                      <Link
+                        component="button"
+                        variant="body2"
+                        onClick={() => handleViewMore(msg)}
+                        sx={{
+                          fontStyle: "italic",
+                          color: "primary.main",
+                          cursor: "pointer",
+                        }}
+                      >
+                        here
+                      </Link>{" "}
+                      to view more
+                    </Typography>
+                    {selectedMessage === msg.message_id &&
+                      editedMessages.length > 0 && (
+                        <TableContainer
+                          component={Paper}
+                          sx={{ marginTop: 2 }}
+                        >
+                          <Table size="small">
+                            <TableBody>
+                              {editedMessages.map((edit, idx) => (
+                                <TableRow key={idx}>
+                                  <TableCell sx={{ color: "white" }}>
+                                    {idx === editedMessages.length - 1
+                                      ? `Original Message (${new Date(
+                                          edit.previous_timestamp
+                                        ).toLocaleString()}):`
+                                      : `Previous Edited Message (${new Date(
+                                          edit.previous_timestamp
+                                        ).toLocaleString()}):`}
+                                  </TableCell>
+                                  <TableCell sx={{ color: "white" }}>
+                                    {edit.original_message_text}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      )}
                   </>
                 )}
-              </Box>
-            </Paper>
-          </ListItem>
-        ))}
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginTop: theme.spacing(1),
+                  }}
+                >
+                  <Typography variant="caption" color={colors.grey[500]}>
+                    {new Date(msg.message_timestamp).toLocaleString()}
+                    {editedAtTimestamp && (
+                      <Typography
+                        component="span"
+                        sx={{ color: "red", fontStyle: "italic", fontSize: '0.75rem' }}
+                      >
+                        {" "}
+                        (Edited at:{" "}
+                        {new Date(editedAtTimestamp).toLocaleString()})
+                      </Typography>
+                    )}
+                  </Typography>
+                  {msg.direction === "outgoing" && msg.response_status && (
+                    <>
+                      {msg.response_status.toLowerCase() === "sending" && (
+                        <PendingIcon fontSize="small" />
+                      )}
+                      {msg.response_status.toLowerCase() === "sent" && (
+                        <CheckCircleIcon
+                          fontSize="small"
+                          color="success"
+                          sx={{ marginLeft: theme.spacing(1) }}
+                        />
+                      )}
+                      {msg.response_status.toLowerCase() === "failed" && (
+                        <CloseIcon
+                          fontSize="small"
+                          color="error"
+                          sx={{ marginLeft: theme.spacing(1) }}
+                        />
+                      )}
+                    </>
+                  )}
+                </Box>
+              </Paper>
+            </ListItem>
+          );
+        })}
       </List>
       {loading && <Typography variant="body2">Loading...</Typography>}
       {error && (

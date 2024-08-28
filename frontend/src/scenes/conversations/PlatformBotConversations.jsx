@@ -1,19 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Box, useTheme, Button } from "@mui/material";
-import { tokens } from "../../theme";
+import { Box, Button, Tooltip } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useParams, useNavigate, Outlet } from "react-router-dom";
 import { getBotConversations, getAlertsSpecific } from "../../api";
 import Header from "../../components/Header";
 import PauseCircleIcon from "@mui/icons-material/PauseCircle";
-import Tooltip from "@mui/material/Tooltip";
-
 
 const PlatformBotConversations = ({ platform }) => {
   const { botId } = useParams();
   const navigate = useNavigate();
-  const theme = useTheme();
-  const colors = tokens;
   const [conversations, setConversations] = useState([]);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,35 +24,41 @@ const PlatformBotConversations = ({ platform }) => {
     }
   };
 
-  useEffect(() => {
-    const fetchConversations = async () => {
-      try {
-        const convData = await getBotConversations(platform, botId);
-        const rowsData = await Promise.all(
-          convData.map(async (conv) => {
-            const unreadCount = await fetchUnreadAlerts(
-              platform,
-              conv.bot_id,
-              conv.scammer_unique_id
-            );
-            return {
-              id: conv.scammer_id,
-              scammerUniqueID: conv.scammer_unique_id,
-              pause: conv.pause,
-              alert: unreadCount,
-            };
-          })
-        );
-        setRows(rowsData);
-        setConversations(convData);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchConversations = async () => {
+    try {
+      const convData = await getBotConversations(platform, botId);
+      const rowsData = await Promise.all(
+        convData.map(async (conv) => {
+          const unreadCount = await fetchUnreadAlerts(
+            platform,
+            conv.bot_id,
+            conv.scammer_unique_id
+          );
+          return {
+            id: conv.scammer_id,
+            scammerUniqueID: conv.scammer_unique_id,
+            pause: conv.pause,
+            alert: unreadCount,
+          };
+        })
+      );
+      setRows(rowsData);
+      setConversations(convData);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchConversations();
+
+    const interval = setInterval(() => {
+      fetchConversations();
+    }, 1000);
+
+    return () => clearInterval(interval); 
   }, [botId, platform]);
 
   const columns = [
@@ -76,7 +77,7 @@ const PlatformBotConversations = ({ platform }) => {
         <Box
           display="flex"
           alignItems="center"
-          justifyContent="flex-start" 
+          justifyContent="flex-start"
           width="100%"
           height="100%"
         >
@@ -87,7 +88,7 @@ const PlatformBotConversations = ({ platform }) => {
           ) : null}
         </Box>
       ),
-    },    
+    },
     {
       field: "scammerUniqueID",
       headerName: "Scammer Unique ID",
@@ -125,53 +126,51 @@ const PlatformBotConversations = ({ platform }) => {
   }
 
   return (
-     
-      <div style={{ display: "flex", height: "80%" }}>
-        {/* Left Section */}
-        <div style={{ width: "40%", paddingTop: "20px", paddingRight: "20px" }}>
-          <Header
-            title={`Conversations (Bot ID: ${botId})`}
-            subtitle="List of users this bot is talking to"
-          />
-          <Box
-            height="75vh"
-            sx={{
-              "& .MuiDataGrid-root": {
-                border: "none",
-              },
-              "& .MuiDataGrid-cell": {
-                borderBottom: "none",
-              },
-              "& .userid-column--cell": {
-                color: colors.greenAccent,
-              },
-              "& .MuiDataGrid-columnHeader": {
-                backgroundColor: "#28231d",
-                borderBottom: "none",
-              },
-              "& .MuiDataGrid-virtualScroller": {
-                backgroundColor: "#0c0908",
-              },
-              "& .MuiDataGrid-footerContainer": {
-                borderTop: "none",
-                backgroundColor: "#28231d",
-              },
-              "& .MuiCheckbox-root": {
-                color: `${colors.greenAccent} !important`,
-              },
-            }}
-          >
-            <DataGrid rows={rows} columns={columns} />
-          </Box>
-        </div>
-        
-        {/* Right Section */}
-        <div style={{ width: "60%" }}>
-          <Outlet />
-        </div>
+    <div style={{ display: "flex", height: "80%" }}>
+      {/* Left Section */}
+      <div style={{ width: "40%", paddingTop: "20px", paddingRight: "20px" }}>
+        <Header
+          title={`Conversations (Bot ID: ${botId})`}
+          subtitle="List of users this bot is talking to"
+        />
+        <Box
+          height="75vh"
+          sx={{
+            "& .MuiDataGrid-root": {
+              border: "none",
+            },
+            "& .MuiDataGrid-cell": {
+              borderBottom: "none",
+            },
+            "& .userid-column--cell": {
+              color: "#00e676", 
+            },
+            "& .MuiDataGrid-columnHeader": {
+              backgroundColor: "#28231d",
+              borderBottom: "none",
+            },
+            "& .MuiDataGrid-virtualScroller": {
+              backgroundColor: "#0c0908",
+            },
+            "& .MuiDataGrid-footerContainer": {
+              borderTop: "none",
+              backgroundColor: "#28231d",
+            },
+            "& .MuiCheckbox-root": {
+              color: "#00e676 !important", 
+            },
+          }}
+        >
+          <DataGrid rows={rows} columns={columns} />
+        </Box>
       </div>
-    );
-    
+
+      {/* Right Section */}
+      <div style={{ width: "60%" }}>
+        <Outlet />
+      </div>
+    </div>
+  );
 };
 
 export default PlatformBotConversations;

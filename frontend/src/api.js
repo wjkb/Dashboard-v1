@@ -254,23 +254,6 @@ export const getConversationPauseStatus = async (platform, botId, scammerUniqueI
   }
 };
 
-export const toggleConversationPause = async (platform, botId, scammerUniqueId) => {
-  try {
-    const response = await fetch(
-      `${API_URL}/conversations/${platform}/${botId}/${scammerUniqueId}/toggle_pause`,
-      {
-        method: "PUT",
-      }
-    );
-    if (!response.ok) {
-      throw new Error("Failed to toggle conversation pause status");
-    }
-    return await response.json();
-  } catch (error) {
-    throw new Error(`Error toggling pause status: ${error.message}`);
-  }
-};
-
 // PUT APIs
 export const editBot = async (botId, updatedData) => {
   try {
@@ -442,6 +425,31 @@ export const toggleBotPauseSelectively = async (botId) => {
     return await response.json();
   } catch (error) {
     throw new Error(`Error pausing/resuming bot: ${error.message}`);
+  }
+};
+
+export const toggleConversationPause = async (platform, botId, scammerUniqueId) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/conversations/toggle_pause`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          platform: platform,
+          bot_id: botId,
+          scammer_unique_id: scammerUniqueId,
+        }),
+      }
+    );
+    if (!response.ok) {
+      throw new Error("Failed to toggle conversation pause status");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error toggling pause status: ${error.message}`);
   }
 };
 

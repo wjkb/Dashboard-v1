@@ -178,13 +178,15 @@ create_alert_model = ns_alerts.model('CreateAlert', {
 
 create_edit_model = ns_messages.model('CreateEdit', {
     'scammer_unique_id': fields.String(required=True, description='The unique ID of the scammer', example='unique_scammer_123'),
-    'original_message_text': fields.String(required=True, description='The text of the original message', example='Hello, how are you?'),  # Changed from conversation_id to message_text
+    'original_message_text': fields.String(required=True, description='The text of the original message', example='Hello, how are you?'),
     'direction': fields.String(required=True, description='The direction of the edit', example='outgoing'),
     'platform_type': fields.String(required=True, description='The type of platform', example='WhatsApp'),
     'message_id': fields.String(description='The ID of the associated message', example='msg_123'),
     'edited_message_text': fields.String(required=True, description='The updated message text after editing', example='Edited message text.'),
     'bot_id': fields.String(description='The ID of the bot associated with the edit', example='bot_001'),
-    'edited_timestamp': fields.DateTime(description='The timestamp of the edit', example='2024-08-21T15:00:00')
+    'edited_timestamp': fields.DateTime(description='The timestamp of the edit', example='2024-08-21T15:00:00'),
+    'conversation_id': fields.Integer(description='The ID of the associated conversation', example=42),  
+    'previous_timestamp': fields.DateTime(description='The timestamp of the original message before editing', example='2024-08-20T14:00:00'),  #
 })
 
 ##################################################
@@ -474,26 +476,20 @@ class TogglePauseBotSelectively(Resource):
 
 @ns_conversations.route('/api/conversations/toggle_pause')
 class TogglePauseConversation(Resource):
-    @ns_conversations.doc('toggle_pause_conversation')
-    def post(self):
+    def put(self):
         try:
-            try:
-                data = request.get_json()
-            except Exception as e:
-                return {'error': 'Cannot receive data'}, 400
+            data = request.get_json()
             platform = data.get('platform')
             bot_id = data.get('bot_id')
             scammer_unique_id = data.get('scammer_unique_id')
-            platform_mapping = {
-                'facebook': 'Facebook',
-                'whatsapp': 'WhatsApp',
-                'telegram': 'Telegram'
-            }
+            
+            if not platform or not bot_id or not scammer_unique_id:
+                return {'error': 'Missing required parameters'}, 400
+
             platform_name = platform_mapping.get(platform.lower())
             if not platform_name:
                 return {'error': 'Invalid platform'}, 400
 
-            # Get the conversation
             conversation = (
                 db.session.query(Conversation)
                 .join(Scammer, Conversation.scammer_id == Scammer.id)
@@ -502,11 +498,11 @@ class TogglePauseConversation(Resource):
             )
             if not conversation:
                 return {"error": "Conversation not found"}, 404
-            
+
             conversation.pause = not conversation.pause
             db.session.commit()
 
-            # If bot is resumed, get all conversations related to the bot
+            # If bot is resumed, execute the additional logic
             if not conversation.pause:
                 platform_message_classes = {
                     'Facebook': FacebookMessage,
@@ -514,40 +510,37 @@ class TogglePauseConversation(Resource):
                     'Telegram': TelegramMessage
                 }
                 
-                # Get bot_id and scammer_unique_id from conversation
                 bot_id = conversation.bot_id
                 scammer_unique_id = Scammer.query.get(conversation.scammer_id).unique_id
 
-                # Get all the last incoming messages up till but not including the last outgoing message, 
-                # or all incoming messages if no outgoing message, and send them to send_main_convo_message
                 platform_messages = (
-                    db.session.query(platform_message_classes[platform])
+                    db.session.query(platform_message_classes[platform_name])
                     .filter_by(conversation_id=conversation.id)
-                    .order_by(platform_message_classes[platform].message_timestamp.asc())
+                    .order_by(platform_message_classes[platform_name].message_timestamp.asc())
                     .all()
                 )
 
-                # Get the last outgoing message
                 last_outgoing_message = (
-                    db.session.query(platform_message_classes[platform])
+                    db.session.query(platform_message_classes[platform_name])
                     .filter_by(conversation_id=conversation.id, direction='outgoing')
-                    .order_by(platform_message_classes[platform].message_timestamp.desc())
+                    .order_by(platform_message_classes[platform_name].message_timestamp.desc())
                     .first()
                 )
+
                 if last_outgoing_message:
                     messages_to_send = [msg for msg in platform_messages if msg.direction == 'incoming' and msg.message_timestamp > last_outgoing_message.message_timestamp]
                 else:
                     messages_to_send = [msg for msg in platform_messages if msg.direction == 'incoming']
 
-                # Function to select only wanted fields from the message dictionary
                 wanted_fields = ['platform', 'bot_id', 'scammer_id', 'direction', 'message_id', 'message_text', 'message_timestamp']
+
                 def select_wanted_fields(message: dict, wanted_fields: list = wanted_fields):
                     return {key: value for key, value in message.items() if key in wanted_fields}
-                
+
                 message_list = []
                 for message in messages_to_send:
                     message = message.serialize()
-                    message['platform'] = API_mapping[platform]
+                    message['platform'] = API_mapping[platform_name]
                     message['bot_id'] = bot_id
                     message['scammer_id'] = scammer_unique_id
                     filtered_message = select_wanted_fields(message, wanted_fields)
@@ -556,10 +549,11 @@ class TogglePauseConversation(Resource):
                 if message_list:
                     send_main_convo_message(message_list)
 
+            return {"message": "Conversation pause status toggled", "pause": conversation.pause}, 200
 
-            return {"message": "Bot pause status updated successfully to " + str(conversation.pause)}, 200
         except Exception as e:
-            return {"error": "Internal Server Error" + str(e)}, 500
+            return {"error": "Internal Server Error: " + str(e)}, 500
+
 
 @ns_conversations.route('/api/conversations/get_conversation_pause_status')
 class getConversationPauseStatus(Resource):
@@ -1502,13 +1496,15 @@ class EditedMessage(Resource):
         try:
             data = request.get_json()
             platform_type = data.get('platform_type')
-            original_message_text = data.get('original_message_text')  
+            conversation_id = data.get('conversation_id')  
             message_id = data.get('message_id')
+            direction = data.get('direction')
 
             edited_messages = Edit.query.filter_by(
                 platform_type=platform_type,
-                original_message_text=original_message_text,  
-                message_id=message_id
+                conversation_id=conversation_id,  
+                message_id=message_id,
+                direction=direction
             ).order_by(Edit.edited_timestamp.desc()).all()
 
             if not edited_messages:
@@ -1539,28 +1535,3 @@ class CheckPauseStatus(Resource):
             return {"pause": conversation.pause}, 200
         except Exception as e:
             return {"error": "Internal Server Error" + str(e)}, 500
-
-@ns_conversations.route('/api/conversations/<platform>/<bot_id>/<scammer_unique_id>/toggle_pause')
-class TogglePauseConversation(Resource):
-    def put(self, platform, bot_id, scammer_unique_id):
-        try:
-            platform_name = platform_mapping.get(platform.lower())
-            if not platform_name:
-                return {'error': 'Invalid platform'}, 400
-
-            conversation = (
-                db.session.query(Conversation)
-                .join(Scammer, Conversation.scammer_id == Scammer.id)
-                .filter(Conversation.bot_id == bot_id, Conversation.platform == platform_name, Scammer.unique_id == scammer_unique_id)
-                .first()
-            )
-            if not conversation:
-                return {"error": "Conversation not found"}, 404
-
-            conversation.pause = not conversation.pause
-            db.session.commit()
-
-            return {"message": "Conversation pause status toggled", "pause": conversation.pause}, 200
-        except Exception as e:
-            return {"error": "Internal Server Error" + str(e)}, 500
-

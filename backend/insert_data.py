@@ -79,6 +79,8 @@ with app.app_context():
         db.session.add(conversation)
     db.session.commit()
 
+    # Insert WhatsApp messages
+
     whatsapp_messages_data = [
         (3, 'incoming', '1', 'Hello! can you help me with my order?', datetime(2024, 5, 15, 14, 30), None, None, "edited", None),
         (3, 'outgoing', '1', 'Sure, I\'d be happy to assist. Could you please provide your order number?', datetime(2024, 5, 15, 14, 31), None, None, "sent", None),
@@ -94,8 +96,8 @@ with app.app_context():
         (3, 'outgoing', '4', 'Hello? Are you there?', datetime(2024, 5, 15, 14, 37, 30), None, None, "sent", None),
         (3, 'incoming', '9', 'OMG. I am so sorry, that was an accident', datetime(2024, 5, 15, 14, 38), None, None, "deleted", datetime(2024, 5, 15, 14, 33)),
         (3, 'incoming', '10','wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww, dfasdfsadfsadfsafadfafdafdafdafdad', datetime(2024, 5, 15, 14, 40), None, None, None, None),
-        (4, 'outgoing', '5', 'Hey Lim, do you know the store hours for today?', datetime(2024, 5, 15, 15, 30), None, None, "sent", None),
-        (4, 'incoming', '10', 'Yes, the store is open from 9 AM to 8 PM today.', datetime(2024, 5, 15, 15, 31), None, None, None, None),
+        (4, 'outgoing', '1', 'Hey Lim, do you know the store hours for today?', datetime(2024, 5, 15, 15, 30), None, None, "sent", None),
+        (4, 'incoming', '2', 'Yes, the store is open from 9 AM to 8 PM today.', datetime(2024, 5, 15, 15, 31), None, None, None, None),
     ]
 
     # Insert messages into the database
@@ -166,27 +168,27 @@ with app.app_context():
             'incoming',  
             'WhatsApp',  
             '1',  
-            'Hello? can you help me with my order?',  
+            'Hello1 can you help me with my order?',  
             '90000001', 
             datetime(2024, 5, 15, 14, 35, 17) 
         ),
         (
             '90000012',  
-            'Hello! can you help me with my order?',  
+            'Hello1 can you help me with my order?',  
             'incoming',  
             'WhatsApp',  
             '1',  
-            'Hello3 can you help me with my order?',  
+            'Hello2 can you help me with my order?',  
             '90000001',  
             datetime(2024, 5, 15, 14, 35, 24)  
         ),
         (
             '90000012',  
-            'Hello! can you help me with my order?',  
+            'Hello2 can you help me with my order?',  
             'incoming',  
             'WhatsApp',  
             '1',  
-            'Hello4 can you help me with my order?',  
+            'Hello3 can you help me with my order?',  
             '90000001',  
             datetime(2024, 5, 15, 14, 35, 39)  
         ),

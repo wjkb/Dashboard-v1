@@ -25,8 +25,6 @@ import {
   markAlertAsUnread,
   deleteAlert,
   restoreAlert,
-  getConversationPauseStatus, 
-  toggleConversationPause
 } from "../../api";
 import "./AlertsMenu.css";
 
@@ -48,12 +46,14 @@ const AlertsMenu = () => {
         const data = await getAlerts();
         if (data) {
           const { alerts = [] } = data;
-          const activeAlerts = alerts.filter(alert => alert.active);
-          const inactiveAlerts = alerts.filter(alert => !alert.active);
+          const activeAlerts = alerts.filter((alert) => alert.active);
+          const inactiveAlerts = alerts.filter((alert) => !alert.active);
 
           setAlerts(activeAlerts);
           setDeletedAlerts(inactiveAlerts);
-          setUnreadCount(activeAlerts.filter(alert => !alert.read_status).length);
+          setUnreadCount(
+            activeAlerts.filter((alert) => !alert.read_status).length
+          );
         }
       } catch (error) {
         console.error("Failed to fetch alerts:", error);
@@ -89,7 +89,11 @@ const AlertsMenu = () => {
 
     if (alert.link) {
       window.location.href = alert.link;
-    } else if (alert.platform_type && alert.bot_id && alert.scammer_unique_id) {
+    } else if (
+      alert.platform_type &&
+      alert.bot_id &&
+      alert.scammer_unique_id
+    ) {
       const url = `http://localhost:3000/platforms/${alert.platform_type}/${alert.bot_id}/${alert.scammer_unique_id}`;
       window.location.href = url;
     }
@@ -119,23 +123,14 @@ const AlertsMenu = () => {
 
   const handleMarkAsUnread = async (alert) => {
     try {
-      // Check if the conversation is paused
-      const response = await getConversationPauseStatus(alert.platform_type, alert.bot_id, alert.scammer_unique_id);
-      const isPaused = response.pause;
-  
-      // If the conversation is not paused, toggle the pause state
-      if (!isPaused) {
-        await toggleConversationPause(alert.platform_type, alert.bot_id, alert.scammer_unique_id);
-      }
-  
-      // Mark the alert as unread
       await markAlertAsUnread(alert.id);
       const updateFunction = activeTab === 2 ? setDeletedAlerts : setAlerts;
-      const updatedAlerts = (activeTab === 2 ? deletedAlerts : alerts).map((a) =>
-        a.id === alert.id ? { ...a, read_status: false } : a
+      const updatedAlerts = (activeTab === 2 ? deletedAlerts : alerts).map(
+        (a) =>
+          a.id === alert.id ? { ...a, read_status: false } : a
       );
       updateFunction(updatedAlerts);
-  
+
       if (activeTab !== 2) {
         setUnreadCount(updatedAlerts.filter((a) => !a.read_status).length);
       }
@@ -143,26 +138,17 @@ const AlertsMenu = () => {
       console.error("Failed to mark alert as unread:", error);
     }
   };
-  
+
   const handleMarkAsReadFromContext = async (alert) => {
     try {
-      // Check if the conversation is paused
-      const response = await getConversationPauseStatus(alert.platform_type, alert.bot_id, alert.scammer_unique_id);
-      const isPaused = response.pause;
-  
-      // If the conversation is paused, toggle the pause state
-      if (isPaused) {
-        await toggleConversationPause(alert.platform_type, alert.bot_id, alert.scammer_unique_id);
-      }
-  
-      // Mark the alert as read
       await markAlertAsRead(alert.id);
       const updateFunction = activeTab === 2 ? setDeletedAlerts : setAlerts;
-      const updatedAlerts = (activeTab === 2 ? deletedAlerts : alerts).map((a) =>
-        a.id === alert.id ? { ...a, read_status: true } : a
+      const updatedAlerts = (activeTab === 2 ? deletedAlerts : alerts).map(
+        (a) =>
+          a.id === alert.id ? { ...a, read_status: true } : a
       );
       updateFunction(updatedAlerts);
-  
+
       if (activeTab !== 2) {
         setUnreadCount(updatedAlerts.filter((a) => !a.read_status).length);
       }
@@ -170,7 +156,7 @@ const AlertsMenu = () => {
       console.error("Failed to mark alert as read:", error);
     }
   };
-  
+
   const handleDeleteAlert = async (alert) => {
     try {
       await deleteAlert(alert.id);
@@ -188,7 +174,7 @@ const AlertsMenu = () => {
   const handleRestoreAlert = async (alert) => {
     try {
       await restoreAlert(alert.id);
-      setDeletedAlerts(deletedAlerts.filter(a => a.id !== alert.id));
+      setDeletedAlerts(deletedAlerts.filter((a) => a.id !== alert.id));
       setAlerts([...alerts, { ...alert, active: true }]);
     } catch (error) {
       console.error("Failed to restore alert:", error);
@@ -259,48 +245,79 @@ const AlertsMenu = () => {
                   title={`Alert type: ${alert.alert_type}`}
                   arrow
                 >
-                  <MenuItem
-                    onClick={() => handleAlertItemClick(alert)}
-                  >
+                  <MenuItem onClick={() => handleAlertItemClick(alert)}>
                     <ListItemIcon>
                       <CircleIcon
-                        sx={{ color: alert.read_status ? '#888888' : '#ff0000', fontSize: 12 }}
+                        sx={{
+                          color: alert.read_status ? "#888888" : "#ff0000",
+                          fontSize: 12,
+                        }}
                       />
                     </ListItemIcon>
                     <Box sx={{ flexGrow: 1 }}>
                       <Typography variant="body2">
-                        {alert.alert_type === 'manual_intervention_required'
+                        {alert.alert_type === "manual_intervention_required"
                           ? `Manual intervention required for bot ${alert.bot_id} on ${alert.platform_type}`
-                          : alert.alert_type === 'edited_message'
+                          : alert.alert_type === "edited_message"
                           ? `Message '${alert.message_text}' was edited by ${alert.scammer_unique_id}`
-                          : `Message '${alert.message_text}' was deleted by ${alert.scammer_unique_id}`
-                        }
+                          : `Message '${alert.message_text}' was deleted by ${alert.scammer_unique_id}`}
                       </Typography>
                       <Typography variant="caption" color="textSecondary">
-                        {formatTimestamp(alert.timestamp)}
+                        {alert.alert_type === "edited_message" && alert.edited_timestamp ? (
+                          <>
+                            {`Edited at: ${formatTimestamp(alert.edited_timestamp)}`}
+                            <Typography
+                              component="span"
+                              sx={{ color: "red", fontStyle: "italic" }}
+                            >
+                              {" "}
+                              (Original: {formatTimestamp(alert.timestamp)})
+                            </Typography>
+                          </>
+                        ) : (
+                          formatTimestamp(alert.timestamp)
+                        )}
                       </Typography>
                     </Box>
                     <Box>
-                      <Tooltip title={alert.read_status ? "Mark as unread" : "Mark as read"}>
+                      <Tooltip
+                        title={alert.read_status ? "Mark as unread" : "Mark as read"}
+                      >
                         <IconButton
                           onClick={(e) => {
                             e.stopPropagation();
-                            alert.read_status ? handleMarkAsUnread(alert) : handleMarkAsReadFromContext(alert);
+                            alert.read_status
+                              ? handleMarkAsUnread(alert)
+                              : handleMarkAsReadFromContext(alert);
                           }}
                           sx={{ color: alert.read_status ? "gray" : "green" }}
                         >
-                          {alert.read_status ? <MailOutlineIcon /> : <MailIcon />}
+                          {alert.read_status ? (
+                            <MailOutlineIcon />
+                          ) : (
+                            <MailIcon />
+                          )}
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title={activeTab === 2 ? "Restore alert" : "Delete alert"}>
+                      <Tooltip
+                        title={
+                          activeTab === 2 ? "Restore alert" : "Delete alert"
+                        }
+                      >
                         <IconButton
                           onClick={(e) => {
                             e.stopPropagation();
-                            activeTab === 2 ? handleRestoreAlert(alert) : handleDeleteAlert(alert);
+                            activeTab === 2
+                              ? handleRestoreAlert(alert)
+                              : handleDeleteAlert(alert);
                           }}
-                          sx={{ color: activeTab === 2 ? "blue" : "red" }}
+                          sx={{ color: activeTab === 2 ? "limegreen" : "red" }}
                         >
-                          {activeTab === 2 ? <RefreshIcon /> : <DeleteIcon />}
+                          {activeTab === 2 ? (
+                            <RefreshIcon />
+                          ) : (
+                            <DeleteIcon />
+                          )}
                         </IconButton>
                       </Tooltip>
                     </Box>
