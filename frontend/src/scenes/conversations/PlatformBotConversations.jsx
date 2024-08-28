@@ -8,6 +8,7 @@ import Header from "../../components/Header";
 import PauseCircleIcon from "@mui/icons-material/PauseCircle";
 import Tooltip from "@mui/material/Tooltip";
 
+
 const PlatformBotConversations = ({ platform }) => {
   const { botId } = useParams();
   const navigate = useNavigate();
@@ -63,13 +64,13 @@ const PlatformBotConversations = ({ platform }) => {
     {
       field: "alert",
       headerName: "Alerts",
-      flex: 0.5,
+      flex: 0.3,
       cellClassName: "useralert-column--cell",
     },
     {
       field: "pause",
       headerName: "Paused",
-      flex: 0.5,
+      flex: 0.3,
       cellClassName: "userpause-column--cell",
       renderCell: (params) => (
         <Box
@@ -129,7 +130,7 @@ const PlatformBotConversations = ({ platform }) => {
         {/* Left Section */}
         <div style={{ width: "40%", paddingTop: "20px", paddingRight: "20px" }}>
           <Header
-            title={`Conversations (ID: ${botId})`}
+            title={`Conversations (Bot ID: ${botId})`}
             subtitle="List of users this bot is talking to"
           />
           <Box

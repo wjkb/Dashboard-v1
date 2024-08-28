@@ -419,6 +419,58 @@ class TogglePauseBot(Resource):
         except Exception as e:
             return {"error": "Internal Server Error"}, 500
             
+@ns_bots.route('/api/bots/<bot_id>/toggle_pause_selectively')
+class TogglePauseBotSelectively(Resource):
+    @ns_bots.doc('toggle_pause_bot_selectively')
+    def put(self, bot_id):
+        try:
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {"error": "Bot not found"}, 404
+            
+            bot.pause = not bot.pause
+            db.session.commit()
+
+            # If bot is resumed, get all conversations related to the bot
+            if not bot.pause:
+                platform_message_classes = {
+                    'Facebook': FacebookMessage,
+                    'WhatsApp': WhatsappMessage,
+                    'Telegram': TelegramMessage
+                }
+                conversations = Conversation.query.filter_by(bot_id=bot_id).all()
+
+                # Look through all conversations, pause the conversations where the last message is incoming.
+                for conversation in conversations:
+                    
+                    # Get platform, bot_id and scammer_unique_id from conversation
+                    bot_id = conversation.bot_id
+                    scammer_unique_id = Scammer.query.get(conversation.scammer_id).unique_id
+                    platform = conversation.platform
+
+                    # Check if there are any incoming messages
+                    pause_conversation = False
+
+                    platform_messages = (
+                        db.session.query(platform_message_classes[platform])
+                        .filter_by(conversation_id=conversation.id)
+                        .order_by(platform_message_classes[platform].message_timestamp.desc())
+                        .first()
+                    )
+                    
+                    # Pause conversation for where last message is incoming
+                    if platform_messages and platform_messages.direction == "incoming":
+                        pause_conversation = True
+
+                    # Don't unpause conversation which is originally paused
+                    if conversation.pause == False:
+                        conversation.pause = pause_conversation
+                    # print(f"Pausing/Not pausing for {conversation.id}: {pause_conversation}")
+                    db.session.commit()
+
+            return {"message": "Bot pause status updated successfully to " + str(bot.pause)}, 200
+        except Exception as e:
+            return {"error": "Internal Server Error"}, 500
 
 @ns_conversations.route('/api/conversations/toggle_pause')
 class TogglePauseConversation(Resource):
@@ -1063,8 +1115,8 @@ class SendProactiveMessage(Resource):
             if not bot:
                 return {'status': 'error', 'message': 'Bot not found'}, 404
 
-            if not bot.pause:
-                return {'status': 'error', 'message': 'Bot is running. Pause first!'}, 400
+            # if not bot.pause:
+            #     return {'status': 'error', 'message': 'Bot is running. Pause first!'}, 400
             
             next_response_data = {
                 "platform": platform,
@@ -1111,7 +1163,7 @@ class DownloadEverything(Resource):
     @ns_utils.expect(download_everything_model)
     def post(self):
         try:
-            print("DownloadEverything API was called")
+            # print("DownloadEverything API was called")
             data = request.get_json()
             bot_id = data.get('botId')
             platform = data.get('platform')
@@ -1162,6 +1214,49 @@ class DownloadEverything(Resource):
         except Exception as e:
             return {'error': str(e)}, 500
         
+@ns_utils.route('/api/check_pause_status')
+class CheckPauseStatus(Resource):
+    def post(self):
+        try:
+            data = request.get_json()
+
+            platform_name = data.get('platform')
+            bot_id = data.get('bot_id')
+            scammer_id = data.get('scammer_id')
+    
+            if platform_name is None:
+                return {'status': 'error', 'message': 'Unknown platform'}, 400
+
+            if bot_id is None:
+                return {'status': 'error', 'message': 'Unknown bot id'}, 400
+
+            if scammer_id is None:
+                return {'status': 'error', 'message': 'Unknown scammer id id'}, 400
+
+            # Check if bot is paused
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {'status': 'error', 'message': 'Bot not found'}, 404
+            
+            if bot.pause:
+                return {'pause': True}, 200
+            
+            else:
+                # Check if conversation is paused
+                conversation = (
+                    db.session.query(Conversation)
+                    .join(Scammer, Conversation.scammer_id == Scammer.id)
+                    .filter(Conversation.bot_id == bot_id, Conversation.platform == platform_name, Scammer.unique_id == scammer_id)
+                    .first()
+                )
+                if not conversation:
+                    return {"error": "Conversation not found"}, 404
+                
+                return {"pause": conversation.pause}, 200
+        except Exception as e:
+
+            return  {"error": f"Error sending pause status: {e}"}, 400
+
 
 @ns_graph_insights.route('/api/conversation_count')
 class ConversationCount(Resource):
