@@ -1,15 +1,16 @@
 import sys
+import os
 
 sys.path.append('..')
 from utils.send_utils import send_proactive_queue, send_main_convo_message
-
+from urllib.parse import unquote
 from flask import Blueprint, request
 from flask_restx import Api, Resource, fields
 from datetime import datetime
 import json
 import requests
 from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation, Alert, Edit
-from backend.utils import save_file, safe_parse_timestamp, create_zip, create_message_csv
+from backend.utils import safe_parse_timestamp, create_zip, create_message_csv
 
 # Initialize Flask-RESTx Api
 api_bp = Blueprint('api', __name__)
@@ -143,9 +144,9 @@ conversation_model = ns_conversations.model('Conversation', {
 
 bot_model_2 = ns_bots.model('Bot2', {
     'id': fields.String(required=True, example='90217777'),
-    'name': fields.String(required=True, example='John Doe'),
+    'name': fields.String(required=False, example='John Doe'),
     'email': fields.String(example='johndoe@gmail.com'),
-    'persona': fields.String(required=True, example='Middle-aged man'),
+    'persona': fields.String(required=False, example='Middle-aged man'),
     'model': fields.String(required=True, example='Llama 3'),
     'platforms': fields.List(fields.String, required=True, example=['Facebook', 'WhatsApp']),
 })
@@ -153,9 +154,9 @@ bot_model_2 = ns_bots.model('Bot2', {
 bot_model_1 = ns_bots.model('Bot1', {
     'id': fields.String(required=True, description='The bot phone number is used as the unique identifier'),
     'active': fields.Boolean(required=True, default=True),
-    'name': fields.String(required=True),
+    'name': fields.String(required=False),
     'email': fields.String(),
-    'persona': fields.String(required=True),
+    'persona': fields.String(required=False),
     'model': fields.String(required=True),
     'platforms': fields.List(fields.String, required=True),
     'health_status': fields.Raw(default={}, description='Health status of the bot on each platform'),
@@ -1535,3 +1536,127 @@ class CheckPauseStatus(Resource):
             return {"pause": conversation.pause}, 200
         except Exception as e:
             return {"error": "Internal Server Error" + str(e)}, 500
+        
+
+def find_file(filename, search_directory):
+    for root, dirs, files in os.walk(search_directory):
+        if filename in files:
+            return os.path.join(root, filename)
+    return None
+
+filename = 'victim_details.json'
+current_directory = os.getcwd()
+search_directory =  os.path.dirname(current_directory)
+victim_details_path = find_file(filename, search_directory)
+
+@ns_bots.route('/api/victim_details/<victim_id>/property', methods=['POST'])
+class InsertVictimProperty(Resource):
+    def post(self, victim_id):
+        try:
+            # Load the existing victim details from JSON file
+            with open(victim_details_path, 'r') as file:
+                victim_details = json.load(file)
+
+            # Find the correct victim entity by matching bot.id to the id of each entity
+            victim_entity = None
+            for victim_name, details in victim_details.items():
+                if details['id'] == victim_id:
+                    victim_entity = victim_name
+                    break
+
+            if victim_entity is None:
+                return {'error': 'Victim ID not found'}, 404
+
+            # Get the property data from the request
+            data = request.json
+            key = data.get('key')
+            value = data.get('value')
+
+            if not key or not value:
+                return {'error': 'Missing key or value'}, 400
+
+            # Add the new property to the specific victim's details
+            victim_details[victim_entity][key] = value
+
+            # Save the updated data back to the JSON file
+            with open(victim_details_path, 'w') as file:
+                json.dump(victim_details, file, indent=4)
+
+            return {'message': 'Property added successfully'}, 201
+        except Exception as e:
+            return {'error': str(e)}, 500
+        
+@ns_bots.route('/api/victim_details/<victim_id>/property', methods=['POST'])
+class InsertVictimProperty(Resource):
+    def post(self, victim_id):
+        try:
+            # Load the existing victim details from JSON file
+            with open(victim_details_path, 'r') as file:
+                victim_details = json.load(file)
+
+            # Find the correct victim entity by matching bot.id to the id of each entity
+            victim_entity = None
+            for victim_name, details in victim_details.items():
+                if details['id'] == victim_id:
+                    victim_entity = victim_name
+                    break
+
+            if victim_entity is None:
+                return {'error': 'Victim ID not found'}, 404
+
+            # Get the property data from the request
+            data = request.json
+            key = data.get('key')
+            value = data.get('value')
+
+            if not key or not value:
+                return {'error': 'Missing key or value'}, 400
+
+            # Add the new property to the specific victim's details
+            victim_details[victim_entity][key] = value
+
+            # Save the updated data back to the JSON file
+            with open(victim_details_path, 'w') as file:
+                json.dump(victim_details, file, indent=4)
+
+            return {'message': 'Property added successfully'}, 201
+        except Exception as e:
+            return {'error': str(e)}, 500
+
+
+@ns_bots.route('/api/victim_details/<victim_id>/property/<key>', methods=['DELETE'])
+class DeleteVictimProperty(Resource):
+    def delete(self, victim_id, key):
+        try:
+            # Decode the key to handle URL-encoded spaces and other characters
+            key = unquote(key)
+
+            # Load the existing victim details from JSON file
+            with open(victim_details_path, 'r') as file:
+                victim_details = json.load(file)
+
+            # Find the correct victim entity by matching bot.id to the id of each entity
+            victim_entity = None
+            for victim_name, details in victim_details.items():
+                if details['id'] == victim_id:
+                    victim_entity = victim_name
+                    break
+
+            if victim_entity is None:
+                return {'error': 'Victim ID not found'}, 404
+
+            # Check if the key exists in the victim's details and delete it
+            if key in victim_details[victim_entity]:
+                del victim_details[victim_entity][key]
+
+                # Save the updated data back to the JSON file
+                with open(victim_details_path, 'w') as file:
+                    json.dump(victim_details, file, indent=4)
+
+                return {'message': 'Property deleted successfully'}, 200
+            else:
+                return {'error': 'Key not found in victim details'}, 404
+        except Exception as e:
+            return {'error': str(e)}, 500
+
+

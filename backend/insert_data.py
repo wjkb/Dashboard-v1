@@ -19,19 +19,17 @@ with app.app_context():
 
     # Insert bots
     bots_data = [
-        ('90000001', 'Lim Wei Jie', 'limweijie@gmail.com', 'Middle-aged man', 'Llama 2', True),
-        ('90000002', 'Chua Mei Ling', 'chuameiling@gmail.com', 'Middle-aged man', 'Llama 3', False),
-        ('90000003', 'Ahmad Yusof', 'ahmadyusof@gmail.com', 'Old man', 'Llama 2', False),
-        ('90000004', 'Wong Li Hua', 'wonglihua@gmail.com', 'Young woman', 'Llama 2', False),
-        ('90000005', 'Tan Wei', 'tanwei@gmail.com', 'Young man', 'Llama 3', False),
-        ('90000006', 'Lim Mei Ling', 'limmeiling@gmail.com', 'Middle-aged woman', 'Llama 2', False),
-        ('90000007', 'Rajendra Kumar', 'rajendrakumar@gmail.com', 'Old man', 'Llama 3', False),
-        ('90000008', 'Loh Jia Hui', 'lohjiahui@gmail.com', 'Middle-aged woman', 'Llama 2', False),
-        ('90000009', 'Soh Wei Lun', 'sohweilun@gmail.com', 'Young man', 'Llama 3', False)
+        ('90000001', 'Llama 2', True),
+        ('90000002', 'Llama 3', False),
+        ('90000003', 'Llama 2', False),
+        ('90000004', 'Llama 2', False),
+        ('90000005', 'Llama 3', False),
+        ('90000006', 'Llama 2', False),
+        ('90000007', 'Llama 3', False)
     ]
 
-    for id, name, email, persona, model, pause  in bots_data:
-        bot = Bot(id=id, name=name, email=email, persona=persona, model=model)
+    for id, model, pause  in bots_data:
+        bot = Bot(id=id, pause=pause, model=model)
         db.session.add(bot)
     db.session.commit()
 
