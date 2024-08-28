@@ -432,7 +432,7 @@ const ManageBots = () => {
       headerName: "Actions",
       flex: 2,
       renderCell: (params) => (
-        <Box>
+        <Box display="flex" alignItems="center">
           <Button
             variant="contained"
             color="primary"
@@ -451,16 +451,26 @@ const ManageBots = () => {
             }
             color="green"
             sx={{
-              marginLeft: 2, 
+              marginLeft: 2,
               "& .MuiSwitch-track": {
                 backgroundColor: params.row.active ? "green" : "red",
               },
             }}
           />
+          <Typography
+            variant="body2"
+            sx={{
+              marginLeft: theme.spacing(1),
+              color: params.row.active ? "green" : "red",
+            }}
+          >
+            {params.row.active ? "Active" : "Inactive"}
+          </Typography>
         </Box>
       ),
     },
   ];
+  
 
   if (loading) {
     return <div>Loading...</div>;
