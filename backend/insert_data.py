@@ -137,7 +137,8 @@ with app.app_context():
     ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test4", False, datetime(2024, 5, 15, 14, 35, 15), '90000001'),
     ('90000012', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test5", False, datetime(2024, 5, 15, 14, 35, 16), '90000001'),
     ('90000013', 'incoming', 'deleted_message', 'WhatsApp', '2', "Test6", False, datetime(2024, 5, 15, 14, 35, 17), '90000001'),
-    (None, None, 'manual_intervention_required', 'WhatsApp', None, None, None, datetime(2024, 5, 15, 14, 32, 18), '90000001')  
+    ('90000012', 'incoming', 'edited_message', 'WhatsApp', '1', "Hello! can you help me with my order?", False, datetime(2024, 5, 15, 14, 35, 17), '90000001'),
+    ('90000012', None, 'manual_intervention_required', 'WhatsApp', None, None, None, datetime(2024, 5, 15, 14, 32, 18), '90000001')  
     ]
 
     for scammer_unique_id, direction, alert_type, platform_type, message_id, message_text, read_status, timestamp, bot_id in alerts_data:
@@ -157,11 +158,11 @@ with app.app_context():
     db.session.commit()
 
 
-# Insert Edit data
+    # Insert Edit data
     edits_data = [
         (
             '90000012', 
-            3, 
+            'Hello! can you help me with my order?',  
             'incoming',  
             'WhatsApp',  
             '1',  
@@ -171,7 +172,7 @@ with app.app_context():
         ),
         (
             '90000012',  
-            3,  
+            'Hello! can you help me with my order?',  
             'incoming',  
             'WhatsApp',  
             '1',  
@@ -179,12 +180,22 @@ with app.app_context():
             '90000001',  
             datetime(2024, 5, 15, 14, 35, 24)  
         ),
+        (
+            '90000012',  
+            'Hello! can you help me with my order?',  
+            'incoming',  
+            'WhatsApp',  
+            '1',  
+            'Hello4 can you help me with my order?',  
+            '90000001',  
+            datetime(2024, 5, 15, 14, 35, 39)  
+        ),
     ]
 
-    for scammer_unique_id, conversation_id, direction, platform_type, message_id, edited_message_text, bot_id, edited_timestamp in edits_data:
+    for scammer_unique_id, original_message_text, direction, platform_type, message_id, edited_message_text, bot_id, edited_timestamp in edits_data:
         edit_entry = Edit(
             scammer_unique_id=scammer_unique_id,
-            conversation_id=conversation_id,
+            original_message_text=original_message_text,  
             direction=direction,
             platform_type=platform_type,
             message_id=message_id,
@@ -194,8 +205,8 @@ with app.app_context():
         )
         db.session.add(edit_entry)
 
-    # Commit all changes to the database
     db.session.commit()
+
 
 
 

@@ -278,7 +278,7 @@ class Alert(db.Model):
 class Edit(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     scammer_unique_id = db.Column(db.String(255), nullable=True)
-    conversation_id = db.Column(db.String(255), nullable=True)
+    original_message_text = db.Column(db.String(255), nullable=True)  
     direction = db.Column(db.String(50), nullable=True)
     platform_type = db.Column(db.String(50), nullable=True)
     message_id = db.Column(db.String(255), nullable=True)
@@ -290,7 +290,7 @@ class Edit(db.Model):
         return {
             'id': self.id,
             'scammer_unique_id': self.scammer_unique_id,
-            'conversation_id': self.conversation_id,
+            'original_message_text': self.original_message_text, 
             'direction': self.direction,
             'platform_type': self.platform_type,
             'message_id': self.message_id,
@@ -298,6 +298,7 @@ class Edit(db.Model):
             'bot_id': self.bot_id,
             'edited_timestamp': self.edited_timestamp.isoformat() if self.edited_timestamp else None,
         }
+
 
 
 

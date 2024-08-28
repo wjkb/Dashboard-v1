@@ -13,6 +13,8 @@ import {
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import DownloadIcon from "@mui/icons-material/Download";
+import PauseIcon from "@mui/icons-material/Pause";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { useParams } from "react-router-dom";
 import {
   getBot,
@@ -37,11 +39,6 @@ const TAB_FILES = 1;
 const TAB_EXTRACTED_INFORMATION = -999; // Change this to 2 and TAB_SCREENSHOTS to 3 when re-enabling Extracted Information Tab
 const TAB_SCREENSHOTS = 2;
 
-/**
- * Component to display messages and files of a Platform (i.e. Facebook, Whatsapp, etc.) bot conversation with a specific user.
- *
- * @returns {JSX.Element} The PlatformUserMessages component.
- */
 const PlatformUserMessages = ({ platform }) => {
   const { botId, scammerUniqueId } = useParams();
   const [bot, setBot] = useState(null);
@@ -81,6 +78,19 @@ const PlatformUserMessages = ({ platform }) => {
     setPauseResumeMessages([]);
     setIsPaused(false);
     setPauseButtonDisabled(false);
+
+    // Fetch data on component mount
+    fetchBot();
+    fetchMessages();
+    fetchExtractedInformation();
+    fetchScreenshots();
+    checkConversationPauseStatus(platform, botId, scammerUniqueId);
+
+    const interval = setInterval(() => {
+      fetchMessages();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [botId, scammerUniqueId]);
 
   /**
@@ -94,6 +104,7 @@ const PlatformUserMessages = ({ platform }) => {
       setError(err.message);
     }
   };
+
   /**
    * Check if platform is paused
    */
@@ -108,7 +119,7 @@ const PlatformUserMessages = ({ platform }) => {
         botId,
         scammerUniqueId
       );
-      setIsPaused(pause_status.pause_status);
+      setIsPaused(pause_status.pause); // Updated to pause_status.pause
     } catch (err) {
       setError(err.message);
     }
@@ -180,20 +191,6 @@ const PlatformUserMessages = ({ platform }) => {
     }
   };
 
-  useEffect(() => {
-    fetchBot();
-    fetchMessages();
-    fetchExtractedInformation();
-    fetchScreenshots();
-    checkConversationPauseStatus(platform, botId, scammerUniqueId);
-
-    const interval = setInterval(() => {
-      fetchMessages();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [botId, scammerUniqueId]);
-
   const handleRefresh = () => {
     setLoading(true);
     fetchMessages();
@@ -246,11 +243,10 @@ const PlatformUserMessages = ({ platform }) => {
     setLoading(false);
   };
 
-  const handlePauseorResumeBot = async (action) => {
+  const handlePauseorResumeBot = async () => {
     try {
-      console.log("pausing", platform, botId, scammerUniqueId);
       await toggleConversationPause(platform, botId, scammerUniqueId);
-      // fetchBot();
+      setIsPaused(!isPaused); // Toggle the isPaused state
     } catch (err) {
       setError(err.message);
     }
@@ -295,16 +291,14 @@ const PlatformUserMessages = ({ platform }) => {
   };
 
   const handleConfirmPause = () => {
-    handlePauseorResumeBot("pause");
-    setIsPaused(true);
+    handlePauseorResumeBot();
     setOpenPauseDialog(false);
   };
 
   const handleConfirmResume = () => {
-    handlePauseorResumeBot("resume");
-    setIsPaused(false);
-    setOpenResumeDialog(false);
+    handlePauseorResumeBot();
     setPauseButtonDisabled(true);
+    setOpenResumeDialog(false);
   };
 
   const handleViewFile = (messageId) => {
@@ -370,215 +364,229 @@ const PlatformUserMessages = ({ platform }) => {
       <ScreenshotsTab screenshots={screenshots} />
     ) : null;
 
-    return (
-      <div style={{ height: "80%", paddingTop: "20px" }}>
-        <Header
-          title={`Messages with ${scammerUniqueId}`}
-          subtitle="Conversation details"
-        />
-        <Box marginBottom="10px">
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleRefresh}
-            style={{ marginRight: "10px" }}
-          >
-            <RefreshIcon />
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleDownloadEverything}
-            style={{ marginRight: "10px" }}
-          >
-            <DownloadIcon />
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={handleOpenConfirmIgnoreDialog}
-          >
-            Ignore Message History
-          </Button>
-        </Box>
-  
-        <Box marginBottom="10px">
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={
-              bot
-                ? isPaused
-                  ? handleOpenResumeDialog
-                  : handleOpenPauseDialog
-                : null
-            }
-            style={{ marginRight: "10px" }}
-            disabled={pauseButtonDisabled && !isPaused}
-          >
-            {bot
-          ? isPaused
-            ? "Resume Conversation"
-            : "Pause Conversation"
-          : "Loading..."}
-          </Button>
-          {bot && isPaused && (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleOpenSendMessageDialog}
-            >
-              Send Message
-            </Button>
+  return (
+    <div style={{ height: "80%", paddingTop: "20px" }}>
+      <Header
+        title={`Messages with ${scammerUniqueId}`}
+        subtitle="Conversation details"
+      />
+      <Box marginBottom="10px">
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleRefresh}
+          style={{ marginRight: "10px" }}
+        >
+          <RefreshIcon />
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleDownloadEverything}
+          style={{ marginRight: "10px" }}
+        >
+          <DownloadIcon />
+        </Button>
+        <Button
+          variant="contained"
+          color="error"
+          onClick={handleOpenConfirmIgnoreDialog}
+        >
+          Ignore Message History
+        </Button>
+      </Box>
+
+      <Box marginBottom="10px">
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={
+            bot
+              ? isPaused
+                ? handleOpenResumeDialog
+                : handleOpenPauseDialog
+              : null
+          }
+          style={{ marginRight: "10px" }}
+          disabled={pauseButtonDisabled && !isPaused}
+        >
+          {bot ? (
+            <Box display="flex" alignItems="center" justifyContent="flex-start">
+              {isPaused ? (
+                <>
+                  <PlayArrowIcon style={{ marginRight: "5px" }} />
+                  Resume Conversation
+                </>
+              ) : (
+                <>
+                  <PauseIcon style={{ marginRight: "5px" }} />
+                  Pause Conversation
+                </>
+              )}
+            </Box>
+          ) : (
+            "Loading..."
           )}
-        </Box>
-  
-        {/* Dialogs and Tabs remain the same */}
-        
-        <Dialog
-          open={openConfirmIgnoreDialog}
-          onClose={handleCloseConfirmIgnoreDialog}
-          aria-labelledby="ignore-dialog-title"
-          arua-describedby="ignore-dialog-description"
-        >
-          <DialogTitle>Confirm Ignore Message History</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              Are you sure you want the bot to ignore the message history? This
-              will make the bot ignore previous messages used for context to
-              generate responses, and this action is not reversible.
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={handleCloseConfirmIgnoreDialog}
-              sx={{ color: 'white', backgroundColor: '#9c27b0', '&:hover': { backgroundColor: '#ab47bc' } }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleConfirmIgnore}
-              sx={{ color: 'white', backgroundColor: '#f44336', '&:hover': { backgroundColor: '#e57373' } }}
-            >
-              Ignore History
-            </Button>
-          </DialogActions>
-        </Dialog>
-  
-        <Dialog
-          open={openPauseDialog}
-          onClose={handleClosePauseDialog}
-          aria-labelledby="pause-dialog-title"
-          aria-describedby="pause-dialog-description"
-        >
-          <DialogTitle id="pause-dialog-title">Pause Bot</DialogTitle>
-          <DialogContent>
-            <DialogContentText id="pause-dialog-description">
-              The following incoming messages are pending responses. The bot will
-              be paused until these messages are processed:
-            </DialogContentText>
-            <ul>
-              {pauseResumeMessages.map((msg) => (
-                <li key={msg.message_id}>{msg.message_text}</li>
-              ))}
-            </ul>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={handleClosePauseDialog}
-              sx={{ color: 'white', backgroundColor: '#9c27b0', '&:hover': { backgroundColor: '#ab47bc' } }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleConfirmPause}
-              sx={{ color: 'white', backgroundColor: '#9c27b0', '&:hover': { backgroundColor: '#ab47bc' } }}
-              autoFocus
-            >
-              Confirm Pause
-            </Button>
-          </DialogActions>
-        </Dialog>
-  
-        <Dialog
-          open={openResumeDialog}
-          onClose={handleCloseResumeDialog}
-          aria-labelledby="resume-dialog-title"
-          aria-describedby="resume-dialog-description"
-        >
-          <DialogTitle id="resume-dialog-title">Resume Bot</DialogTitle>
-          <DialogContent>
-            <DialogContentText id="resume-dialog-description">
-              The bot will resume processing the following incoming messages
-              without responses:
-            </DialogContentText>
-            <ul>
-              {pauseResumeMessages.map((msg) => (
-                <li key={msg.message_id}>{msg.message_text}</li>
-              ))}
-            </ul>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={handleCloseResumeDialog}
-              sx={{ color: 'white', backgroundColor: '#9c27b0', '&:hover': { backgroundColor: '#ab47bc' } }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleConfirmResume}
-              sx={{ color: 'white', backgroundColor: '#9c27b0', '&:hover': { backgroundColor: '#ab47bc' } }}
-              autoFocus
-            >
-              Confirm Resume
-            </Button>
-          </DialogActions>
-        </Dialog>
-  
-        <Dialog
-          open={openSendMessageDialog}
-          onClose={handleCloseSendMessageDialog}
-          PaperProps={{ style: { width: "80%" } }}
-          aria-labelledby="send-message-dialog-title"
-          aria-describedby="send-message-dialog-description"
-        >
-          <DialogTitle id="send-message-dialog-title">Send Message</DialogTitle>
-          <DialogContent>
-            <DialogContentText id="send-message-dialog-description">
-              Type your message below:
-            </DialogContentText>
-            <TextField
-              autoFocus
-              margin="dense"
-              id="messageText"
-              label="Message"
-              type="text"
-              fullWidth
-              value={messageText}
-              onChange={(e) => setMessageText(e.target.value)}
-              multiline
-              rows={4}
-              maxRows={10}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={handleCloseSendMessageDialog}
-              sx={{ color: 'white', backgroundColor: '#9c27b0', '&:hover': { backgroundColor: '#ab47bc' } }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSendMessage}
-              sx={{ color: 'white', backgroundColor: '#9c27b0', '&:hover': { backgroundColor: '#ab47bc' } }}
-            >
-              Send
-            </Button>
-          </DialogActions>
-        </Dialog>
-  
-        <Tabs value={tabValue} onChange={handleChangeTab}>
-          <Tab
+        </Button>
+        {bot && isPaused && (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleOpenSendMessageDialog}
+          >
+            Send Message
+          </Button>
+        )}
+      </Box>
+
+
+
+      {/* Dialogs and Tabs remain the same */}
+
+      <Dialog
+        open={openConfirmIgnoreDialog}
+        onClose={handleCloseConfirmIgnoreDialog}
+        aria-labelledby="ignore-dialog-title"
+        arua-describedby="ignore-dialog-description"
+      >
+        <DialogTitle>Confirm Ignore Message History</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want the bot to ignore the message history? This
+            will make the bot ignore previous messages used for context to
+            generate responses, and this action is not reversible.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseConfirmIgnoreDialog}
+            sx={{ color: "white", backgroundColor: "#9c27b0", "&:hover": { backgroundColor: "#ab47bc" } }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmIgnore}
+            sx={{ color: "white", backgroundColor: "#f44336", "&:hover": { backgroundColor: "#e57373" } }}
+          >
+            Ignore History
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={openPauseDialog}
+        onClose={handleClosePauseDialog}
+        aria-labelledby="pause-dialog-title"
+        aria-describedby="pause-dialog-description"
+      >
+        <DialogTitle id="pause-dialog-title">Pause Bot</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="pause-dialog-description">
+            The following incoming messages are pending responses. The bot will
+            be paused until these messages are processed:
+          </DialogContentText>
+          <ul>
+            {pauseResumeMessages.map((msg) => (
+              <li key={msg.message_id}>{msg.message_text}</li>
+            ))}
+          </ul>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleClosePauseDialog}
+            sx={{ color: "white", backgroundColor: "#9c27b0", "&:hover": { backgroundColor: "#ab47bc" } }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmPause}
+            sx={{ color: "white", backgroundColor: "#9c27b0", "&:hover": { backgroundColor: "#ab47bc" } }}
+            autoFocus
+          >
+            Confirm Pause
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={openResumeDialog}
+        onClose={handleCloseResumeDialog}
+        aria-labelledby="resume-dialog-title"
+        aria-describedby="resume-dialog-description"
+      >
+        <DialogTitle id="resume-dialog-title">Resume Bot</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="resume-dialog-description">
+            The bot will resume processing the following incoming messages
+            without responses:
+          </DialogContentText>
+          <ul>
+            {pauseResumeMessages.map((msg) => (
+              <li key={msg.message_id}>{msg.message_text}</li>
+            ))}
+          </ul>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseResumeDialog}
+            sx={{ color: "white", backgroundColor: "#9c27b0", "&:hover": { backgroundColor: "#ab47bc" } }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmResume}
+            sx={{ color: "white", backgroundColor: "#9c27b0", "&:hover": { backgroundColor: "#ab47bc" } }}
+            autoFocus
+          >
+            Confirm Resume
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={openSendMessageDialog}
+        onClose={handleCloseSendMessageDialog}
+        PaperProps={{ style: { width: "80%" } }}
+        aria-labelledby="send-message-dialog-title"
+        aria-describedby="send-message-dialog-description"
+      >
+        <DialogTitle id="send-message-dialog-title">Send Message</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="send-message-dialog-description">
+            Type your message below:
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="messageText"
+            label="Message"
+            type="text"
+            fullWidth
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            multiline
+            rows={4}
+            maxRows={10}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseSendMessageDialog}
+            sx={{ color: "white", backgroundColor: "#9c27b0", "&:hover": { backgroundColor: "#ab47bc" } }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSendMessage}
+            sx={{ color: "white", backgroundColor: "#9c27b0", "&:hover": { backgroundColor: "#ab47bc" } }}
+          >
+            Send
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Tabs value={tabValue} onChange={handleChangeTab}>
+        <Tab
           label="Messages"
           sx={{
             "&.Mui-selected": {
@@ -588,7 +596,7 @@ const PlatformUserMessages = ({ platform }) => {
             },
           }}
         />
-          <Tab
+        <Tab
           label="Files"
           sx={{
             "&.Mui-selected": {
@@ -598,9 +606,7 @@ const PlatformUserMessages = ({ platform }) => {
             },
           }}
         />
-          {/* Disabled Extracted Information Tab below for now, uncomment below to re-enable */}
-          {/* <Tab label="Extracted Information" /> */}
-          <Tab
+        <Tab
           label="Screenshots"
           sx={{
             "&.Mui-selected": {
@@ -610,10 +616,10 @@ const PlatformUserMessages = ({ platform }) => {
             },
           }}
         />
-        </Tabs>
-        {shownTab}
-      </div>
-    );
-  };
-  
-  export default PlatformUserMessages;
+      </Tabs>
+      {shownTab}
+    </div>
+  );
+};
+
+export default PlatformUserMessages;

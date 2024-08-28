@@ -50,7 +50,7 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
         },
         body: JSON.stringify({
           platform_type: msg.platform_type,
-          conversation_id: msg.conversation_id,
+          original_message_text: msg.message_text,
           message_id: msg.message_id,
         }),
       });
@@ -246,24 +246,31 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                     </Link>{" "}
                     to view more
                   </Typography>
-                  {selectedMessage === msg.message_id && editedMessages.length > 0 && (
-                    <TableContainer component={Paper} sx={{ marginTop: 2 }}>
-                      <Table size="small">
-                        <TableBody>
-                          {editedMessages.map((edit, idx) => (
-                            <TableRow key={idx}>
-                              <TableCell sx={{ color: "white" }}>
-                                Edited Message ({new Date(edit.edited_timestamp).toLocaleString()}):
-                              </TableCell>
-                              <TableCell sx={{ color: "white" }}>
-                                {edit.edited_message_text}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  )}
+                  {selectedMessage === msg.message_id &&
+                    editedMessages.length > 0 && (
+                      <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+                        <Table size="small">
+                          <TableBody>
+                            {editedMessages.map((edit, idx) => (
+                              <TableRow key={idx}>
+                                <TableCell sx={{ color: "white" }}>
+                                  {idx === 0
+                                    ? `Current Message (${new Date(
+                                        edit.edited_timestamp
+                                      ).toLocaleString()}):`
+                                    : `Previous Edited Message (${new Date(
+                                        edit.edited_timestamp
+                                      ).toLocaleString()}):`}
+                                </TableCell>
+                                <TableCell sx={{ color: "white" }}>
+                                  {edit.edited_message_text}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    )}
                 </>
               )}
               <Box

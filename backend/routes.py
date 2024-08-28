@@ -178,7 +178,7 @@ create_alert_model = ns_alerts.model('CreateAlert', {
 
 create_edit_model = ns_messages.model('CreateEdit', {
     'scammer_unique_id': fields.String(required=True, description='The unique ID of the scammer', example='unique_scammer_123'),
-    'conversation_id': fields.String(required=True, description='The ID of the conversation', example='conv_456'),
+    'original_message_text': fields.String(required=True, description='The text of the original message', example='Hello, how are you?'),  # Changed from conversation_id to message_text
     'direction': fields.String(required=True, description='The direction of the edit', example='outgoing'),
     'platform_type': fields.String(required=True, description='The type of platform', example='WhatsApp'),
     'message_id': fields.String(description='The ID of the associated message', example='msg_123'),
@@ -186,7 +186,6 @@ create_edit_model = ns_messages.model('CreateEdit', {
     'bot_id': fields.String(description='The ID of the bot associated with the edit', example='bot_001'),
     'edited_timestamp': fields.DateTime(description='The timestamp of the edit', example='2024-08-21T15:00:00')
 })
-
 
 ##################################################
 # Below are the routes for all the API endpoints #
@@ -1503,32 +1502,65 @@ class EditedMessage(Resource):
         try:
             data = request.get_json()
             platform_type = data.get('platform_type')
-            conversation_id = data.get('conversation_id')
+            original_message_text = data.get('original_message_text')  
             message_id = data.get('message_id')
 
-            # Query the Edit table for all edits related to the message
             edited_messages = Edit.query.filter_by(
                 platform_type=platform_type,
-                conversation_id=conversation_id,
+                original_message_text=original_message_text,  
                 message_id=message_id
             ).order_by(Edit.edited_timestamp.desc()).all()
 
             if not edited_messages:
                 return {'error': 'Edited messages not found'}, 404
 
-            # Serialize all edited messages
             return {'edited_messages': [edit.serialize() for edit in edited_messages]}, 200
 
         except Exception as e:
             return {'error': str(e)}, 500
+        
+@ns_conversations.route('/api/conversations/<platform>/<bot_id>/<scammer_unique_id>/pause_status')
+class CheckPauseStatus(Resource):
+    def get(self, platform, bot_id, scammer_unique_id):
+        try:
+            platform_name = platform_mapping.get(platform.lower())
+            if not platform_name:
+                return {'error': 'Invalid platform'}, 400
 
+            conversation = (
+                db.session.query(Conversation)
+                .join(Scammer, Conversation.scammer_id == Scammer.id)
+                .filter(Conversation.bot_id == bot_id, Conversation.platform == platform_name, Scammer.unique_id == scammer_unique_id)
+                .first()
+            )
+            if not conversation:
+                return {"error": "Conversation not found"}, 404
 
+            return {"pause": conversation.pause}, 200
+        except Exception as e:
+            return {"error": "Internal Server Error" + str(e)}, 500
 
+@ns_conversations.route('/api/conversations/<platform>/<bot_id>/<scammer_unique_id>/toggle_pause')
+class TogglePauseConversation(Resource):
+    def put(self, platform, bot_id, scammer_unique_id):
+        try:
+            platform_name = platform_mapping.get(platform.lower())
+            if not platform_name:
+                return {'error': 'Invalid platform'}, 400
 
+            conversation = (
+                db.session.query(Conversation)
+                .join(Scammer, Conversation.scammer_id == Scammer.id)
+                .filter(Conversation.bot_id == bot_id, Conversation.platform == platform_name, Scammer.unique_id == scammer_unique_id)
+                .first()
+            )
+            if not conversation:
+                return {"error": "Conversation not found"}, 404
 
+            conversation.pause = not conversation.pause
+            db.session.commit()
 
-
-
-
-
+            return {"message": "Conversation pause status toggled", "pause": conversation.pause}, 200
+        except Exception as e:
+            return {"error": "Internal Server Error" + str(e)}, 500
 
