@@ -485,3 +485,39 @@ export const deleteAlert = async (alertId) => {
   }
 };
 
+export const insertVictimProperty = async (victimId, key, value) => {
+  try {
+    const response = await fetch(`${API_URL}/victim_details/${victimId}/property`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ key, value }),
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error inserting property: ${error.message}`);
+  }
+};
+
+export const deleteVictimProperty = async (victimId, key) => {
+  try {
+    const response = await fetch(`${API_URL}/victim_details/${victimId}/property/${key}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error deleting property: ${error.message}`);
+  }
+};
+
+

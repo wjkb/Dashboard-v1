@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   useTheme,
@@ -37,47 +37,57 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
   const theme = useTheme();
   const colors = tokens;
 
-  const handleViewMore = async (msg) => {
+  useEffect(() => {
+    const fetchEditedMessages = async (msg) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(`${HOST_URL}/api/messages/edited_message`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            platform_type: msg.platform_type,
+            conversation_id: msg.conversation_id,
+            message_id: msg.message_id,
+            direction: msg.direction,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch the edited messages.");
+        }
+
+        const data = await response.json();
+        const fetchedEditedMessages = data.edited_messages || [];
+
+        if (Array.isArray(fetchedEditedMessages)) {
+          fetchedEditedMessages.sort(
+            (a, b) => new Date(b.edited_timestamp) - new Date(a.edited_timestamp)
+          );
+          setEditedMessages(fetchedEditedMessages);
+        } else {
+          setEditedMessages([]);
+        }
+
+        setLoading(false);
+      } catch (err) {
+        setLoading(false);
+        setError(err.message);
+      }
+    };
+
+    messages.forEach((msg) => {
+      if (msg.response_status?.toLowerCase() === "edited") {
+        fetchEditedMessages(msg);
+      }
+    });
+  }, [messages]);
+
+  const handleViewMore = (msg) => {
     setSelectedMessage(msg.message_id);
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await fetch(`${HOST_URL}/api/messages/edited_message`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          platform_type: msg.platform_type,
-          conversation_id: msg.conversation_id,
-          message_id: msg.message_id,
-          direction: msg.direction,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch the edited messages.");
-      }
-
-      const data = await response.json();
-      const fetchedEditedMessages = data.edited_messages || [];
-
-      if (Array.isArray(fetchedEditedMessages)) {
-        fetchedEditedMessages.sort(
-          (a, b) =>
-            new Date(b.previous_timestamp) - new Date(a.previous_timestamp)
-        );
-        setEditedMessages(fetchedEditedMessages);
-      } else {
-        setEditedMessages([]);
-      }
-
-      setLoading(false);
-    } catch (err) {
-      setLoading(false);
-      setError(err.message);
-    }
   };
 
   const renderFile = (filePath, fileType) => {
@@ -179,12 +189,7 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
       <List>
         {messages.map((msg, index) => {
           const isEdited = msg.response_status?.toLowerCase() === "edited";
-          const mostRecentEdit = isEdited
-            ? editedMessages[0]?.edited_message_text
-            : msg.message_text;
-          const editedAtTimestamp = isEdited
-            ? editedMessages[0]?.previous_timestamp
-            : null;
+          const mostRecentEdit = isEdited ? editedMessages[0] : null;
 
           return (
             <ListItem
@@ -214,18 +219,19 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                 }}
               >
                 {msg.file_path && renderFile(msg.file_path, msg.file_type)}
-                {mostRecentEdit && (
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      wordBreak: "break-word",
-                      overflowWrap: "break-word",
-                      color: "black", // Ensure all message text is black
-                    }}
-                  >
-                    {mostRecentEdit}
-                  </Typography>
-                )}
+                <Typography
+                  variant="body1"
+                  sx={{
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
+                    color: "black",
+                  }}
+                >
+                  {isEdited && mostRecentEdit
+                    ? mostRecentEdit.edited_message_text
+                    : msg.message_text}
+                </Typography>
+
                 {isEdited && (
                   <>
                     <Typography
@@ -250,10 +256,7 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                     </Typography>
                     {selectedMessage === msg.message_id &&
                       editedMessages.length > 0 && (
-                        <TableContainer
-                          component={Paper}
-                          sx={{ marginTop: 2 }}
-                        >
+                        <TableContainer component={Paper} sx={{ marginTop: 2 }}>
                           <Table size="small">
                             <TableBody>
                               {editedMessages.map((edit, idx) => (
@@ -263,7 +266,7 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                                       ? `Original Message (${new Date(
                                           edit.previous_timestamp
                                         ).toLocaleString()}):`
-                                      : `Previous Edited Message (${new Date(
+                                      : `Edited Message (${new Date(
                                           edit.previous_timestamp
                                         ).toLocaleString()}):`}
                                   </TableCell>
@@ -287,17 +290,11 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                   }}
                 >
                   <Typography variant="caption" color={colors.grey[500]}>
-                    {new Date(msg.message_timestamp).toLocaleString()}
-                    {editedAtTimestamp && (
-                      <Typography
-                        component="span"
-                        sx={{ color: "red", fontStyle: "italic", fontSize: '0.75rem' }}
-                      >
-                        {" "}
-                        (Edited at:{" "}
-                        {new Date(editedAtTimestamp).toLocaleString()})
-                      </Typography>
-                    )}
+                    {isEdited && mostRecentEdit
+                      ? `Edited at ${new Date(
+                          mostRecentEdit.edited_timestamp
+                        ).toLocaleString()}`
+                      : new Date(msg.message_timestamp).toLocaleString()}
                   </Typography>
                   {msg.direction === "outgoing" && msg.response_status && (
                     <>

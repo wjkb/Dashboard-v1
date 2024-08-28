@@ -1,5 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { Box, useTheme, Button, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+  Paper,
+  IconButton,
+  TextField,
+  useTheme,
+  Switch
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
+import { insertVictimProperty, deleteVictimProperty } from "../../api";
 import { tokens } from "../../theme";
 import { DataGrid } from "@mui/x-data-grid";
 import Header from "../../components/Header";
@@ -7,6 +27,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import CheckIcon from "@mui/icons-material/Check";
 import Circle from "@mui/icons-material/Circle";
 import EditIcon from "@mui/icons-material/Edit";
+import Tooltip from "@mui/material/Tooltip";
+import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import {
   getAllBots,
   editBot,
@@ -18,8 +40,9 @@ import EditBotDialog from "./EditBotDialog";
 import DeactivateBotDialog from "./DeactivateBotDialog";
 import ActivateBotDialog from "./ActivateBotDialog";
 import DeleteBotDialog from "./DeleteBotDialog";
-import Tooltip from "@mui/material/Tooltip";
-import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
+
+// Import victim details JSON file
+import victimDetails from "../victim_details.json";
 
 /**
  * Manages the display and operations for bots including editing and deleting.
@@ -45,6 +68,10 @@ const ManageBots = () => {
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [activateDialogOpen, setActivateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [personaDialogOpen, setPersonaDialogOpen] = useState(false);
+
+  // State for new property
+  const [newProperty, setNewProperty] = useState({ key: "", value: "" });
 
   useEffect(() => {
     /**
@@ -53,13 +80,25 @@ const ManageBots = () => {
     const fetchBots = async () => {
       try {
         const botsData = await getAllBots();
-        const transformedData = botsData.map((bot) => ({
-          ...bot,
-          Facebook: bot.platforms.includes("Facebook"),
-          WhatsApp: bot.platforms.includes("WhatsApp"),
-          Telegram: bot.platforms.includes("Telegram"),
-        }));
-        console.log(transformedData);
+
+        // Iterate over each bot and check against the victim_details.json data
+        const transformedData = botsData.map((bot) => {
+          // Find the victim entity by matching the id
+          const victim = Object.values(victimDetails).find(
+            (entity) => entity.id === bot.id
+          );
+
+          // If bot.name or bot.email is null, replace with victim details
+          return {
+            ...bot,
+            name: bot.name || victim?.name, // Use victim's name if bot's name is null
+            email: bot.email || victim?.email, // Use victim's email if bot's email is null
+            fullDetails: victim || {}, // Store all other victim details for view more
+            Facebook: bot.platforms.includes("Facebook"),
+            WhatsApp: bot.platforms.includes("WhatsApp"),
+            Telegram: bot.platforms.includes("Telegram"),
+          };
+        });
 
         setBots(transformedData);
       } catch (err) {
@@ -211,12 +250,75 @@ const ManageBots = () => {
     try {
       await deleteBot(selectedBot.id);
       setBots(bots.filter((bot) => bot.id !== selectedBot.id));
-      // setDeactiveBots(deactiveBots.filter((bot) => bot.id !== selectedBot.id));
       handleDeleteDialogClose();
     } catch (err) {
       setError(err.message);
     }
   };
+
+  /**
+   * Handles the click event for viewing more details about a bot.
+   *
+   * @param {Object} bot - The bot whose details are to be viewed.
+   */
+  const handleViewMoreClick = (bot) => {
+    setSelectedBot(bot);
+    setPersonaDialogOpen(true);
+  };
+
+  /**
+   * Closes the persona dialog.
+   */
+  const handlePersonaDialogClose = () => {
+    setPersonaDialogOpen(false);
+    setSelectedBot(null);
+  };
+
+  /**
+   * Handles the deletion of a property from the persona details.
+   *
+   * @param {string} keyToDelete - The key of the property to delete.
+   */
+// For inserting a new property
+  const handleAddProperty = async () => {
+    if (newProperty.key && newProperty.value) {
+      try {
+        await insertVictimProperty(selectedBot.id, newProperty.key, newProperty.value);
+        const updatedDetails = {
+          ...selectedBot.fullDetails,
+          [newProperty.key]: newProperty.value,
+        };
+        const updatedBot = { ...selectedBot, fullDetails: updatedDetails };
+        setSelectedBot(updatedBot);
+        setBots(prevBots =>
+          prevBots.map(bot => (bot.id === selectedBot.id ? updatedBot : bot))
+        );
+        setNewProperty({ key: "", value: "" });
+      } catch (error) {
+        console.error("Failed to add property:", error);
+        setError("Failed to add property");
+      }
+    }
+  };
+
+  // For deleting a property
+  const handleDeleteProperty = async (keyToDelete) => {
+    try {
+      await deleteVictimProperty(selectedBot.id, keyToDelete);
+      const updatedDetails = { ...selectedBot.fullDetails };
+      delete updatedDetails[keyToDelete];
+      const updatedBot = { ...selectedBot, fullDetails: updatedDetails };
+      setSelectedBot(updatedBot);
+      setBots(prevBots =>
+        prevBots.map(bot => (bot.id === selectedBot.id ? updatedBot : bot))
+      );
+    } catch (error) {
+      console.error("Failed to delete property:", error);
+      setError("Failed to delete property");
+    }
+  };
+
+  
 
   /**
    * Renders platform icon based on the presence of the platform.
@@ -257,11 +359,9 @@ const ManageBots = () => {
       renderCell: (params) => {
         const isActive = params.value;
         const color = isActive ? "green" : "red";
-        const statusText = isActive ? "Activated" : "Deactivated";
-
         return (
-          <Tooltip title={statusText} arrow>
-            <FiberManualRecordIcon style={{ color, marginTop: "15px" }} />
+          <Tooltip title={isActive ? "Activated" : "Deactivated"} arrow>
+            <FiberManualRecordIcon style={{ color }} />
           </Tooltip>
         );
       },
@@ -270,7 +370,6 @@ const ManageBots = () => {
       field: "id",
       headerName: "ID",
       flex: 1,
-      cellClassName: "phone-column--cell",
     },
     {
       field: "name",
@@ -283,16 +382,19 @@ const ManageBots = () => {
       flex: 1,
     },
     {
-      field: "persona",
+      field: "viewMore",
       headerName: "Persona",
       flex: 1,
+      renderCell: (params) => (
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => handleViewMoreClick(params.row)}
+        >
+          View More
+        </Button>
+      ),
     },
-    // {
-    //   field: "model",
-    //   headerName: "Model",
-    //   flex: 1,
-    // },
-
     {
       field: "Facebook",
       headerName: "Facebook",
@@ -331,159 +433,34 @@ const ManageBots = () => {
       flex: 2,
       renderCell: (params) => (
         <Box>
-          {/* Edit button */}
           <Button
             variant="contained"
             color="primary"
             startIcon={<EditIcon />}
-            style={{ width: "100px", marginRight: "10px" }}
             onClick={() => handleEditClick(params.row)}
           >
             Edit
           </Button>
-
-          {params.row.active ? (
-            // Deactivate button
-            <Button
-              variant="contained"
-              color="warning"
-              startIcon={<CloseIcon />}
-              style={{ width: "100px", marginRight: "10px" }}
-              onClick={() => handleDeactivateClick(params.row)}
-            >
-              Deactivate
-            </Button>
-          ) : (
-            <>
-              {/* Activate button */}
-              <Button
-                variant="contained"
-                color="success"
-                startIcon={<CheckIcon />}
-                style={{ width: "100px", marginRight: "10px" }}
-                onClick={() => handleActivateClick(params.row)}
-              >
-                Activate
-              </Button>
-
-              {/* Delete button */}
-              <Button
-                variant="contained"
-                color="error"
-                startIcon={<CloseIcon />}
-                style={{ width: "100px", marginRight: "10px" }}
-                onClick={() => handleDeleteClick(params.row)}
-              >
-                Delete
-              </Button>
-            </>
-          )}
+  
+          <Switch
+            checked={params.row.active}
+            onChange={() =>
+              params.row.active
+                ? handleDeactivateClick(params.row)
+                : handleActivateClick(params.row)
+            }
+            color="green"
+            sx={{
+              marginLeft: 2, 
+              "& .MuiSwitch-track": {
+                backgroundColor: params.row.active ? "green" : "red",
+              },
+            }}
+          />
         </Box>
       ),
     },
   ];
-
-  // const columnsDeactive = [
-  //   {
-  //     field: "id",
-  //     headerName: "ID",
-  //     flex: 1,
-  //     cellClassName: "phone-column--cell",
-  //   },
-  //   {
-  //     field: "name",
-  //     headerName: "Name",
-  //     flex: 1,
-  //   },
-  //   {
-  //     field: "email",
-  //     headerName: "Email",
-  //     flex: 1,
-  //   },
-  //   {
-  //     field: "persona",
-  //     headerName: "Persona",
-  //     flex: 1,
-  //   },
-  //   {
-  //     field: "model",
-  //     headerName: "Model",
-  //     flex: 1,
-  //   },
-  //   {
-  //     field: "Facebook",
-  //     headerName: "Facebook",
-  //     flex: 0.5,
-  //     renderCell: (params) =>
-  //       renderHealthIcon(
-  //         "Facebook",
-  //         params.row.Facebook,
-  //         params.row.health_status
-  //       ),
-  //   },
-  //   {
-  //     field: "WhatsApp",
-  //     headerName: "WhatsApp",
-  //     flex: 0.5,
-  //     renderCell: (params) =>
-  //       renderHealthIcon(
-  //         "WhatsApp",
-  //         params.row.WhatsApp,
-  //         params.row.health_status
-  //       ),
-  //   },
-  //   {
-  //     field: "Telegram",
-  //     headerName: "Telegram",
-  //     flex: 0.5,
-  //     renderCell: (params) =>
-  //       renderHealthIcon(
-  //         "Telegram",
-  //         params.row.Telegram,
-  //         params.row.health_status
-  //       ),
-  //   },
-  //   {
-  //     headerName: "Actions",
-  //     flex: 2,
-  //     renderCell: (params) => (
-  //       <Box>
-  //         {/* Edit button */}
-  //         <Button
-  //           variant="contained"
-  //           color="primary"
-  //           startIcon={<EditIcon />}
-  //           style={{ width: "100px", marginRight: "10px" }}
-  //           onClick={() => handleEditClick(params.row)}
-  //         >
-  //           Edit
-  //         </Button>
-
-  //         {/* Activate button */}
-  //         <Button
-  //           variant="contained"
-  //           color="success"
-  //           startIcon={<CheckIcon />}
-  //           style={{ width: "100px", marginRight: "10px" }}
-  //           onClick={() => handleActivateClick(params.row)}
-  //         >
-  //           Activate
-  //         </Button>
-
-  //         {/* Delete button */}
-  //         <Button
-  //           variant="contained"
-  //           color="error"
-  //           startIcon={<CloseIcon />}
-  //           style={{ width: "100px", marginRight: "10px" }}
-  //           onClick={() => handleDeleteClick(params.row)}
-  //         >
-  //           Delete
-  //         </Button>
-  //       </Box>
-  //     ),
-  //   },
-  // ];
 
   if (loading) {
     return <div>Loading...</div>;
@@ -496,7 +473,6 @@ const ManageBots = () => {
   return (
     <Box margin="20px" width="auto">
       <Header title="All Bots" subtitle="Managing All Bots" />
-      {/* DataGrid for displaying active bots */}
       <Box
         height={"65vh"}
         width={"100%"}
@@ -529,44 +505,6 @@ const ManageBots = () => {
         <DataGrid rows={bots} columns={columnsActive} />
       </Box>
 
-      {/* Conditional rendering of DataGrid for displaying deactivated bots
-      {deactiveBots.length > 0 && (
-        <>
-          <Header subtitle="Managing Deactivated Bots" />
-          <Box
-            height="20vh"
-            sx={{
-              "& .MuiDataGrid-root": {
-                border: "none",
-              },
-              "& .MuiDataGrid-cell": {
-                borderBottom: "none",
-              },
-              "& .phone-column--cell": {
-                color: colors.greenAccent,
-              },
-              "& .MuiDataGrid-columnHeader": {
-                backgroundColor: "#28231d",
-                borderBottom: "none",
-              },
-              "& .MuiDataGrid-virtualScroller": {
-                backgroundColor: "#0c0908",
-              },
-              "& .MuiDataGrid-footerContainer": {
-                borderTop: "none",
-                backgroundColor: "#28231d",
-              },
-              "& .MuiCheckbox-root": {
-                color: `${colors.greenAccent} !important`,
-              },
-            }}
-          >
-            <DataGrid rows={deactiveBots} columns={columnsDeactive} />
-          </Box>
-        </>
-      )} */}
-
-      {/* Legend for Status Icons */}
       <Box mt={2}>
         <Typography variant="h6" gutterBottom>
           Legend for Status Icons:
@@ -589,8 +527,7 @@ const ManageBots = () => {
           <span className="circle orange" style={{ marginRight: 8 }}></span>
           <Circle style={{ color: "orange" }} fontSize="small" />
           <Typography variant="body1">
-            Idle: Bot is currently active but idle (no recent messages
-            exchanged)
+            Idle: Bot is currently active but idle (no recent messages exchanged)
           </Typography>
         </Box>
         <Box display="flex" alignItems="center" mb={1}>
@@ -602,7 +539,6 @@ const ManageBots = () => {
         </Box>
       </Box>
 
-      {/* Conditional rendering of EditBotDialog */}
       {selectedBot && (
         <EditBotDialog
           bot={selectedBot}
@@ -612,7 +548,6 @@ const ManageBots = () => {
         />
       )}
 
-      {/* Conditional rendering of DeactivateBotDialog */}
       {selectedBot && (
         <DeactivateBotDialog
           bot={selectedBot}
@@ -622,7 +557,6 @@ const ManageBots = () => {
         />
       )}
 
-      {/* Conditional rendering of ActivateBotDialog */}
       {selectedBot && (
         <ActivateBotDialog
           bot={selectedBot}
@@ -632,7 +566,6 @@ const ManageBots = () => {
         />
       )}
 
-      {/* Conditional rendering of DeleteDialog */}
       {selectedBot && (
         <DeleteBotDialog
           bot={selectedBot}
@@ -641,6 +574,85 @@ const ManageBots = () => {
           onConfirm={handleDeleteConfirm}
         />
       )}
+
+      {selectedBot && (
+        <Dialog
+          open={personaDialogOpen}
+          onClose={handlePersonaDialogClose}
+          maxWidth="md"
+        >
+          <DialogTitle>
+            {selectedBot.name}'s Persona
+            <IconButton
+              aria-label="close"
+              onClick={handlePersonaDialogClose}
+              style={{
+                position: 'absolute',
+                right: 8,
+                top: 8,
+                color: theme.palette.grey[500],
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableBody>
+                  {Object.entries(selectedBot.fullDetails).map(([key, value]) => (
+                    <TableRow key={key}>
+                      <TableCell component="th" scope="row">
+                        {key}
+                      </TableCell>
+                      <TableCell>{value}</TableCell>
+                      <TableCell align="right">
+                        <IconButton
+                          onClick={() => handleDeleteProperty(key)}
+                          color="secondary"
+                          style={{ color: "red" }} // Make the trashcan icon red
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow>
+                    <TableCell>
+                      <TextField
+                        label="New Key"
+                        value={newProperty.key}
+                        onChange={(e) =>
+                          setNewProperty({ ...newProperty, key: e.target.value })
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        label="New Value"
+                        value={newProperty.value}
+                        onChange={(e) =>
+                          setNewProperty({ ...newProperty, value: e.target.value })
+                        }
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <IconButton
+                        onClick={handleAddProperty}
+                        color="primary"
+                        style={{ color: "limegreen" }} // Make the + icon bright green
+                      >
+                        <AddIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </DialogContent>
+        </Dialog>
+      )}
+
     </Box>
   );
 };

@@ -7,20 +7,95 @@ import {
   Typography,
   Tooltip,
   Box,
-  useTheme,
   Button,
-  Collapse,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+  Paper,
+  IconButton,
 } from "@mui/material";
 import { tokens } from "../../theme";
 import { DataGrid } from "@mui/x-data-grid";
-import Header from "../../components/Header";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import { useNavigate, Outlet } from "react-router-dom";
-import { getPlatformBots } from "../../api";
+import { getPlatformBots, toggleBotPauseSelectively } from "../../api";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import PauseIcon from "@mui/icons-material/Pause";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import { toggleBotPauseSelectively } from "../../api";
+import CloseIcon from "@mui/icons-material/Close";
+import victimDetails from "../victim_details.json";
+
+// PauseDialog Component
+const PauseDialog = ({ open, onClose, onConfirm }) => (
+  <Dialog open={open} onClose={onClose}>
+    <DialogTitle sx={{ fontSize: "h3.fontSize" }}>Pause Bot</DialogTitle>
+    <DialogContent>
+      <Typography>Pausing bot. Will not reply to messages.</Typography>
+    </DialogContent>
+    <DialogActions>
+      <Button
+        onClick={onClose}
+        sx={{
+          color: "white",
+          backgroundColor: "#9c27b0",
+          "&:hover": { backgroundColor: "#ab47bc" },
+        }}
+      >
+        Cancel
+      </Button>
+      <Button
+        onClick={onConfirm}
+        sx={{
+          color: "white",
+          backgroundColor: "#9c27b0",
+          "&:hover": { backgroundColor: "#ab47bc" },
+        }}
+      >
+        Confirm
+      </Button>
+    </DialogActions>
+  </Dialog>
+);
+
+// ResumeDialog Component
+const ResumeDialog = ({ open, onClose, onConfirm }) => (
+  <Dialog open={open} onClose={onClose}>
+    <DialogTitle sx={{ fontSize: "h3.fontSize" }}>Resume Bot</DialogTitle>
+    <DialogContent>
+      <Typography>
+        Resuming bot. Conversations that were previously paused and
+        conversations with pending incoming messages will be paused.
+      </Typography>
+      <Typography>
+        Manually unpause the conversation to generate a response.
+      </Typography>
+    </DialogContent>
+    <DialogActions>
+      <Button
+        onClick={onClose}
+        sx={{
+          color: "white",
+          backgroundColor: "#9c27b0",
+          "&:hover": { backgroundColor: "#ab47bc" },
+        }}
+      >
+        Cancel
+      </Button>
+      <Button
+        onClick={onConfirm}
+        sx={{
+          color: "white",
+          backgroundColor: "#9c27b0",
+          "&:hover": { backgroundColor: "#ab47bc" },
+        }}
+      >
+        Confirm
+      </Button>
+    </DialogActions>
+  </Dialog>
+);
 
 /**
  * Component to manage and display Platform bots.
@@ -37,6 +112,8 @@ const PlatformBots = ({ platform }) => {
   const [openPauseDialog, setOpenPauseDialog] = useState(false);
   const [openResumeDialog, setOpenResumeDialog] = useState(false);
   const [currentBotId, setCurrentBotId] = useState(null);
+  const [personaDialogOpen, setPersonaDialogOpen] = useState(false);
+  const [selectedBot, setSelectedBot] = useState(null);
 
   const toggleMainTableVisibility = () => {
     setHideMainTable((prev) => !prev);
@@ -46,9 +123,25 @@ const PlatformBots = ({ platform }) => {
     const fetchBots = async () => {
       try {
         const botsData = await getPlatformBots(platform);
-        // console.log("Bots data:", botsData);
 
-        setBots(botsData);
+        // Transform data with victim details
+        const transformedData = botsData.map((bot) => {
+          const victim = Object.values(victimDetails).find(
+            (entity) => entity.id === bot.id
+          );
+
+          return {
+            ...bot,
+            name: bot.name || victim?.name,
+            email: bot.email || victim?.email,
+            fullDetails: victim || {},
+            Facebook: bot.platforms.includes("Facebook"),
+            WhatsApp: bot.platforms.includes("WhatsApp"),
+            Telegram: bot.platforms.includes("Telegram"),
+          };
+        });
+
+        setBots(transformedData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -59,79 +152,7 @@ const PlatformBots = ({ platform }) => {
     fetchBots();
   }, [platform]);
 
-  // Define dialog content for pausing
-  const PauseDialog = ({ open, onClose, onConfirm }) => (
-    <Dialog open={open} onClose={onClose}>
-      <DialogTitle sx={{ fontSize: "h3.fontSize" }}>Pause Bot</DialogTitle>
-      <DialogContent>
-        <Typography>Pausing bot. Will not reply to messages.</Typography>
-      </DialogContent>
-      <DialogActions>
-        <Button
-          onClick={onClose}
-          sx={{
-            color: "white",
-            backgroundColor: "#9c27b0",
-            "&:hover": { backgroundColor: "#ab47bc" },
-          }}
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={onConfirm}
-          sx={{
-            color: "white",
-            backgroundColor: "#9c27b0",
-            "&:hover": { backgroundColor: "#ab47bc" },
-          }}
-        >
-          Confirm
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-
-  // Define dialog content for resuming
-  const ResumeDialog = ({ open, onClose, onConfirm }) => (
-    <Dialog open={open} onClose={onClose}>
-      <DialogTitle sx={{ fontSize: "h3.fontSize" }}>Resume Bot</DialogTitle>
-      <DialogContent>
-        <Typography>
-          Resuming bot. Conversations that were previously paused and
-          conversations with pending incoming messages will be paused.
-        </Typography>
-
-        <Typography>
-          Manually unpause the conversation to generate a response.
-        </Typography>
-      </DialogContent>
-      <DialogActions>
-        <Button
-          onClick={onClose}
-          sx={{
-            color: "white",
-            backgroundColor: "#9c27b0",
-            "&:hover": { backgroundColor: "#ab47bc" },
-          }}
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={onConfirm}
-          sx={{
-            color: "white",
-            backgroundColor: "#9c27b0",
-            "&:hover": { backgroundColor: "#ab47bc" },
-          }}
-        >
-          Confirm
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-
   // Pausing/Unpausing
-
   const togglePause = async (botId) => {
     try {
       await toggleBotPauseSelectively(botId);
@@ -139,7 +160,6 @@ const PlatformBots = ({ platform }) => {
       const updatedBots = bots.map((bot) =>
         bot.id === botId ? { ...bot, pause: !bot.pause } : bot
       );
-      // console.log(updatedBots);
       setBots(updatedBots);
     } catch (error) {
       console.error("Failed to toggle pause state:", error);
@@ -158,7 +178,6 @@ const PlatformBots = ({ platform }) => {
   };
 
   const handlePauseConfirm = () => {
-    // Call your pause function here with currentBotId
     togglePause(currentBotId);
     handleClosePauseDialog();
   };
@@ -174,9 +193,19 @@ const PlatformBots = ({ platform }) => {
   };
 
   const handleResumeConfirm = () => {
-    // Call your resume function here with currentBotId
     togglePause(currentBotId);
     handleCloseResumeDialog();
+  };
+
+  // Handle persona view
+  const handleViewPersonaClick = (bot) => {
+    setSelectedBot(bot);
+    setPersonaDialogOpen(true);
+  };
+
+  const handlePersonaDialogClose = () => {
+    setPersonaDialogOpen(false);
+    setSelectedBot(null);
   };
 
   const columns = [
@@ -211,8 +240,16 @@ const PlatformBots = ({ platform }) => {
       field: "persona",
       headerName: "Persona",
       flex: 1,
+      renderCell: (params) => (
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => handleViewPersonaClick(params.row)}
+        >
+          View Persona
+        </Button>
+      ),
     },
-
     {
       field: "conversations",
       headerName: "Conversations",
@@ -238,7 +275,7 @@ const PlatformBots = ({ platform }) => {
       headerName: "Pause/Resume Bot",
       flex: 1,
       renderCell: (params) => {
-        const isPaused = params.row.pause; // Adjust based on your bot state
+        const isPaused = params.row.pause;
         return (
           <Box>
             {isPaused ? (
@@ -254,10 +291,10 @@ const PlatformBots = ({ platform }) => {
                     whiteSpace: "nowrap",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
-                    padding: "5px", // Adjust padding to fit text
+                    padding: "5px",
                     display: "flex",
-                    justifyContent: "center", // Center text
-                    alignItems: "center", // Center text
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
                 >
                   Resume Bot
@@ -271,15 +308,16 @@ const PlatformBots = ({ platform }) => {
                   startIcon={<PauseIcon />}
                   onClick={() => handleOpenPauseDialog(params.row.id)}
                   sx={{
-                    width: "50%",
+                    width: "110px", 
+                    height: "40px", 
                     margin: "10px",
                     whiteSpace: "nowrap",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
-                    padding: "5px", // Adjust padding to fit text
+                    padding: "5px",
                     display: "flex",
-                    justifyContent: "center", // Center text
-                    alignItems: "center", // Center text
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
                 >
                   Pause Bot
@@ -309,13 +347,12 @@ const PlatformBots = ({ platform }) => {
             style={{
               display: "flex",
               width: "100%",
-              fontSize: "0.8rem", // Equivalent to h1 size
-              backgroundColor: "#808080", // Grey background
-              color: "#ffffff", // White font color
-              borderRadius: "8px", // Slightly rounded edges
-              padding: "5px 10px", // Larger padding for a big button
-              border: "3px solid #ffffff", // Thick white border
-              // marginBottom: "10px"
+              fontSize: "0.8rem",
+              backgroundColor: "#808080",
+              color: "#ffffff",
+              borderRadius: "8px",
+              padding: "5px 10px",
+              border: "3px solid #ffffff",
             }}
           >
             {hideMainTable ? `Show ${platform} bots` : `Hide ${platform} bots`}
@@ -356,7 +393,7 @@ const PlatformBots = ({ platform }) => {
                 sortModel={[
                   {
                     field: "active",
-                    sort: "desc", // 'desc' sorts true first, 'asc' sorts false first
+                    sort: "desc",
                   },
                 ]}
               />
@@ -376,6 +413,47 @@ const PlatformBots = ({ platform }) => {
           onClose={handleCloseResumeDialog}
           onConfirm={handleResumeConfirm}
         />
+
+        {/* Persona Dialog */}
+        {selectedBot && (
+          <Dialog
+            open={personaDialogOpen}
+            onClose={handlePersonaDialogClose}
+            maxWidth="md"
+          >
+            <DialogTitle>
+              {selectedBot.name}'s Persona
+              <IconButton
+                aria-label="close"
+                onClick={handlePersonaDialogClose}
+                style={{
+                  position: "absolute",
+                  right: 8,
+                  top: 8,
+                  color: "gray",
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent>
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableBody>
+                    {Object.entries(selectedBot.fullDetails).map(([key, value]) => (
+                      <TableRow key={key}>
+                        <TableCell component="th" scope="row">
+                          {key}
+                        </TableCell>
+                        <TableCell>{value}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </DialogContent>
+          </Dialog>
+        )}
         <Outlet />
       </div>
     </div>
