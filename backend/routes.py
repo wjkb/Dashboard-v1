@@ -1,10 +1,11 @@
 import sys
 import os
+import json
 
 sys.path.append('..')
 from utils.send_utils import send_proactive_queue, send_main_convo_message
 from urllib.parse import unquote
-from flask import Blueprint, request
+from flask import Blueprint, request, jsonify
 from flask_restx import Api, Resource, fields
 from datetime import datetime
 import json
@@ -46,6 +47,7 @@ ns_messages = api.namespace('messages', description='Message operations', path='
 ns_utils = api.namespace('utils', description='Utility operations', path='/')
 ns_graph_insights = api.namespace('graph_insights', description='Graph Insights operations', path='/')
 ns_alerts = api.namespace('alerts', description='Alert operations', path='/')
+ns_victim_details = api.namespace('victim_details', description='Victim Details operations', path='/')
 
 # Define models for Swagger documentation
 start_bot_script_model = ns_utils.model('StartBotScript', {
@@ -186,8 +188,6 @@ create_edit_model = ns_messages.model('CreateEdit', {
     'edited_message_text': fields.String(required=True, description='The updated message text after editing', example='Edited message text.'),
     'bot_id': fields.String(description='The ID of the bot associated with the edit', example='bot_001'),
     'edited_timestamp': fields.DateTime(description='The timestamp of the edit', example='2024-08-21T15:00:00'),
-    'conversation_id': fields.Integer(description='The ID of the associated conversation', example=42),  
-    'previous_timestamp': fields.DateTime(description='The timestamp of the original message before editing', example='2024-08-20T14:00:00'),  #
 })
 
 ##################################################
@@ -354,73 +354,6 @@ class ActivateBot(Resource):
             return {"message": "Bot activated successfully"}, 200
         except Exception as e:
             return {"error": "Internal Server Error"}, 500
-        
-@ns_bots.route('/api/bots/<bot_id>/toggle_pause')
-class TogglePauseBot(Resource):
-    @ns_bots.doc('toggle_pause_bot')
-    def put(self, bot_id):
-        try:
-            bot = Bot.query.get(bot_id)
-            if not bot:
-                return {"error": "Bot not found"}, 404
-            
-            bot.pause = not bot.pause
-            db.session.commit()
-
-            # If bot is resumed, get all conversations related to the bot
-            if not bot.pause:
-                platform_message_classes = {
-                    'Facebook': FacebookMessage,
-                    'WhatsApp': WhatsappMessage,
-                    'Telegram': TelegramMessage
-                }
-                conversations = Conversation.query.filter_by(bot_id=bot_id).all()
-                for conversation in conversations:
-                    # Get bot_id and scammer_unique_id from conversation
-                    bot_id = conversation.bot_id
-                    scammer_unique_id = Scammer.query.get(conversation.scammer_id).unique_id
-
-                    # Get all the last incoming messages up till but not including the last outgoing message, or all incoming messages if no outgoing message, and send them to send_main_convo_message
-                    for platform in ['Facebook', 'WhatsApp', 'Telegram']:
-                        platform_messages = (
-                            db.session.query(platform_message_classes[platform])
-                            .filter_by(conversation_id=conversation.id)
-                            .order_by(platform_message_classes[platform].message_timestamp.asc())
-                            .all()
-                        )
-                        # Get the last outgoing message
-                        last_outgoing_message = (
-                            db.session.query(platform_message_classes[platform])
-                            .filter_by(conversation_id=conversation.id, direction='outgoing')
-                            .order_by(platform_message_classes[platform].message_timestamp.desc())
-                            .first()
-                        )
-                        if last_outgoing_message:
-                            messages_to_send = [msg for msg in platform_messages if msg.direction == 'incoming' and msg.message_timestamp > last_outgoing_message.message_timestamp]
-                        else:
-                            messages_to_send = [msg for msg in platform_messages if msg.direction == 'incoming']
-
-                        # Function to select only wanted fields from the message dictionary
-                        wanted_fields = ['platform', 'bot_id', 'scammer_id', 'direction', 'message_id', 'message_text', 'message_timestamp']
-                        def select_wanted_fields(message: dict, wanted_fields: list = wanted_fields):
-                            return {key: value for key, value in message.items() if key in wanted_fields}
-                        
-                        message_list = []
-                        for message in messages_to_send:
-                            message = message.serialize()
-                            message['platform'] = API_mapping[platform]
-                            message['bot_id'] = bot_id
-                            message['scammer_id'] = scammer_unique_id
-                            filtered_message = select_wanted_fields(message, wanted_fields)
-                            message_list.append(filtered_message)
-
-                        if message_list:
-                            send_main_convo_message(message_list)
-
-
-            return {"message": "Bot pause status updated successfully to " + str(bot.pause)}, 200
-        except Exception as e:
-            return {"error": "Internal Server Error"}, 500
             
 @ns_bots.route('/api/bots/<bot_id>/toggle_pause_selectively')
 class TogglePauseBotSelectively(Resource):
@@ -554,42 +487,6 @@ class TogglePauseConversation(Resource):
 
         except Exception as e:
             return {"error": "Internal Server Error: " + str(e)}, 500
-
-
-@ns_conversations.route('/api/conversations/get_conversation_pause_status')
-class getConversationPauseStatus(Resource):
-    @ns_conversations.doc('get_conversation_pause_status')
-    def post(self):
-        try:
-            try:
-                data = request.get_json()
-                
-            except Exception as e:
-                return {'error': 'Cannot receive data'}, 400
-
-            platform = data.get('platform')
-            bot_id = data.get('bot_id')
-            scammer_unique_id = data.get('scammer_unique_id')
-
-            platform_name = platform_mapping.get(platform.lower())
-            if not platform_name:
-                return {'error': 'Invalid platform'}, 400
-
-            # Get the conversation
-            conversation = (
-                db.session.query(Conversation)
-                .join(Scammer, Conversation.scammer_id == Scammer.id)
-                .filter(Conversation.bot_id == bot_id, Conversation.platform == platform_name, Scammer.unique_id == scammer_unique_id)
-                .first()
-            )
-            if not conversation:
-                return {"error": "Conversation not found"}, 404
-            
-            return {"pause_status": conversation.pause}, 200
-
-        except Exception as e:
-            print(f"Error occurred: {e}")
-            return {"error": "Internal Server Error"}, 500
 
 @ns_platform_bots.route('/api/<platform>/bots')
 class PlatformBots(Resource):
@@ -1328,10 +1225,8 @@ class RecentMessages(Resource):
         
         except Exception as e:
             return {'error': str(e)}, 500
-
-
 @ns_alerts.route('/api/alerts')
-class AlertsResource(Resource):
+class ReceiveAlerts(Resource):
     @ns_alerts.expect(create_alert_model)
     def post(self):
         try:
@@ -1365,7 +1260,6 @@ class AlertsResource(Resource):
             return {'alerts': serialized_alerts, 'unread_count': unread_count}, 200
         except Exception as e:
             return {'error': str(e)}, 500
-
 @ns_alerts.route('/api/alerts/<int:alert_id>/mark_read')
 class MarkAlertAsRead(Resource):
     def put(self, alert_id):
@@ -1517,7 +1411,7 @@ class EditedMessage(Resource):
             return {'error': str(e)}, 500
         
 @ns_conversations.route('/api/conversations/<platform>/<bot_id>/<scammer_unique_id>/pause_status')
-class CheckPauseStatus(Resource):
+class GetConversationPauseStatus(Resource):
     def get(self, platform, bot_id, scammer_unique_id):
         try:
             platform_name = platform_mapping.get(platform.lower())
@@ -1538,55 +1432,37 @@ class CheckPauseStatus(Resource):
             return {"error": "Internal Server Error" + str(e)}, 500
         
 
+# Victim_Details_Json File
 def find_file(filename, search_directory):
     for root, dirs, files in os.walk(search_directory):
         if filename in files:
             return os.path.join(root, filename)
     return None
 
-filename = 'victim_details.json'
-current_directory = os.getcwd()
-search_directory =  os.path.dirname(current_directory)
-victim_details_path = find_file(filename, search_directory)
-
-@ns_bots.route('/api/victim_details/<victim_id>/property', methods=['POST'])
-class InsertVictimProperty(Resource):
-    def post(self, victim_id):
+@ns_victim_details.route('/api/victim_details_json')
+class GetVictimDetailsJson(Resource):
+    def get(self):
         try:
-            # Load the existing victim details from JSON file
+            global victim_details_path
+            # get the path of victim_details_json file
+            current_directory = os.getcwd()
+            search_directory = os.path.dirname(current_directory)
+            victim_details_path = find_file('victim_details.json', search_directory)
+
+            if not victim_details_path:
+                return {'error': 'victim_details.json file not found'}, 404
+
+            #load and return the json file
             with open(victim_details_path, 'r') as file:
-                victim_details = json.load(file)
+                data = json.load(file)
 
-            # Find the correct victim entity by matching bot.id to the id of each entity
-            victim_entity = None
-            for victim_name, details in victim_details.items():
-                if details['id'] == victim_id:
-                    victim_entity = victim_name
-                    break
+            return jsonify(data)
 
-            if victim_entity is None:
-                return {'error': 'Victim ID not found'}, 404
-
-            # Get the property data from the request
-            data = request.json
-            key = data.get('key')
-            value = data.get('value')
-
-            if not key or not value:
-                return {'error': 'Missing key or value'}, 400
-
-            # Add the new property to the specific victim's details
-            victim_details[victim_entity][key] = value
-
-            # Save the updated data back to the JSON file
-            with open(victim_details_path, 'w') as file:
-                json.dump(victim_details, file, indent=4)
-
-            return {'message': 'Property added successfully'}, 201
         except Exception as e:
             return {'error': str(e)}, 500
+
         
-@ns_bots.route('/api/victim_details/<victim_id>/property', methods=['POST'])
+@ns_victim_details.route('/api/victim_details/<victim_id>/property', methods=['POST'])
 class InsertVictimProperty(Resource):
     def post(self, victim_id):
         try:
@@ -1624,7 +1500,7 @@ class InsertVictimProperty(Resource):
             return {'error': str(e)}, 500
 
 
-@ns_bots.route('/api/victim_details/<victim_id>/property/<key>', methods=['DELETE'])
+@ns_victim_details.route('/api/victim_details/<victim_id>/property/<key>', methods=['DELETE'])
 class DeleteVictimProperty(Resource):
     def delete(self, victim_id, key):
         try:
