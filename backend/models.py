@@ -294,38 +294,12 @@ class Edit(db.Model):
         if 'conversation_id' not in kwargs or kwargs['conversation_id'] is None:
             self.conversation_id = self.get_conversation_id()
 
-        if 'previous_timestamp' not in kwargs or kwargs['previous_timestamp'] is None:
-            self.previous_timestamp = self.get_previous_timestamp()
-
     def get_conversation_id(self):
         conversation = db.session.query(Conversation).filter_by(
             bot_id=self.bot_id,
             platform=self.platform_type
         ).first()
         return conversation.id if conversation else None
-
-    def get_previous_timestamp(self):
-        message = None
-        if self.platform_type == 'WhatsApp':
-            message = db.session.query(WhatsappMessage).filter_by(
-                message_id=self.message_id,
-                direction=self.direction,
-                conversation_id=self.conversation_id
-            ).first()
-        elif self.platform_type == 'Facebook':
-            message = db.session.query(FacebookMessage).filter_by(
-                message_id=self.message_id,
-                direction=self.direction,
-                conversation_id=self.conversation_id
-            ).first()
-        elif self.platform_type == 'Telegram':
-            message = db.session.query(TelegramMessage).filter_by(
-                message_id=self.message_id,
-                direction=self.direction,
-                conversation_id=self.conversation_id
-            ).first()
-
-        return message.message_timestamp if message else None
 
     def serialize(self):
         return {

@@ -1428,6 +1428,105 @@ class EditedMessage(Resource):
         except Exception as e:
             return {'error': str(e)}, 500
         
+@ns_messages.route('/api/messages/process_edited_message')
+class ProcessEditedMessage(Resource):
+    def post(self):
+        try:
+            print(1441)
+            data = request.get_json()
+            print(1443)
+            platform_name = platform_mapping.get(data['platform'].lower())
+            if not platform_name:
+                return {'status': 'error', 'message': 'Unsupported platform'}, 400
+
+            bot_id = data['bot_id']
+            scammer_unique_id = data['scammer_id']
+            direction = data['direction']
+            message_id = data.get('message_id', None)
+            original_message_text = data.get('original_message_text', None)
+            edited_message_text = data.get("edited_message_text", None)
+            edited_timestamp = safe_parse_timestamp(data.get("edited_timestamp", None))
+            print(1455)
+            # Check if bot exists, if not return an error
+            bot = Bot.query.get(bot_id)
+            if not bot:
+                return {'status': 'error', 'message': 'Bot not found'}, 404
+            
+            # Check if scammer exists, if not create a new scammer
+            scammer = Scammer.query.filter_by(unique_id=scammer_unique_id, platform=platform_name).first()
+            if not scammer:
+                return {'status': 'error', 'message': 'Scammer not found'}, 404
+
+            # Check if conversation exists, if not create a new conversation
+            conversation = Conversation.query.filter_by(
+                bot_id=bot.id,
+                platform=platform_name,
+                scammer_id=scammer.id
+            ).first()
+            if not conversation:
+                return {'status': 'error', 'message': 'Conversation not found'}, 404
+
+            # Map platform to message class
+            platform_message_classes = {
+                'facebook': FacebookMessage,
+                'whatsapp': WhatsappMessage,
+                'telegram': TelegramMessage
+            }
+            message_class = platform_message_classes.get(platform_name.lower())
+            
+            ## Get original message
+            
+            original_message = message_class.query.filter_by(conversation_id=conversation.id, 
+                                                             direction=direction, 
+                                                             message_id=message_id,
+                                                             message_text=original_message_text).first()
+            
+            ## Update Edit Table
+            edit_table_row = Edit(
+                scammer_unique_id = scammer_unique_id,
+                platform_type=  platform_name,
+                bot_id = bot_id,
+                direction = direction,
+                message_id = message_id,
+                conversation_id = conversation.id,
+                original_message_text = original_message.message_text,
+                previous_timestamp = original_message.edited_timestamp,
+                edited_message_text = edited_message_text,
+                edited_timestamp = edited_timestamp,
+            )
+
+            db.session.add(edit_table_row)
+            
+
+            print(scammer_unique_id, direction, "Edited", platform_name, message_id, original_message_text, False, edited_timestamp, bot_id)
+            ## Update Alert Table
+            new_alert = Alert(
+                scammer_unique_id=scammer_unique_id, 
+                direction=direction,
+                alert_type="Edited",
+                platform_type=platform_name,
+                message_id=message_id,
+                message_text=original_message_text,
+                read_status=False,
+                timestamp=edited_timestamp, 
+                bot_id=bot_id,
+                active=True,
+            )
+            
+            db.session.add(new_alert)
+
+
+            original_message.message_text = edited_message_text
+            original_message.edited_timestamp = edited_timestamp
+            original_message.response_status = "Edited"
+
+            db.session.commit()
+
+            return {'responses': f"Finished processing edited message {message_id} for {platform_name}"}, 200
+
+        except Exception as e:
+            return {'error': str(e)}, 500
+        
 @ns_conversations.route('/api/conversations/<platform>/<bot_id>/<scammer_unique_id>/pause_status')
 class GetConversationPauseStatus(Resource):
     def get(self, platform, bot_id, scammer_unique_id):

@@ -274,12 +274,13 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                                   <TableCell sx={{ color: "white" }}>
                                     {idx === editedMessages.length - 1
                                       ? `Original Message (${new Date(
-                                          edit.previous_timestamp
+                                          edit.previous_timestamp || msg.message_timestamp
                                         ).toLocaleString()}):`
                                       : `Edited Message (${new Date(
-                                          edit.previous_timestamp
+                                          edit.previous_timestamp 
                                         ).toLocaleString()}):`}
                                   </TableCell>
+
                                   <TableCell sx={{ color: "white" }}>
                                     {edit.original_message_text}
                                   </TableCell>

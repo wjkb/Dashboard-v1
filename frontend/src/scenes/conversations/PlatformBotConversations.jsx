@@ -56,7 +56,7 @@ const PlatformBotConversations = ({ platform }) => {
 
     const interval = setInterval(() => {
       fetchConversations();
-    }, 1000);
+    }, 5000);
 
     return () => clearInterval(interval); 
   }, [botId, platform]);
