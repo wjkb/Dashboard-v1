@@ -13,6 +13,7 @@ import requests
 from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation, Alert, Edit
 from backend.utils import safe_parse_timestamp, create_zip, create_message_csv
 
+HOST_IP = os.getenv("HOST_IP")
 # Initialize Flask-RESTx Api
 api_bp = Blueprint('api', __name__)
 api = Api(api_bp, version='1.0', title='Your API', description='API Documentation', doc='/api/docs')
@@ -895,6 +896,7 @@ class GetNextResponseMessageId(Resource):
         try:
             data = request.get_json()
             platform_name = platform_mapping.get(data.get('platform').lower())
+            
             if not platform_name:
                 return {'status': 'error', 'message': 'Unsupported platform'}, 400
             bot_id = data.get('bot_id')
@@ -922,7 +924,8 @@ class GetNextResponseMessageId(Resource):
             }
             
             print(f"Getting next response message ID for bot {bot_id} on platform {platform_name} for scammer {scammer_unique_id}")
-            platformMessage = platform_message_classes[platform_name]
+            
+            platformMessage = platform_message_classes[platform_name.lower()]
             print(f"Platform message class: {platform_name}")
             # Get the last message sent by the bot
             last_bot_message = (
@@ -932,12 +935,17 @@ class GetNextResponseMessageId(Resource):
                 .first()
             )
             print(f"Last bot message: {last_bot_message}")
-            if not last_bot_message:
+            try:
+                if last_bot_message:
+                    return {'next_message_id': str(int(last_bot_message.message_id) + 1)}, 200
+                else:
+                    return {'next_message_id': '1'}, 200
+            except:
                 return {'next_message_id': '1'}, 200
-            else:
-                return {'next_message_id': str(int(last_bot_message.message_id) + 1)}, 200
-        
+
+                
         except Exception as e:
+            print(f"Error getting next message id: {e}")
             return {'status': 'error', 'message': str(e)}, 500
 
 # TODO: This is just a route to simulate starting a bot script with fake messages. Replace with actual bot script execution
@@ -1106,16 +1114,17 @@ class DownloadEverything(Resource):
         except Exception as e:
             return {'error': str(e)}, 500
         
-@ns_utils.route('/api/check_pause_status')
-class CheckPauseStatus(Resource):
+@ns_utils.route('/api/check_overall_pause_status')
+class CheckOverallPauseStatus(Resource):
     def post(self):
+
         try:
             data = request.get_json()
 
             platform_name = data.get('platform')
             bot_id = data.get('bot_id')
             scammer_id = data.get('scammer_id')
-    
+
             if platform_name is None:
                 return {'status': 'error', 'message': 'Unknown platform'}, 400
 
@@ -1123,7 +1132,7 @@ class CheckPauseStatus(Resource):
                 return {'status': 'error', 'message': 'Unknown bot id'}, 400
 
             if scammer_id is None:
-                return {'status': 'error', 'message': 'Unknown scammer id id'}, 400
+                return {'status': 'error', 'message': 'Unknown scammer id'}, 400
 
             # Check if bot is paused
             bot = Bot.query.get(bot_id)
@@ -1135,6 +1144,7 @@ class CheckPauseStatus(Resource):
             
             else:
                 # Check if conversation is paused
+                platform_name = platform_mapping[platform_name.lower()]
                 conversation = (
                     db.session.query(Conversation)
                     .join(Scammer, Conversation.scammer_id == Scammer.id)
@@ -1236,13 +1246,13 @@ class ReceiveAlerts(Resource):
                 scammer_unique_id=data['scammer_unique_id'], 
                 direction=data['direction'],
                 alert_type=data['alert_type'],
-                platform_type=data['platform_type'],
+                platform_type=platform_mapping[data['platform_type'].lower()],
                 message_id=data.get('message_id'),
                 message_text=data['message_text'],
                 read_status=data.get('read_status', False),  
-                timestamp=data.get('timestamp'),  
+                timestamp=safe_parse_timestamp(data.get('timestamp')), 
                 bot_id=data.get('bot_id'),
-                active=data.get('active')  
+                active=data.get('active')
             )
 
             db.session.add(new_alert)
@@ -1317,18 +1327,27 @@ class GetAlerts(Resource):
 @ns_alerts.route('/api/alerts/get_specific')
 class GetAlertsSpecific(Resource):
     @ns_messages.doc('get_alerts_specific')
-    def get(self):
-        """Uses parameter query string in URL to pass platform, bot_id, scammer_unique_id
+    def post(self):
+        """Uses JSON body in POST request to pass platform, bot_id, scammer_unique_id
 
-        e.g. api/alerts/get_specific?platform=WhatsApp&bot_id=90000001&scammer_unique_id=90000012
+        Example:
+            {
+                "platform": "WhatsApp",
+                "bot_id": "+6590000001",
+                "scammer_unique_id": "90000012"
+            }
 
         Returns:
             alerts, unread_count
         """
         try:
-            platform = request.args.get('platform')
-            bot_id = request.args.get('bot_id')
-            scammer_unique_id = request.args.get('scammer_unique_id')
+            # Access parameters from the JSON body
+            data = request.get_json()
+
+            # Extract the parameters from the JSON data
+            platform = data.get('platform')
+            bot_id = data.get('bot_id')
+            scammer_unique_id = data.get('scammer_unique_id')
 
             platform_name = platform_mapping.get(platform.lower())
             if not platform_name:
@@ -1343,10 +1362,9 @@ class GetAlertsSpecific(Resource):
                     Alert.read_status == False,  # Only unread alerts
                     Alert.active == True  # Only active alerts (not deleted)
                 ).all()
-
                 unread_count = len(alerts)  # Since only unread alerts are selected
                 serialized_alerts = [alert.serialize() for alert in alerts]
-
+    
                 return {'alerts': serialized_alerts, 'unread_count': unread_count}, 200
             except Exception as e:
                 print(e)
@@ -1534,5 +1552,4 @@ class DeleteVictimProperty(Resource):
                 return {'error': 'Key not found in victim details'}, 404
         except Exception as e:
             return {'error': str(e)}, 500
-
 

@@ -231,6 +231,16 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                     ? mostRecentEdit.edited_message_text
                     : msg.message_text}
                 </Typography>
+                
+                {msg.response_status?.toLowerCase() === "deleted" && (
+                <Typography
+                  variant="body2"
+                  color="error"
+                  sx={{ fontStyle: "italic", marginTop: theme.spacing(1) }}
+                >
+                  This message has been deleted
+                </Typography>
+              )}
 
                 {isEdited && (
                   <>
