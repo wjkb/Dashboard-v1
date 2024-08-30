@@ -13,7 +13,17 @@ import requests
 from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation, Alert, Edit
 from backend.utils import safe_parse_timestamp, create_zip, create_message_csv
 
+#victim_Details_Json File
+def find_file(filename, search_directory):
+    for root, dirs, files in os.walk(search_directory):
+        if filename in files:
+            return os.path.join(root, filename)
+    return None
+current_directory = os.getcwd()
+search_directory = os.path.dirname(current_directory)
+victim_details_path = find_file('victim_details.json', search_directory)
 HOST_IP = os.getenv("HOST_IP")
+
 # Initialize Flask-RESTx Api
 api_bp = Blueprint('api', __name__)
 api = Api(api_bp, version='1.0', title='Your API', description='API Documentation', doc='/api/docs')
@@ -1547,25 +1557,11 @@ class GetConversationPauseStatus(Resource):
             return {"pause": conversation.pause}, 200
         except Exception as e:
             return {"error": "Internal Server Error" + str(e)}, 500
-        
-
-# Victim_Details_Json File
-def find_file(filename, search_directory):
-    for root, dirs, files in os.walk(search_directory):
-        if filename in files:
-            return os.path.join(root, filename)
-    return None
 
 @ns_victim_details.route('/api/victim_details_json')
 class GetVictimDetailsJson(Resource):
     def get(self):
         try:
-            global victim_details_path
-            # get the path of victim_details_json file
-            current_directory = os.getcwd()
-            search_directory = os.path.dirname(current_directory)
-            victim_details_path = find_file('victim_details.json', search_directory)
-
             if not victim_details_path:
                 return {'error': 'victim_details.json file not found'}, 404
 

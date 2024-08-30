@@ -129,9 +129,10 @@ const PlatformBots = ({ platform }) => {
   
         // Transform data with victim details
         const transformedData = botsData.map((bot) => {
-          const victim = Object.values(victimDetails).find(
-            (entity) => entity.id === bot.id
+          const victimKey = Object.keys(victimDetails).find(
+            (key) => key === bot.id
           );
+          const victim = victimKey ? victimDetails[victimKey] : null;
   
           return {
             ...bot,

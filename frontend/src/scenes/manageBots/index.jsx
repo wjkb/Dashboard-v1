@@ -72,11 +72,12 @@ const ManageBots = () => {
         // Fetch all bots
         const botsData = await getAllBots();
         const victimDetails = await getVictimDetails(); // Use the new API function
-
         const transformedData = botsData.map((bot) => {
-          const victim = Object.values(victimDetails).find(
-            (entity) => entity.id === bot.id
+          const victimKey = Object.keys(victimDetails).find(
+            (key) => key === bot.id
+            
           );
+          const victim = victimKey ? victimDetails[victimKey] : null;
           // If bot.name or bot.email is null, replace with victim details
           return {
             ...bot,
