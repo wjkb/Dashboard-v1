@@ -25,7 +25,7 @@ import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import PauseIcon from "@mui/icons-material/Pause";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CloseIcon from "@mui/icons-material/Close";
-import victimDetails from "../victim_details.json";
+import { getVictimDetails } from "../../api";
 
 // PauseDialog Component
 const PauseDialog = ({ open, onClose, onConfirm }) => (
@@ -122,14 +122,17 @@ const PlatformBots = ({ platform }) => {
   useEffect(() => {
     const fetchBots = async () => {
       try {
-        const botsData = await getPlatformBots(platform);
-
+        const [botsData, victimDetails] = await Promise.all([
+          getPlatformBots(platform),
+          getVictimDetails(), 
+        ]);
+  
         // Transform data with victim details
         const transformedData = botsData.map((bot) => {
           const victim = Object.values(victimDetails).find(
             (entity) => entity.id === bot.id
           );
-
+  
           return {
             ...bot,
             name: bot.name || victim?.name,
@@ -140,7 +143,7 @@ const PlatformBots = ({ platform }) => {
             Telegram: bot.platforms.includes("Telegram"),
           };
         });
-
+  
         setBots(transformedData);
       } catch (err) {
         setError(err.message);
@@ -148,7 +151,7 @@ const PlatformBots = ({ platform }) => {
         setLoading(false);
       }
     };
-
+  
     fetchBots();
   }, [platform]);
 

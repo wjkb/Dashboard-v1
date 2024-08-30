@@ -149,6 +149,19 @@ export const getEditedMessage = async (platform, botId, messageId) => {
   }
 };
 
+export const getVictimDetails = async () => {
+  try {
+    const response = await fetch(`${API_URL}/victim_details_json`);
+    if (!response.ok) {
+      throw new Error("Failed to load victim details");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error loading victim details: ${error.message}`);
+  }
+};
+
+
 
 // POST APIs
 export const createBot = async (botData) => {
@@ -251,6 +264,24 @@ export const getConversationPauseStatus = async (platform, botId, scammerUniqueI
     return await response.json();
   } catch (error) {
     throw new Error(`Error fetching pause status: ${error.message}`);
+  }
+};
+
+export const insertVictimProperty = async (victimId, key, value) => {
+  try {
+    const response = await fetch(`${API_URL}/victim_details/${victimId}/property`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ key, value }),
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error inserting property: ${error.message}`);
   }
 };
 
@@ -485,24 +516,6 @@ export const deleteAlert = async (alertId) => {
   }
 };
 
-export const insertVictimProperty = async (victimId, key, value) => {
-  try {
-    const response = await fetch(`${API_URL}/victim_details/${victimId}/property`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ key, value }),
-    });
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-    return await response.json();
-  } catch (error) {
-    throw new Error(`Error inserting property: ${error.message}`);
-  }
-};
-
 export const deleteVictimProperty = async (victimId, key) => {
   try {
     const response = await fetch(`${API_URL}/victim_details/${victimId}/property/${key}`, {
@@ -519,5 +532,3 @@ export const deleteVictimProperty = async (victimId, key) => {
     throw new Error(`Error deleting property: ${error.message}`);
   }
 };
-
-

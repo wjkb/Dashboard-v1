@@ -246,7 +246,7 @@ const PlatformUserMessages = ({ platform }) => {
   const handlePauseorResumeBot = async () => {
     try {
       await toggleConversationPause(platform, botId, scammerUniqueId);
-      setIsPaused(!isPaused); 
+      setIsPaused(!isPaused); // Toggle the isPaused state
     } catch (err) {
       setError(err.message);
     }
@@ -302,7 +302,7 @@ const PlatformUserMessages = ({ platform }) => {
   };
 
   const handleViewFile = (messageId) => {
-    setTabValue(TAB_MESSAGES); 
+    setTabValue(TAB_MESSAGES); // Switch back to the messages tab
     setTimeout(() => {
       if (messageRefs.current[messageId]) {
         messageRefs.current[messageId].scrollIntoView({

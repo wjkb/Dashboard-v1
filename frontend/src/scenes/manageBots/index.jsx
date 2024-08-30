@@ -15,40 +15,33 @@ import {
   IconButton,
   TextField,
   useTheme,
-  Switch
+  Switch,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import { insertVictimProperty, deleteVictimProperty } from "../../api";
-import { tokens } from "../../theme";
-import { DataGrid } from "@mui/x-data-grid";
-import Header from "../../components/Header";
-import CloseIcon from "@mui/icons-material/Close";
-import CheckIcon from "@mui/icons-material/Check";
-import Circle from "@mui/icons-material/Circle";
-import EditIcon from "@mui/icons-material/Edit";
-import Tooltip from "@mui/material/Tooltip";
-import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import {
+  insertVictimProperty,
+  deleteVictimProperty,
+  getVictimDetails, // Import the new API function
   getAllBots,
   editBot,
   deactivateBot,
   activateBot,
   deleteBot,
 } from "../../api";
+import { tokens } from "../../theme";
+import { DataGrid } from "@mui/x-data-grid";
+import Header from "../../components/Header";
+import CloseIcon from "@mui/icons-material/Close";
+import Circle from "@mui/icons-material/Circle";
+import EditIcon from "@mui/icons-material/Edit";
+import Tooltip from "@mui/material/Tooltip";
+import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import EditBotDialog from "./EditBotDialog";
 import DeactivateBotDialog from "./DeactivateBotDialog";
 import ActivateBotDialog from "./ActivateBotDialog";
 import DeleteBotDialog from "./DeleteBotDialog";
 
-// Import victim details JSON file
-import victimDetails from "../victim_details.json";
-
-/**
- * Manages the display and operations for bots including editing and deleting.
- *
- * @returns {JSX.Element} The ManageBots component.
- */
 const ManageBots = () => {
   const theme = useTheme();
   const colors = tokens;
@@ -74,20 +67,16 @@ const ManageBots = () => {
   const [newProperty, setNewProperty] = useState({ key: "", value: "" });
 
   useEffect(() => {
-    /**
-     * Fetches all bots from the API and sets the state.
-     */
     const fetchBots = async () => {
       try {
+        // Fetch all bots
         const botsData = await getAllBots();
+        const victimDetails = await getVictimDetails(); // Use the new API function
 
-        // Iterate over each bot and check against the victim_details.json data
         const transformedData = botsData.map((bot) => {
-          // Find the victim entity by matching the id
           const victim = Object.values(victimDetails).find(
             (entity) => entity.id === bot.id
           );
-
           // If bot.name or bot.email is null, replace with victim details
           return {
             ...bot,
@@ -230,10 +219,6 @@ const ManageBots = () => {
    *
    * @param {Object} bot - The bot to be deleted.
    */
-  const handleDeleteClick = (bot) => {
-    setSelectedBot(bot);
-    setDeleteDialogOpen(true);
-  };
 
   /**
    * Closes the delete confirmation dialog.
@@ -391,7 +376,7 @@ const ManageBots = () => {
           color="primary"
           onClick={() => handleViewMoreClick(params.row)}
         >
-          View More
+          View Persona
         </Button>
       ),
     },
@@ -515,6 +500,7 @@ const ManageBots = () => {
         <DataGrid rows={bots} columns={columnsActive} />
       </Box>
 
+      {/* Status Icons Legend */}
       <Box mt={2}>
         <Typography variant="h6" gutterBottom>
           Legend for Status Icons:
@@ -549,6 +535,7 @@ const ManageBots = () => {
         </Box>
       </Box>
 
+      {/* Dialogs for Edit, Deactivate, Activate, Delete */}
       {selectedBot && (
         <EditBotDialog
           bot={selectedBot}
@@ -585,6 +572,7 @@ const ManageBots = () => {
         />
       )}
 
+      {/* Persona Dialog */}
       {selectedBot && (
         <Dialog
           open={personaDialogOpen}
@@ -662,7 +650,6 @@ const ManageBots = () => {
           </DialogContent>
         </Dialog>
       )}
-
     </Box>
   );
 };
