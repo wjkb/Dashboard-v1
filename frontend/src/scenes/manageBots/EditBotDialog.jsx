@@ -159,7 +159,7 @@ const EditBotDialog = ({ open, onClose, bot, onSave }) => {
               <DialogActions>
               <Button
                   onClick={onClose}
-                  sx={{ color: 'white', backgroundColor: '#9c27b0', '&:hover': { backgroundColor: '#ab47bc' } }}
+                  sx={{ color: 'white', backgroundColor: 'red', '&:hover': { backgroundColor: '#ef5350' } }}
                 >
                   Cancel
                 </Button>

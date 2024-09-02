@@ -21,7 +21,7 @@ def find_file(filename, search_directory):
     return None
 current_directory = os.getcwd()
 search_directory = os.path.dirname(current_directory)
-victim_details_path = find_file('victim_details.json', search_directory)
+VICTIM_DETAILS_PATH = find_file('victim_details.json', search_directory)
 HOST_IP = os.getenv("HOST_IP")
 
 # Initialize Flask-RESTx Api
@@ -498,6 +498,40 @@ class TogglePauseConversation(Resource):
 
         except Exception as e:
             return {"error": "Internal Server Error: " + str(e)}, 500
+
+@ns_conversations.route('/api/conversations/pause_conversation')
+class PauseConversation(Resource):
+    def post(self):
+        try:
+            data = request.get_json()
+            platform = data.get('platform')
+            bot_id = data.get('bot_id')
+            scammer_unique_id = data.get('scammer_unique_id')
+            
+            if not platform or not bot_id or not scammer_unique_id:
+                return {'error': 'Missing required parameters'}, 400
+
+            platform_name = platform_mapping.get(platform.lower())
+            if not platform_name:
+                return {'error': 'Invalid platform'}, 400
+
+            conversation = (
+                db.session.query(Conversation)
+                .join(Scammer, Conversation.scammer_id == Scammer.id)
+                .filter(Conversation.bot_id == bot_id, Conversation.platform == platform_name, Scammer.unique_id == scammer_unique_id)
+                .first()
+            )
+            if not conversation:
+                return {"error": "Conversation not found"}, 404
+
+            conversation.pause = True
+            db.session.commit()
+
+            return {"message": f"Conversation pause status set to True", "pause": conversation.pause}, 200
+
+        except Exception as e:
+            return {"error": "Internal Server Error: " + str(e)}, 500
+
 
 @ns_platform_bots.route('/api/<platform>/bots')
 class PlatformBots(Resource):
@@ -1254,15 +1288,15 @@ class ReceiveAlerts(Resource):
 
             new_alert = Alert(
                 scammer_unique_id=data['scammer_unique_id'], 
-                direction=data['direction'],
+                direction=data.get('direction', None),
                 alert_type=data['alert_type'],
                 platform_type=platform_mapping[data['platform_type'].lower()],
                 message_id=data.get('message_id'),
-                message_text=data['message_text'],
-                read_status=data.get('read_status', False),  
-                timestamp=safe_parse_timestamp(data.get('timestamp')), 
+                message_text=data.get('message_text', None),
+                read_status=data.get('read_status', False),
+                timestamp=safe_parse_timestamp(data.get('timestamp', None)), 
                 bot_id=data.get('bot_id'),
-                active=data.get('active')
+                active=data.get('active', True)
             )
 
             db.session.add(new_alert)
@@ -1437,7 +1471,7 @@ class EditedMessage(Resource):
 
         except Exception as e:
             return {'error': str(e)}, 500
-        
+
 @ns_messages.route('/api/messages/process_edited_message')
 class ProcessEditedMessage(Resource):
     def post(self):
@@ -1536,7 +1570,8 @@ class ProcessEditedMessage(Resource):
 
         except Exception as e:
             return {'error': str(e)}, 500
-        
+       
+
 @ns_conversations.route('/api/conversations/<platform>/<bot_id>/<scammer_unique_id>/pause_status')
 class GetConversationPauseStatus(Resource):
     def get(self, platform, bot_id, scammer_unique_id):
@@ -1562,11 +1597,11 @@ class GetConversationPauseStatus(Resource):
 class GetVictimDetailsJson(Resource):
     def get(self):
         try:
-            if not victim_details_path:
+            if not VICTIM_DETAILS_PATH:
                 return {'error': 'victim_details.json file not found'}, 404
 
             #load and return the json file
-            with open(victim_details_path, 'r') as file:
+            with open(VICTIM_DETAILS_PATH, 'r') as file:
                 data = json.load(file)
 
             return jsonify(data)
@@ -1574,24 +1609,17 @@ class GetVictimDetailsJson(Resource):
         except Exception as e:
             return {'error': str(e)}, 500
 
-        
-@ns_victim_details.route('/api/victim_details/<victim_id>/property', methods=['POST'])
+@ns_victim_details.route('/api/victim_details/<bot_id>/property', methods=['POST'])
 class InsertVictimProperty(Resource):
-    def post(self, victim_id):
+    def post(self, bot_id):
         try:
             # Load the existing victim details from JSON file
-            with open(victim_details_path, 'r') as file:
+            with open(VICTIM_DETAILS_PATH, 'r') as file:
                 victim_details = json.load(file)
 
-            # Find the correct victim entity by matching bot.id to the id of each entity
-            victim_entity = None
-            for victim_name, details in victim_details.items():
-                if details['id'] == victim_id:
-                    victim_entity = victim_name
-                    break
-
-            if victim_entity is None:
-                return {'error': 'Victim ID not found'}, 404
+            # Find the correct victim entity by matching the 'bot_id' with the key in victim_details
+            if bot_id not in victim_details:
+                return {'error': 'Bot ID not found'}, 404
 
             # Get the property data from the request
             data = request.json
@@ -1602,44 +1630,37 @@ class InsertVictimProperty(Resource):
                 return {'error': 'Missing key or value'}, 400
 
             # Add the new property to the specific victim's details
-            victim_details[victim_entity][key] = value
+            victim_details[bot_id][key] = value
 
             # Save the updated data back to the JSON file
-            with open(victim_details_path, 'w') as file:
+            with open(VICTIM_DETAILS_PATH, 'w') as file:
                 json.dump(victim_details, file, indent=4)
 
             return {'message': 'Property added successfully'}, 201
         except Exception as e:
             return {'error': str(e)}, 500
 
-
-@ns_victim_details.route('/api/victim_details/<victim_id>/property/<key>', methods=['DELETE'])
+@ns_victim_details.route('/api/victim_details/<bot_id>/property/<key>', methods=['DELETE'])
 class DeleteVictimProperty(Resource):
-    def delete(self, victim_id, key):
+    def delete(self, bot_id, key):
         try:
             # Decode the key to handle URL-encoded spaces and other characters
             key = unquote(key)
 
             # Load the existing victim details from JSON file
-            with open(victim_details_path, 'r') as file:
+            with open(VICTIM_DETAILS_PATH, 'r') as file:
                 victim_details = json.load(file)
 
-            # Find the correct victim entity by matching bot.id to the id of each entity
-            victim_entity = None
-            for victim_name, details in victim_details.items():
-                if details['id'] == victim_id:
-                    victim_entity = victim_name
-                    break
-
-            if victim_entity is None:
-                return {'error': 'Victim ID not found'}, 404
+            # Find the correct victim entity by matching 'bot_id' with the key in victim_details
+            if bot_id not in victim_details:
+                return {'error': 'Bot ID not found'}, 404
 
             # Check if the key exists in the victim's details and delete it
-            if key in victim_details[victim_entity]:
-                del victim_details[victim_entity][key]
+            if key in victim_details[bot_id]:
+                del victim_details[bot_id][key]
 
                 # Save the updated data back to the JSON file
-                with open(victim_details_path, 'w') as file:
+                with open(VICTIM_DETAILS_PATH, 'w') as file:
                     json.dump(victim_details, file, indent=4)
 
                 return {'message': 'Property deleted successfully'}, 200
@@ -1648,3 +1669,39 @@ class DeleteVictimProperty(Resource):
         except Exception as e:
             return {'error': str(e)}, 500
 
+@ns_victim_details.route('/api/victim_details/<bot_id>/property/<key>', methods=['PUT'])
+class UpdateVictimProperty(Resource):
+    def put(self, bot_id, key):
+        try:
+            # Decode the key to handle URL-encoded spaces and other characters
+            key = unquote(key)
+
+            # Load the existing victim details from JSON file
+            with open(VICTIM_DETAILS_PATH, 'r') as file:
+                victim_details = json.load(file)
+
+            # Check if the bot_id exists in the victim details
+            if bot_id not in victim_details:
+                return {'error': 'Bot ID not found'}, 404
+
+            # Get the new value from the request
+            data = request.json
+            new_value = data.get('value')
+
+            if not new_value:
+                return {'error': 'Missing value'}, 400
+
+            # Update the specific property in the victim's details
+            victim = victim_details[bot_id]
+            if key in victim:
+                victim[key] = new_value
+
+                # Save the updated data back to the JSON file
+                with open(VICTIM_DETAILS_PATH, 'w') as file:
+                    json.dump(victim_details, file, indent=4)
+
+                return {'message': 'Property updated successfully'}, 200
+            else:
+                return {'error': 'Key not found in victim details'}, 404
+        except Exception as e:
+            return {'error': str(e)}, 500

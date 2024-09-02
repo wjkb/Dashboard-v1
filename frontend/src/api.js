@@ -171,6 +171,20 @@ export const getVictimDetails = async () => {
   }
 };
 
+export const getConversationPauseStatus = async (platform, botId, scammerUniqueId) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/conversations/${platform}/${botId}/${scammerUniqueId}/pause_status`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch conversation pause status");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error fetching pause status: ${error.message}`);
+  }
+};
+
 // POST APIs
 export const createBot = async (botData) => {
   try {
@@ -261,17 +275,21 @@ export const sendProactiveMessage = async (
   }
 };
 
-export const getConversationPauseStatus = async (platform, botId, scammerUniqueId) => {
+export const insertVictimProperty = async (bot_id, key, value) => {
   try {
-    const response = await fetch(
-      `${API_URL}/conversations/${platform}/${botId}/${scammerUniqueId}/pause_status`
-    );
+    const response = await fetch(`${API_URL}/victim_details/${bot_id}/property`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ key, value }),
+    });
     if (!response.ok) {
-      throw new Error("Failed to fetch conversation pause status");
+      throw new Error("Network response was not ok");
     }
     return await response.json();
   } catch (error) {
-    throw new Error(`Error fetching pause status: ${error.message}`);
+    throw new Error(`Error inserting property: ${error.message}`);
   }
 };
 
@@ -475,6 +493,24 @@ export const toggleConversationPause = async (platform, botId, scammerUniqueId) 
   }
 };
 
+export const updateVictimProperty = async (botId, key, value) => {
+  try {
+    const response = await fetch(`${API_URL}/victim_details/${botId}/property/${encodeURIComponent(key)}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ value }),
+    });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error updating property: ${error.message}`);
+  }
+};
+
 // DELETE APIs
 export const deleteBot = async (botId) => {
   try {
@@ -507,27 +543,9 @@ export const deleteAlert = async (alertId) => {
   }
 };
 
-export const insertVictimProperty = async (victimId, key, value) => {
+export const deleteVictimProperty = async (botId, key) => {
   try {
-    const response = await fetch(`${API_URL}/victim_details/${victimId}/property`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ key, value }),
-    });
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-    return await response.json();
-  } catch (error) {
-    throw new Error(`Error inserting property: ${error.message}`);
-  }
-};
-
-export const deleteVictimProperty = async (victimId, key) => {
-  try {
-    const response = await fetch(`${API_URL}/victim_details/${victimId}/property/${key}`, {
+    const response = await fetch(`${API_URL}/victim_details/${botId}/property/${encodeURIComponent(key)}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
