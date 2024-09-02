@@ -30,7 +30,6 @@ import Header from "../../components/Header";
 import EditBotDialog from "./EditBotDialog";
 import DeactivateBotDialog from "./DeactivateBotDialog";
 import ActivateBotDialog from "./ActivateBotDialog";
-import DeleteBotDialog from "./DeleteBotDialog";
 import {
   insertVictimProperty,
   deleteVictimProperty,
@@ -40,7 +39,6 @@ import {
   editBot,
   deactivateBot,
   activateBot,
-  deleteBot,
 } from "../../api";
 import { tokens } from "../../theme";
 
@@ -62,7 +60,6 @@ const ManageBots = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [activateDialogOpen, setActivateDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [personaDialogOpen, setPersonaDialogOpen] = useState(false);
   const [editPropertyDialogOpen, setEditPropertyDialogOpen] = useState(false);
 
@@ -110,10 +107,6 @@ const ManageBots = () => {
    *
    * @param {Object} bot - The bot to be edited.
    */
- const handleEditClick = (bot) => {
-  setSelectedBot(bot);
-  setEditDialogOpen(true);
-};
 
 /**
  * Closes the edit dialog.
@@ -224,27 +217,6 @@ const handleActivateConfirm = async () => {
  *
  * @param {Object} bot - The bot to be deleted.
  */
-
-/**
- * Closes the delete confirmation dialog.
- */
-const handleDeleteDialogClose = () => {
-  setDeleteDialogOpen(false);
-  setSelectedBot(null);
-};
-
-/**
- * Confirms the deletion of a bot.
- */
-const handleDeleteConfirm = async () => {
-  try {
-    await deleteBot(selectedBot.id);
-    setBots(bots.filter((bot) => bot.id !== selectedBot.id));
-    handleDeleteDialogClose();
-  } catch (err) {
-    setError(err.message);
-  }
-};
 
 /**
  * Handles the click event for viewing more details about a bot.
@@ -383,6 +355,38 @@ const handleAddProperty = async () => {
       },
     },
     {
+      headerName: "Actions",
+      flex: 1,
+      renderCell: (params) => (
+        <Box display="flex" alignItems="center">
+          <Switch
+            checked={params.row.active}
+            onChange={() =>
+              params.row.active
+                ? handleDeactivateClick(params.row)
+                : handleActivateClick(params.row)
+            }
+            color="green"
+            sx={{
+              marginLeft: 2,
+              "& .MuiSwitch-track": {
+                backgroundColor: params.row.active ? "green" : "red",
+              },
+            }}
+          />
+          <Typography
+            variant="body2"
+            sx={{
+              marginLeft: theme.spacing(1),
+              color: params.row.active ? "green" : "red",
+            }}
+          >
+            {params.row.active ? "Active" : "Inactive"}
+          </Typography>
+        </Box>
+      ),
+    },
+    {
       field: "id",
       headerName: "ID",
       flex: 1,
@@ -390,7 +394,7 @@ const handleAddProperty = async () => {
     {
       field: "name",
       headerName: "Name",
-      flex: 1,
+      flex: 0.7,
     },
     {
       field: "email",
@@ -400,7 +404,7 @@ const handleAddProperty = async () => {
     {
       field: "viewMore",
       headerName: "Persona",
-      flex: 1,
+      flex: 1.2,
       renderCell: (params) => (
         <Button
           variant="contained"
@@ -442,40 +446,8 @@ const handleAddProperty = async () => {
           "Telegram",
           params.row.Telegram,
           params.row.health_status
-        ),
-    },
-    {
-      headerName: "Actions",
-      flex: 2,
-      renderCell: (params) => (
-        <Box display="flex" alignItems="center">
 
-          <Switch
-            checked={params.row.active}
-            onChange={() =>
-              params.row.active
-                ? handleDeactivateClick(params.row)
-                : handleActivateClick(params.row)
-            }
-            color="green"
-            sx={{
-              marginLeft: 2,
-              "& .MuiSwitch-track": {
-                backgroundColor: params.row.active ? "green" : "red",
-              },
-            }}
-          />
-          <Typography
-            variant="body2"
-            sx={{
-              marginLeft: theme.spacing(1),
-              color: params.row.active ? "green" : "red",
-            }}
-          >
-            {params.row.active ? "Active" : "Inactive"}
-          </Typography>
-        </Box>
-      ),
+        ),
     },
   ];
 
@@ -582,15 +554,6 @@ const handleAddProperty = async () => {
           open={activateDialogOpen}
           onClose={handleActivateDialogClose}
           onConfirm={handleActivateConfirm}
-        />
-      )}
-
-      {selectedBot && (
-        <DeleteBotDialog
-          bot={selectedBot}
-          open={deleteDialogOpen}
-          onClose={handleDeleteDialogClose}
-          onConfirm={handleDeleteConfirm}
         />
       )}
 
