@@ -10,7 +10,7 @@ from flask_restx import Api, Resource, fields
 from datetime import datetime
 import json
 import requests
-from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation, Alert, Edit
+from backend.models import db, Bot, Scammer, Platform, Conversation, Message, MessageScreenshots, ExtractedInformation, Alert, Edit
 from backend.utils import safe_parse_timestamp, create_zip, create_message_csv
 
 #victim_Details_Json File
@@ -149,11 +149,10 @@ conversation_model = ns_conversations.model('Conversation', {
     'scammer_id': fields.Integer(required=True),
     'scammer_unique_id': fields.String(required=True),
     'platform': fields.String(required=True),
-    'facebook_messages': fields.List(fields.Nested(message_model)),
-    'whatsapp_messages': fields.List(fields.Nested(message_model)),
-    'telegram_messages': fields.List(fields.Nested(message_model)),
+    'messages': fields.List(fields.Nested(message_model)), 
     'pause': fields.Boolean(default=False)
 })
+
 
 bot_model_2 = ns_bots.model('Bot2', {
     'id': fields.String(required=True, example='90217777'),
@@ -316,10 +315,8 @@ class GetorUpdateOrDeleteBot(Resource):
             # Get all conversations related to the bot
             conversations = Conversation.query.filter_by(bot_id=bot_id).all()
             for conversation in conversations:
-                # Delete all related Facebook, WhatsApp, and Telegram messages
-                FacebookMessage.query.filter_by(conversation_id=conversation.id).delete()
-                WhatsappMessage.query.filter_by(conversation_id=conversation.id).delete()
-                TelegramMessage.query.filter_by(conversation_id=conversation.id).delete()
+                # Delete all related messages using the unified Message model
+                Message.query.filter_by(conversation_id=conversation.id).delete()
             
             # Delete all conversations
             Conversation.query.filter_by(bot_id=bot_id).delete()
@@ -335,6 +332,7 @@ class GetorUpdateOrDeleteBot(Resource):
         except Exception as e:
             print(f"Error occurred: {e}")
             return {"error": "Internal Server Error"}, 500
+
         
 @ns_bots.route('/api/bots/<bot_id>/deactivate')
 class DeactivateBot(Resource):
@@ -374,50 +372,40 @@ class TogglePauseBotSelectively(Resource):
             bot = Bot.query.get(bot_id)
             if not bot:
                 return {"error": "Bot not found"}, 404
-            
+
+            # Toggle bot pause status
             bot.pause = not bot.pause
             db.session.commit()
 
-            # If bot is resumed, get all conversations related to the bot
+            # If the bot is resumed, process related conversations
             if not bot.pause:
-                platform_message_classes = {
-                    'Facebook': FacebookMessage,
-                    'WhatsApp': WhatsappMessage,
-                    'Telegram': TelegramMessage
-                }
                 conversations = Conversation.query.filter_by(bot_id=bot_id).all()
 
-                # Look through all conversations, pause the conversations where the last message is incoming.
                 for conversation in conversations:
-                    
-                    # Get platform, bot_id and scammer_unique_id from conversation
-                    bot_id = conversation.bot_id
-                    scammer_unique_id = Scammer.query.get(conversation.scammer_id).unique_id
-                    platform = conversation.platform
-
-                    # Check if there are any incoming messages
+                    # Check if there are any incoming messages for the conversation
                     pause_conversation = False
 
-                    platform_messages = (
-                        db.session.query(platform_message_classes[platform])
+                    last_message = (
+                        db.session.query(Message)
                         .filter_by(conversation_id=conversation.id)
-                        .order_by(platform_message_classes[platform].message_timestamp.desc())
+                        .order_by(Message.message_timestamp.desc())
                         .first()
                     )
-                    
-                    # Pause conversation for where last message is incoming
-                    if platform_messages and platform_messages.direction == "incoming":
+
+                    # Pause conversation if the last message is incoming
+                    if last_message and last_message.direction == "incoming":
                         pause_conversation = True
 
-                    # Don't unpause conversation which is originally paused
+                    # Pause conversation if it was not paused originally
                     if conversation.pause == False:
                         conversation.pause = pause_conversation
-                    # print(f"Pausing/Not pausing for {conversation.id}: {pause_conversation}")
+                    
                     db.session.commit()
 
             return {"message": "Bot pause status updated successfully to " + str(bot.pause)}, 200
         except Exception as e:
-            return {"error": "Internal Server Error"}, 500
+            return {"error": "Internal Server Error: " + str(e)}, 500
+
 
 @ns_conversations.route('/api/conversations/toggle_pause')
 class TogglePauseConversation(Resource):
@@ -447,35 +435,35 @@ class TogglePauseConversation(Resource):
             conversation.pause = not conversation.pause
             db.session.commit()
 
-            # If bot is resumed, execute the additional logic
+            # If conversation is resumed, execute additional logic
             if not conversation.pause:
-                platform_message_classes = {
-                    'Facebook': FacebookMessage,
-                    'WhatsApp': WhatsappMessage,
-                    'Telegram': TelegramMessage
-                }
-                
-                bot_id = conversation.bot_id
                 scammer_unique_id = Scammer.query.get(conversation.scammer_id).unique_id
 
+                # Get all platform messages for this conversation
                 platform_messages = (
-                    db.session.query(platform_message_classes[platform_name])
-                    .filter_by(conversation_id=conversation.id)
-                    .order_by(platform_message_classes[platform_name].message_timestamp.asc())
+                    db.session.query(Message)
+                    .filter_by(conversation_id=conversation.id, platform_type=platform_name)
+                    .order_by(Message.message_timestamp.asc())
                     .all()
                 )
 
+                # Get the last outgoing message
                 last_outgoing_message = (
-                    db.session.query(platform_message_classes[platform_name])
-                    .filter_by(conversation_id=conversation.id, direction='outgoing')
-                    .order_by(platform_message_classes[platform_name].message_timestamp.desc())
+                    db.session.query(Message)
+                    .filter_by(conversation_id=conversation.id, direction='outgoing', platform_type=platform_name)
+                    .order_by(Message.message_timestamp.desc())
                     .first()
                 )
 
                 if last_outgoing_message:
-                    messages_to_send = [msg for msg in platform_messages if msg.direction == 'incoming' and msg.message_timestamp > last_outgoing_message.message_timestamp]
+                    messages_to_send = [
+                        msg for msg in platform_messages
+                        if msg.direction == 'incoming' and msg.message_timestamp > last_outgoing_message.message_timestamp
+                    ]
                 else:
-                    messages_to_send = [msg for msg in platform_messages if msg.direction == 'incoming']
+                    messages_to_send = [
+                        msg for msg in platform_messages if msg.direction == 'incoming'
+                    ]
 
                 wanted_fields = ['platform', 'bot_id', 'scammer_id', 'direction', 'message_id', 'message_text', 'message_timestamp']
 
@@ -484,11 +472,11 @@ class TogglePauseConversation(Resource):
 
                 message_list = []
                 for message in messages_to_send:
-                    message = message.serialize()
-                    message['platform'] = API_mapping[platform_name]
-                    message['bot_id'] = bot_id
-                    message['scammer_id'] = scammer_unique_id
-                    filtered_message = select_wanted_fields(message, wanted_fields)
+                    message_data = message.serialize()
+                    message_data['platform'] = API_mapping[platform_name]
+                    message_data['bot_id'] = bot_id
+                    message_data['scammer_id'] = scammer_unique_id
+                    filtered_message = select_wanted_fields(message_data, wanted_fields)
                     message_list.append(filtered_message)
 
                 if message_list:
@@ -596,6 +584,7 @@ class BotConversationMessages(Resource):
             if not platform_name:
                 return {'error': 'Invalid platform'}, 400
 
+            # Find the conversation based on bot_id, platform, and scammer_unique_id
             conversation = (
                 db.session.query(Conversation)
                 .join(Scammer, Conversation.scammer_id == Scammer.id)
@@ -604,27 +593,21 @@ class BotConversationMessages(Resource):
             )
             if not conversation:
                 return {"error": "Conversation not found"}, 404
-            
-            platform_message_classes = {
-                'facebook': FacebookMessage,
-                'whatsapp': WhatsappMessage,
-                'telegram': TelegramMessage
-            }
-            message_class = platform_message_classes.get(platform.lower())
-            if not message_class:
-                return {'error': 'Unsupported platform'}, 400
-            
+
+            # Query messages related to the conversation, filtered by platform
             messages = (
-                db.session.query(message_class)
-                .filter_by(conversation_id=conversation.id)
-                .order_by(message_class.message_timestamp.asc())
+                db.session.query(Message)
+                .filter_by(conversation_id=conversation.id, platform_type=platform_name)
+                .order_by(Message.message_timestamp.asc())
                 .all()
             )
+
             return [msg.serialize() for msg in messages]
 
         except Exception as e:
             print(f"Error occurred: {e}")
             return {"error": "Internal Server Error"}, 500
+
 
 @ns_messages.route('/api/<platform>/bots/<bot_id>/conversations/<scammer_unique_id>/screenshots')
 class BotConversationScreenshots(Resource):
@@ -701,6 +684,7 @@ class ReceiveMessage(Resource):
 
         deleted_timestamp = data.get('deleted_timestamp', None)
         edited_timestamp = data.get('edited_timestamp', None)
+        platform_type = data.get('platform_type', None)
 
         # Check if bot exists, if not return an error
         bot = Bot.query.get(bot_id)
@@ -729,73 +713,46 @@ class ReceiveMessage(Resource):
             db.session.add(conversation)
             db.session.commit()
 
-        # Map platform to message class
-        platform_message_classes = {
-            'facebook': FacebookMessage,
-            'whatsapp': WhatsappMessage,
-            'telegram': TelegramMessage
-        }
-        message_class = platform_message_classes.get(platform_name.lower())
-
         # Create or update message object
-        if direction == 'incoming':
-            message = message_class.query.filter_by(conversation_id=conversation.id, direction=direction, message_id=message_id).first()
-            print(message)
-            if not message:
-                message = message_class(
-                    conversation_id=conversation.id,
-                    direction=direction,
-                    message_id=message_id,
-                    message_text=message_text,
-                    message_timestamp=safe_parse_timestamp(message_timestamp),
-                    file_path=file_path,
-                    file_type=file_type,
-                    response_status=response_status
-                )
-                db.session.add(message)
-            else:
-                # This portion accounts for media and update queue if they exists. 
-                message.message_text = message_text
-                
+        message = Message.query.filter_by(
+            conversation_id=conversation.id, 
+            direction=direction, 
+            message_id=message_id
+        ).first()
 
-                # message.message_timestamp = safe_parse_timestamp(message_timestamp)
-
-                message.file_path = file_path
-                message.file_type = file_type
-
-                message.deleted_timestamp = safe_parse_timestamp(deleted_timestamp)
-                message.edited_timestamp = safe_parse_timestamp(edited_timestamp)
-                message.response_status = response_status
-
-        elif direction == 'outgoing':
-            message = message_class.query.filter_by(conversation_id=conversation.id, direction=direction, message_id=message_id).first()
-            if not message:
-                message = message_class(
-                    conversation_id=conversation.id,
-                    direction=direction,
-                    message_id=message_id,
-                    message_text=message_text,
-                    message_timestamp=safe_parse_timestamp(message_timestamp),
-                    file_path=file_path,
-                    file_type=file_type,
-                    responded_to=responded_to,
-                    response_bef_generation_timestamp=safe_parse_timestamp(response_bef_generation_timestamp),
-                    response_aft_generation_timestamp=safe_parse_timestamp(response_aft_generation_timestamp),
-                    response_status=response_status
-                )
-                db.session.add(message)
-            else:
-                message.message_text = message_text
-                # message.message_timestamp = safe_parse_timestamp(message_timestamp)
-                message.file_path = file_path
-                message.file_type = file_type
-                message.responded_to = responded_to
-                message.response_bef_generation_timestamp = safe_parse_timestamp(response_bef_generation_timestamp)
-                message.response_aft_generation_timestamp = safe_parse_timestamp(response_aft_generation_timestamp)
-                message.response_status = response_status
+        if not message:
+            message = Message(
+                conversation_id=conversation.id,
+                direction=direction,
+                message_id=message_id,
+                message_text=message_text,
+                message_timestamp=safe_parse_timestamp(message_timestamp),
+                file_path=file_path,
+                file_type=file_type,
+                responded_to=responded_to,
+                response_bef_generation_timestamp=safe_parse_timestamp(response_bef_generation_timestamp),
+                response_aft_generation_timestamp=safe_parse_timestamp(response_aft_generation_timestamp),
+                response_status=response_status,
+                platform_type=platform_type
+            )
+            db.session.add(message)
+        else:
+            # Update existing message
+            message.message_text = message_text
+            message.file_path = file_path
+            message.file_type = file_type
+            message.deleted_timestamp = safe_parse_timestamp(deleted_timestamp)
+            message.edited_timestamp = safe_parse_timestamp(edited_timestamp)
+            message.response_status = response_status
+            message.responded_to = responded_to
+            message.response_bef_generation_timestamp = safe_parse_timestamp(response_bef_generation_timestamp)
+            message.response_aft_generation_timestamp = safe_parse_timestamp(response_aft_generation_timestamp)
 
         # Commit the changes to the database
         db.session.commit()
+
+        return {"message": "Message processed successfully"}, 201
+
 
 @ns_messages.route('/api/llm_ignore_message_history')
 class LLMIgnoreMessageHistory(Resource):
@@ -806,6 +763,7 @@ class LLMIgnoreMessageHistory(Resource):
             platform_name = platform_mapping.get(data.get('platform').lower())
             if not platform_name:
                 return {'status': 'error', 'message': 'Unsupported platform'}, 400
+            
             bot_id = data['botId']
             scammer_unique_id = data['scammerUniqueId']
             
@@ -824,22 +782,18 @@ class LLMIgnoreMessageHistory(Resource):
             if not conversation:
                 return {'status': 'error', 'message': 'Conversation not found'}, 404
             
-            # Get all messages in the conversation
-            platform_message_classes = {
-                'Facebook': FacebookMessage,
-                'WhatsApp': WhatsappMessage,
-                'Telegram': TelegramMessage
-            }
-            message_class = platform_message_classes.get(platform_name)
-            messages = message_class.query.filter_by(conversation_id=conversation.id).all()
+            # Get all messages in the conversation, filtered by platform_type
+            messages = Message.query.filter_by(conversation_id=conversation.id, platform_type=platform_name).all()
 
             # Set use_for_llm to False for all messages
             for message in messages:
                 message.use_for_llm = False
+
             db.session.commit()
             return {'status': 'success'}, 200
         except Exception as e:
             return {'status': 'error', 'message': str(e)}, 500
+
     
 @ns_messages.route('/api/screenshots')
 class ReceiveScreenshot(Resource):
@@ -943,6 +897,7 @@ class GetNextResponseMessageId(Resource):
             
             if not platform_name:
                 return {'status': 'error', 'message': 'Unsupported platform'}, 400
+            
             bot_id = data.get('bot_id')
             scammer_unique_id = data.get('scammer_id')
 
@@ -960,37 +915,25 @@ class GetNextResponseMessageId(Resource):
             conversation = Conversation.query.filter_by(bot_id=bot_id, platform=platform_name, scammer_id=scammer.id).first()
             if not conversation:
                 return {'next_message_id': '1'}, 200
-            
-            platform_message_classes = {
-                'facebook': FacebookMessage,
-                'whatsapp': WhatsappMessage,
-                'telegram': TelegramMessage
-            }
-            
-            print(f"Getting next response message ID for bot {bot_id} on platform {platform_name} for scammer {scammer_unique_id}")
-            
-            platformMessage = platform_message_classes[platform_name.lower()]
-            print(f"Platform message class: {platform_name}")
-            # Get the last message sent by the bot
+
+            # Get the last outgoing message from the bot
             last_bot_message = (
-                db.session.query(platformMessage)
-                .filter_by(conversation_id=conversation.id, direction='outgoing')
-                .order_by(platformMessage.message_timestamp.desc())
+                db.session.query(Message)
+                .filter_by(conversation_id=conversation.id, direction='outgoing', platform_type=platform_name)
+                .order_by(Message.message_timestamp.desc())
                 .first()
             )
-            print(f"Last bot message: {last_bot_message}")
-            try:
-                if last_bot_message:
-                    return {'next_message_id': str(int(last_bot_message.message_id) + 1)}, 200
-                else:
-                    return {'next_message_id': '1'}, 200
-            except:
+
+            # Determine the next message ID
+            if last_bot_message:
+                return {'next_message_id': str(int(last_bot_message.message_id) + 1)}, 200
+            else:
                 return {'next_message_id': '1'}, 200
 
-                
         except Exception as e:
             print(f"Error getting next message id: {e}")
             return {'status': 'error', 'message': str(e)}, 500
+
 
 # TODO: This is just a route to simulate starting a bot script with fake messages. Replace with actual bot script execution
 @ns_utils.route('/api/send_bot')
@@ -1107,7 +1050,6 @@ class DownloadEverything(Resource):
     @ns_utils.expect(download_everything_model)
     def post(self):
         try:
-            # print("DownloadEverything API was called")
             data = request.get_json()
             bot_id = data.get('botId')
             platform = data.get('platform')
@@ -1129,13 +1071,8 @@ class DownloadEverything(Resource):
             if not conversation:
                 return {'error': 'Conversation not found'}, 404
             
-            platform_message_classes = {
-                'Facebook': FacebookMessage,
-                'WhatsApp': WhatsappMessage,
-                'Telegram': TelegramMessage
-            }
-            message_class = platform_message_classes.get(platform_name)
-            messages = message_class.query.filter_by(conversation_id=conversation.id).all()
+            # Get all messages related to the conversation and platform
+            messages = Message.query.filter_by(conversation_id=conversation.id, platform_type=platform_name).all()
 
             # Get all files (i.e. attachments) in the conversation
             file_paths = [msg.file_path for msg in messages if msg.file_path]
@@ -1146,7 +1083,7 @@ class DownloadEverything(Resource):
             screenshot_file_paths = [screenshot.file_path for screenshot in screenshots]
             screenshot_zip_file_path = create_zip(screenshot_file_paths, 'downloaded_screenshots')
             
-            # Get all messages in csv format
+            # Get all messages in CSV format
             csv_file_path = create_message_csv(messages)
 
             # Create a new zip file with all the files
@@ -1157,6 +1094,7 @@ class DownloadEverything(Resource):
         
         except Exception as e:
             return {'error': str(e)}, 500
+
         
 @ns_utils.route('/api/check_overall_pause_status')
 class CheckOverallPauseStatus(Resource):
@@ -1223,41 +1161,40 @@ class ConversationCount(Resource):
 class MessageCount(Resource):
     def get(self):
         try:
-            facebook_messages = FacebookMessage.query.all()
-            whatsapp_messages = WhatsappMessage.query.all()
-            telegram_messages = TelegramMessage.query.all()
+            # Count messages for each platform based on the platform_type field
+            facebook_messages_count = Message.query.filter_by(platform_type='Facebook').count()
+            whatsapp_messages_count = Message.query.filter_by(platform_type='WhatsApp').count()
+            telegram_messages_count = Message.query.filter_by(platform_type='Telegram').count()
+            
             return {
-                'facebook': len(facebook_messages),
-                'whatsapp': len(whatsapp_messages),
-                'telegram': len(telegram_messages)
+                'facebook': facebook_messages_count,
+                'whatsapp': whatsapp_messages_count,
+                'telegram': telegram_messages_count
             }
         except Exception as e:
             return {'error': str(e)}, 500
+
 
 @ns_graph_insights.route('/api/recent_messages/<platform>')
 class RecentMessages(Resource):
     def get(self, platform):
         try:
-            platform_class_mapping = {
-                'facebook': FacebookMessage,
-                'whatsapp': WhatsappMessage,
-                'telegram': TelegramMessage
-            }
-            platform_class = platform_class_mapping.get(platform.lower())
-            if not platform_class:
+            platform_name = platform_mapping.get(platform.lower())
+            if not platform_name:
                 return {'error': 'Unsupported platform'}, 400
-            
-            # Join the platform-specific messages with conversations and scammer
+
+            # Query messages filtered by platform_type
             messages = (
-                db.session.query(platform_class)
-                .join(Conversation, Conversation.id == platform_class.conversation_id)
+                db.session.query(Message)
+                .filter_by(platform_type=platform_name)
+                .join(Conversation, Conversation.id == Message.conversation_id)
                 .join(Scammer, Scammer.id == Conversation.scammer_id)
-                .order_by(platform_class.message_timestamp.desc())
+                .order_by(Message.message_timestamp.desc())
                 .limit(5)
                 .all()
             )
             
-            # Serialize the messages along with conversation details
+            # Serialize the messages along with conversation and scammer details
             response = []
             for msg in messages:
                 # Get the conversation related to the message
@@ -1265,7 +1202,7 @@ class RecentMessages(Resource):
                 # Get the scammer related to the conversation
                 scammer = Scammer.query.get(conversation.scammer_id)
                 if conversation:
-                    # Add conversation details to the message serialization
+                    # Add conversation and scammer details to the message serialization
                     message_data = msg.serialize()
                     message_data.update({
                         'bot_id': conversation.bot_id,
@@ -1279,6 +1216,7 @@ class RecentMessages(Resource):
         
         except Exception as e:
             return {'error': str(e)}, 500
+
 @ns_alerts.route('/api/alerts')
 class ReceiveAlerts(Resource):
     @ns_alerts.expect(create_alert_model)
@@ -1314,6 +1252,7 @@ class ReceiveAlerts(Resource):
             return {'alerts': serialized_alerts, 'unread_count': unread_count}, 200
         except Exception as e:
             return {'error': str(e)}, 500
+        
 @ns_alerts.route('/api/alerts/<int:alert_id>/mark_read')
 class MarkAlertAsRead(Resource):
     def put(self, alert_id):
@@ -1476,9 +1415,8 @@ class EditedMessage(Resource):
 class ProcessEditedMessage(Resource):
     def post(self):
         try:
-            print(1441)
             data = request.get_json()
-            print(1443)
+
             platform_name = platform_mapping.get(data['platform'].lower())
             if not platform_name:
                 return {'status': 'error', 'message': 'Unsupported platform'}, 400
@@ -1490,7 +1428,7 @@ class ProcessEditedMessage(Resource):
             original_message_text = data.get('original_message_text', None)
             edited_message_text = data.get("edited_message_text", None)
             edited_timestamp = safe_parse_timestamp(data.get("edited_timestamp", None))
-            print(1455)
+
             # Check if bot exists, if not return an error
             bot = Bot.query.get(bot_id)
             if not bot:
@@ -1501,7 +1439,7 @@ class ProcessEditedMessage(Resource):
             if not scammer:
                 return {'status': 'error', 'message': 'Scammer not found'}, 404
 
-            # Check if conversation exists, if not create a new conversation
+            # Check if conversation exists, if not return an error
             conversation = Conversation.query.filter_by(
                 bot_id=bot.id,
                 platform=platform_name,
@@ -1510,40 +1448,35 @@ class ProcessEditedMessage(Resource):
             if not conversation:
                 return {'status': 'error', 'message': 'Conversation not found'}, 404
 
-            # Map platform to message class
-            platform_message_classes = {
-                'facebook': FacebookMessage,
-                'whatsapp': WhatsappMessage,
-                'telegram': TelegramMessage
-            }
-            message_class = platform_message_classes.get(platform_name.lower())
+            # Query the original message from the unified Message model
+            original_message = Message.query.filter_by(
+                conversation_id=conversation.id, 
+                direction=direction, 
+                message_id=message_id,
+                message_text=original_message_text,
+                platform_type=platform_name  # Filter by platform
+            ).first()
             
-            ## Get original message
-            
-            original_message = message_class.query.filter_by(conversation_id=conversation.id, 
-                                                             direction=direction, 
-                                                             message_id=message_id,
-                                                             message_text=original_message_text).first()
-            
-            ## Update Edit Table
+            if not original_message:
+                return {'status': 'error', 'message': 'Original message not found'}, 404
+
+            # Update the Edit table
             edit_table_row = Edit(
-                scammer_unique_id = scammer_unique_id,
-                platform_type=  platform_name,
-                bot_id = bot_id,
-                direction = direction,
-                message_id = message_id,
-                conversation_id = conversation.id,
-                original_message_text = original_message.message_text,
-                previous_timestamp = original_message.edited_timestamp,
-                edited_message_text = edited_message_text,
-                edited_timestamp = edited_timestamp,
+                scammer_unique_id=scammer_unique_id,
+                platform_type=platform_name,
+                bot_id=bot_id,
+                direction=direction,
+                message_id=message_id,
+                conversation_id=conversation.id,
+                original_message_text=original_message.message_text,
+                previous_timestamp=original_message.edited_timestamp,
+                edited_message_text=edited_message_text,
+                edited_timestamp=edited_timestamp,
             )
 
             db.session.add(edit_table_row)
-            
 
-            print(scammer_unique_id, direction, "Edited", platform_name, message_id, original_message_text, False, edited_timestamp, bot_id)
-            ## Update Alert Table
+            # Update the Alert table
             new_alert = Alert(
                 scammer_unique_id=scammer_unique_id, 
                 direction=direction,
@@ -1559,7 +1492,7 @@ class ProcessEditedMessage(Resource):
             
             db.session.add(new_alert)
 
-
+            # Update the original message
             original_message.message_text = edited_message_text
             original_message.edited_timestamp = edited_timestamp
             original_message.response_status = "Edited"
@@ -1569,8 +1502,7 @@ class ProcessEditedMessage(Resource):
             return {'responses': f"Finished processing edited message {message_id} for {platform_name}"}, 200
 
         except Exception as e:
-            return {'error': str(e)}, 500
-       
+            return {'error': str(e)}, 500  
 
 @ns_conversations.route('/api/conversations/<platform>/<bot_id>/<scammer_unique_id>/pause_status')
 class GetConversationPauseStatus(Resource):

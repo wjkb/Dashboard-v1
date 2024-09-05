@@ -155,7 +155,7 @@ const Sidebar = () => {
                   fontWeight="bold"
                   sx={{ m: "10px 0 0 0" }}
                 >
-                  John Doe
+                  Ben
                 </Typography>
                 <Typography variant="h5" color={colors.greenAccent}>
                   Q Team

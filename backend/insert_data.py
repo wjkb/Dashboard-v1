@@ -1,13 +1,11 @@
 from datetime import datetime
 from backend import create_app
-from backend.models import db, Bot, Scammer, Platform, Conversation, FacebookMessage, WhatsappMessage, TelegramMessage, MessageScreenshots, ExtractedInformation, Alert, Edit
+from backend.models import db, Bot, Scammer, Platform, Conversation, Message, MessageScreenshots, ExtractedInformation, Alert, Edit
 app = create_app()
 with app.app_context():
     # Delete existing data
     db.session.query(ExtractedInformation).delete()
-    db.session.query(FacebookMessage).delete()
-    db.session.query(WhatsappMessage).delete()
-    db.session.query(TelegramMessage).delete()
+    db.session.query(Message).delete()
     db.session.query(MessageScreenshots).delete()
     db.session.query(Conversation).delete()
     db.session.query(Platform).delete()
@@ -79,28 +77,28 @@ with app.app_context():
 
     # Insert WhatsApp messages
 
-    whatsapp_messages_data = [
-        (3, 'incoming', '1', 'Hello! can you help me with my order?', datetime(2024, 5, 15, 14, 30), None, None, "edited", None, None),
-        (3, 'outgoing', '1', 'Sure, I\'d be happy to assist. Could you please provide your order number?', datetime(2024, 5, 15, 14, 31), None, None, "sent", None, None),
-        (3, 'incoming', '2', 'It\'s 12345.', datetime(2024, 5, 15, 14, 32), None, None, "deleted", datetime(2024, 5, 15, 14, 33), None),
-        (3, 'outgoing', '2', 'Thank you. I\'ll check the status for you now.', datetime(2024, 5, 15, 14, 33), None, None, "sent", None, None),
-        (3, 'incoming', '3', None, datetime(2024, 5, 15, 14, 34, 10), 'test/WhatsApp/90000001/90000012/cat.jpg', 'image/jpeg', None, None, None),
-        (3, 'incoming', '4', None, datetime(2024, 5, 15, 14, 34, 20), 'test/WhatsApp/90000001/90000012/cat.mp4', 'video/mp4', None, None, None),
-        (3, 'incoming', '5', None, datetime(2024, 5, 15, 14, 34, 30), 'test/WhatsApp/90000001/90000012/cat.mp3', 'audio/mp3', None, None, None),
-        (3, 'incoming', '6', None, datetime(2024, 5, 15, 14, 34, 40), 'test/WhatsApp/90000001/90000012/cat.pdf', 'application/pdf', None, None, None),
-        (3, 'incoming', '7', None, datetime(2024, 5, 15, 14, 34, 50), 'test/WhatsApp/90000001/90000012/cat.txt', 'text/plain', None, None, None),
-        (3, 'incoming', '8', None, datetime(2024, 5, 15, 14, 35, 10), 'test/WhatsApp/90000001/90000012/cat.py', 'text/x-python', None, None, None),
-        (3, 'outgoing', '3', 'Why did you send me random cat stuff??', datetime(2024, 5, 15, 14, 37), None, None, "edited", None, None),
-        (3, 'outgoing', '4', 'Hello? Are you there?', datetime(2024, 5, 15, 14, 37, 30), None, None, "sent", None, None),
-        (3, 'incoming', '9', 'OMG. I am so sorry, that was an accident', datetime(2024, 5, 15, 14, 38), None, None, "deleted", datetime(2024, 5, 15, 14, 33), None),
-        (3, 'incoming', '10','wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww, dfasdfsadfsadfsafadfafdafdafdafdad', datetime(2024, 5, 15, 14, 40), None, None, None, None, None),
-        (4, 'outgoing', '1', 'Hey Lim, do you know the store hours for today?', datetime(2024, 5, 15, 15, 30), None, None, "sent", None, None),
-        (4, 'incoming', '2', 'Yes, the store is open from 9 AM to 8 PM today.', datetime(2024, 5, 15, 15, 31), None, None, None, None, None),
+    messages_data = [
+        (3, 'incoming', '1', 'Hello! can you help me with my order?', datetime(2024, 5, 15, 14, 30), None, None, "edited", None, None,'WhatsApp'),
+        (3, 'outgoing', '1', 'Sure, I\'d be happy to assist. Could you please provide your order number?', datetime(2024, 5, 15, 14, 31), None, None, "sent", None, None,'WhatsApp'),
+        (3, 'incoming', '2', 'It\'s 12345.', datetime(2024, 5, 15, 14, 32), None, None, "deleted", datetime(2024, 5, 15, 14, 33), None,'WhatsApp'),
+        (3, 'outgoing', '2', 'Thank you. I\'ll check the status for you now.', datetime(2024, 5, 15, 14, 33), None, None, "sent", None, None,'WhatsApp'),
+        (3, 'incoming', '3', None, datetime(2024, 5, 15, 14, 34, 10), 'test/WhatsApp/90000001/90000012/cat.jpg', 'image/jpeg', None, None, None,'WhatsApp'),
+        (3, 'incoming', '4', None, datetime(2024, 5, 15, 14, 34, 20), 'test/WhatsApp/90000001/90000012/cat.mp4', 'video/mp4', None, None, None,'WhatsApp'),
+        (3, 'incoming', '5', None, datetime(2024, 5, 15, 14, 34, 30), 'test/WhatsApp/90000001/90000012/cat.mp3', 'audio/mp3', None, None, None,'WhatsApp'),
+        (3, 'incoming', '6', None, datetime(2024, 5, 15, 14, 34, 40), 'test/WhatsApp/90000001/90000012/cat.pdf', 'application/pdf', None, None, None,'WhatsApp'),
+        (3, 'incoming', '7', None, datetime(2024, 5, 15, 14, 34, 50), 'test/WhatsApp/90000001/90000012/cat.txt', 'text/plain', None, None, None,'WhatsApp'),
+        (3, 'incoming', '8', None, datetime(2024, 5, 15, 14, 35, 10), 'test/WhatsApp/90000001/90000012/cat.py', 'text/x-python', None, None, None,'WhatsApp'),
+        (3, 'outgoing', '3', 'Why did you send me random cat stuff??', datetime(2024, 5, 15, 14, 37), None, None, "edited", None, None,'WhatsApp'),
+        (3, 'outgoing', '4', 'Hello? Are you there?', datetime(2024, 5, 15, 14, 37, 30), None, None, "sent", None, None,'WhatsApp'),
+        (3, 'incoming', '9', 'OMG. I am so sorry, that was an accident', datetime(2024, 5, 15, 14, 38), None, None, "deleted", datetime(2024, 5, 15, 14, 33), None,'WhatsApp'),
+        (3, 'incoming', '10','wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww, dfasdfsadfsadfsafadfafdafdafdafdad', datetime(2024, 5, 15, 14, 40), None, None, None, None, None, 'WhatsApp'),
+        (4, 'outgoing', '1', 'Hey Lim, do you know the store hours for today?', datetime(2024, 5, 15, 15, 30), None, None, "sent", None, None,'WhatsApp'),
+        (4, 'incoming', '2', 'Yes, the store is open from 9 AM to 8 PM today.', datetime(2024, 5, 15, 15, 31), None, None, None, None, None,'WhatsApp'),
     ]
 
     # Insert messages into the database
-    for conversation_id, direction, message_id, message_text, message_timestamp, file_path, file_type, response_status, deleted_timestamp, edited_timestamp in whatsapp_messages_data:
-        whatsapp_message = WhatsappMessage(
+    for conversation_id, direction, message_id, message_text, message_timestamp, file_path, file_type, response_status, deleted_timestamp, edited_timestamp, platform_type in messages_data:
+        message = Message(
             conversation_id=conversation_id,
             direction=direction,
             message_id=message_id,
@@ -110,9 +108,10 @@ with app.app_context():
             file_type=file_type,
             response_status=response_status,
             deleted_timestamp=deleted_timestamp,
-            edited_timestamp=edited_timestamp
+            edited_timestamp=edited_timestamp,
+            platform_type=platform_type
         )
-        db.session.add(whatsapp_message)
+        db.session.add(message)
     
     # Insert screenshots into the database
     screenshot_data = [

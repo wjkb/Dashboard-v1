@@ -65,9 +65,7 @@ class Conversation(db.Model):
     bot_id = db.Column(db.String(15), db.ForeignKey('bot.id'), nullable=False)
     scammer_id = db.Column(db.Integer, db.ForeignKey('scammer.id'), nullable=False)
     platform = db.Column(db.String(50), nullable=False)
-    facebook_messages = db.relationship('FacebookMessage', backref='conversation', lazy=True)
-    whatsapp_messages = db.relationship('WhatsappMessage', backref='conversation', lazy=True)
-    telegram_messages = db.relationship('TelegramMessage', backref='conversation', lazy=True)
+    messages = db.relationship('Message', backref='conversation', lazy=True)
     message_screenshots = db.relationship('MessageScreenshots', backref='conversation', lazy=True)
     pause = db.Column(db.Boolean, nullable=False, default=False)
 
@@ -77,13 +75,11 @@ class Conversation(db.Model):
             'bot_id': self.bot_id,
             'scammer_id': self.scammer_id,
             'platform': self.platform,
-            'facebook_messages': [msg.serialize() for msg in self.facebook_messages],
-            'whatsapp_messages': [msg.serialize() for msg in self.whatsapp_messages],
-            'telegram_messages': [msg.serialize() for msg in self.telegram_messages],
+            'messages': [msg.serialize() for msg in self.messages],
             'pause': self.pause
         }
 
-class FacebookMessage(db.Model):
+class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
     direction = db.Column(db.String(10), nullable=False)
@@ -103,7 +99,7 @@ class FacebookMessage(db.Model):
     deleted_timestamp = db.Column(db.DateTime, nullable=True)
     edited_timestamp = db.Column(db.DateTime, nullable=True)
 
-    platform_type = db.Column(db.String(50), nullable=False, default='Facebook')
+    platform_type = db.Column(db.String(50), nullable=False)
 
     def serialize(self):
         return {
@@ -114,113 +110,17 @@ class FacebookMessage(db.Model):
             'message_text': self.message_text,
             'message_timestamp': self.message_timestamp.isoformat() if self.message_timestamp else None,
             'use_for_llm': self.use_for_llm,
-
             'file_path': self.file_path,
             'file_type': self.file_type,
-
             'responded_to': self.responded_to,
             'response_bef_generation_timestamp': self.response_bef_generation_timestamp.isoformat() if self.response_bef_generation_timestamp else None,
             'response_aft_generation_timestamp': self.response_aft_generation_timestamp.isoformat() if self.response_aft_generation_timestamp else None,
             'response_status': self.response_status,
-
             'deleted_timestamp': self.deleted_timestamp.isoformat() if self.deleted_timestamp else None,
             'edited_timestamp': self.edited_timestamp.isoformat() if self.edited_timestamp else None,
-            'platform_type': self.platform_type 
+            'platform_type': self.platform_type
         }
 
-
-class WhatsappMessage(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
-    direction = db.Column(db.String(10), nullable=False)
-    message_id = db.Column(db.String(255), nullable=True)
-    message_text = db.Column(db.Text, nullable=True)
-    message_timestamp = db.Column(db.DateTime, nullable=True)
-    use_for_llm = db.Column(db.Boolean, nullable=False, default=True)
-
-    file_path = db.Column(db.String(255), nullable=True)
-    file_type = db.Column(db.String(50), nullable=True)
-
-    responded_to = db.Column(db.String(255), nullable=True)
-    response_bef_generation_timestamp = db.Column(db.DateTime, nullable=True)
-    response_aft_generation_timestamp = db.Column(db.DateTime, nullable=True)
-    response_status = db.Column(db.String(10), nullable=True)
-
-    deleted_timestamp = db.Column(db.DateTime, nullable=True)
-    edited_timestamp = db.Column(db.DateTime, nullable=True)
-
-    platform_type = db.Column(db.String(50), nullable=False, default='WhatsApp')
-
-    def serialize(self):
-        return {
-            'id': self.id,
-            'conversation_id': self.conversation_id,
-            'direction': self.direction,
-            'message_id': self.message_id,
-            'message_text': self.message_text,
-            'message_timestamp': self.message_timestamp.isoformat() if self.message_timestamp else None,
-            'use_for_llm': self.use_for_llm,
-
-            'file_path': self.file_path,
-            'file_type': self.file_type,
-
-            'responded_to': self.responded_to,
-            'response_bef_generation_timestamp': self.response_bef_generation_timestamp.isoformat() if self.response_bef_generation_timestamp else None,
-            'response_aft_generation_timestamp': self.response_aft_generation_timestamp.isoformat() if self.response_aft_generation_timestamp else None,
-            'response_status': self.response_status,
-
-            'deleted_timestamp': self.deleted_timestamp.isoformat() if self.deleted_timestamp else None,
-            'edited_timestamp': self.edited_timestamp.isoformat() if self.edited_timestamp else None,
-            'platform_type': self.platform_type  
-        }
-
-
-class TelegramMessage(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
-    direction = db.Column(db.String(10), nullable=False)
-    message_id = db.Column(db.String(255), nullable=True)
-    message_text = db.Column(db.Text, nullable=True)
-    message_timestamp = db.Column(db.DateTime, nullable=True)
-    use_for_llm = db.Column(db.Boolean, nullable=False, default=True)
-
-    file_path = db.Column(db.String(255), nullable=True)
-    file_type = db.Column(db.String(50), nullable=True)
-
-    responded_to = db.Column(db.String(255), nullable=True)
-    response_bef_generation_timestamp = db.Column(db.DateTime, nullable=True)
-    response_aft_generation_timestamp = db.Column(db.DateTime, nullable=True)
-    response_status = db.Column(db.String(10), nullable=True)
-
-    deleted_timestamp = db.Column(db.DateTime, nullable=True)
-    edited_timestamp = db.Column(db.DateTime, nullable=True)
-
-    platform_type = db.Column(db.String(50), nullable=False, default='Telegram')
-
-    def serialize(self):
-        return {
-            'id': self.id,
-            'conversation_id': self.conversation_id,
-            'direction': self.direction,
-            'message_id': self.message_id,
-            'message_text': self.message_text,
-            'message_timestamp': self.message_timestamp.isoformat() if self.message_timestamp else None,
-            'use_for_llm': self.use_for_llm,
-
-            'file_path': self.file_path,
-            'file_type': self.file_type,
-
-            'responded_to': self.responded_to,
-            'response_bef_generation_timestamp': self.response_bef_generation_timestamp.isoformat() if self.response_bef_generation_timestamp else None,
-            'response_aft_generation_timestamp': self.response_aft_generation_timestamp.isoformat() if self.response_aft_generation_timestamp else None,
-            'response_status': self.response_status,
-
-            'deleted_timestamp': self.deleted_timestamp.isoformat() if self.deleted_timestamp else None,
-            'edited_timestamp': self.edited_timestamp.isoformat() if self.edited_timestamp else None,
-            'platform_type': self.platform_type 
-        }
-
-    
 class MessageScreenshots(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
@@ -232,7 +132,7 @@ class MessageScreenshots(db.Model):
             'conversation_id': self.conversation_id,
             'file_path': self.file_path
         }
-    
+
 class ExtractedInformation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
@@ -315,6 +215,3 @@ class Edit(db.Model):
             'conversation_id': self.conversation_id,
             'previous_timestamp': self.previous_timestamp.isoformat() if self.previous_timestamp else None,
         }
-
-
-
