@@ -204,6 +204,7 @@ create_edit_model = ns_messages.model('CreateEdit', {
 # Below are the routes for all the API endpoints #
 ##################################################
 
+#General Utility Routes
 @ns_bots.route('/api/bots')
 class CreateOrReadBots(Resource):
     @ns_bots.doc('list_bots')
@@ -405,7 +406,6 @@ class TogglePauseBotSelectively(Resource):
             return {"message": "Bot pause status updated successfully to " + str(bot.pause)}, 200
         except Exception as e:
             return {"error": "Internal Server Error: " + str(e)}, 500
-
 
 @ns_conversations.route('/api/conversations/toggle_pause')
 class TogglePauseConversation(Resource):
@@ -1354,7 +1354,6 @@ class GetAlertsSpecific(Resource):
                 return {'alerts': [], 'unread_count': 0}, 200
         except Exception as e:
             return {'error': str(e)}, 500
-
 
 @ns_alerts.route('/api/alerts/<int:alert_id>/delete')
 class DeleteAlert(Resource):
