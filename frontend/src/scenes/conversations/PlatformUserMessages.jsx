@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback} from "react";
+import { useLocation } from 'react-router-dom'; // Import useLocation to access query parameters
 import {
   Box,
   Tabs,
@@ -40,6 +41,7 @@ const TAB_EXTRACTED_INFORMATION = -999; // Change this to 2 and TAB_SCREENSHOTS 
 const TAB_SCREENSHOTS = 2;
 
 const PlatformUserMessages = ({ platform }) => {
+  const location = useLocation(); // Hook to get query parameters
   const { botId, scammerUniqueId } = useParams();
   const [bot, setBot] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -59,6 +61,9 @@ const PlatformUserMessages = ({ platform }) => {
   const [isPaused, setIsPaused] = useState(false);
   const [pauseButtonDisabled, setPauseButtonDisabled] = useState(false);
   const [openConfirmIgnoreDialog, setOpenConfirmIgnoreDialog] = useState(false);
+  const searchParams = new URLSearchParams(location.search); // Access query parameters
+  const messageIdFromAlert = searchParams.get("message_id");
+  const directionFromAlert = searchParams.get("direction");
 
   useEffect(() => {
     // Reset state when botId or scammerUniqueId changes
@@ -108,11 +113,7 @@ const PlatformUserMessages = ({ platform }) => {
   /**
    * Check if platform is paused
    */
-  const checkConversationPauseStatus = async (
-    platform,
-    botId,
-    scammerUniqueId
-  ) => {
+  const checkConversationPauseStatus = async (platform, botId, scammerUniqueId) => {
     try {
       const pause_status = await getConversationPauseStatus(
         platform,
@@ -201,11 +202,7 @@ const PlatformUserMessages = ({ platform }) => {
 
   const handleDownloadEverything = async () => {
     try {
-      const response = await downloadEverything(
-        platform,
-        botId,
-        scammerUniqueId
-      );
+      const response = await downloadEverything(platform, botId, scammerUniqueId);
       const { zipFileUrl } = response;
       if (zipFileUrl) {
         const link = document.createElement("a");
@@ -300,6 +297,32 @@ const PlatformUserMessages = ({ platform }) => {
     setPauseButtonDisabled(true);
     setOpenResumeDialog(false);
   };
+
+  const handleViewAlert = useCallback(() => {
+    setTabValue(TAB_MESSAGES); // Switch to the Messages tab
+    setTimeout(() => {
+      const matchingMessage = messages.find(
+        (msg) => msg.message_id === messageIdFromAlert && msg.direction === directionFromAlert
+      );
+
+      if (matchingMessage && messageRefs.current[matchingMessage.id]) {
+        messageRefs.current[matchingMessage.id].scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+        setHighlightedMessage(matchingMessage.id);
+        setTimeout(() => {
+          setHighlightedMessage(null);
+        }, 1000);
+      }
+    }, 500);
+  }, [messages, messageIdFromAlert, directionFromAlert]);
+
+    useEffect(() => {
+      if (messages.length > 0 && messageIdFromAlert && directionFromAlert) {
+        handleViewAlert();
+      }
+    }, [messages, messageIdFromAlert, directionFromAlert, handleViewAlert]);
 
   const handleViewFile = (messageId) => {
     setTabValue(TAB_MESSAGES); // Switch back to the messages tab
@@ -438,8 +461,6 @@ const PlatformUserMessages = ({ platform }) => {
           </Button>
         )}
       </Box>
-
-
 
       {/* Dialogs and Tabs remain the same */}
 

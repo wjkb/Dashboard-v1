@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   useTheme,
@@ -26,16 +26,20 @@ import {
 } from "@mui/icons-material";
 
 import { tokens } from "../../theme";
-import { HOST_URL } from "../../api";
+import { HOST_URL, getEditedMessage, getConversationDetails } from "../../api";  
 
 const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
-  const [selectedMessage, setSelectedMessage] = useState(null);
+  const [selectedMessages, setSelectedMessages] = useState([]);  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [editedMessages, setEditedMessages] = useState([]);
-
+  const [editedMessagesMap, setEditedMessagesMap] = useState({});
+  const fetchedMessageIdsRef = useRef(new Set());
+  const [conversationDetails, setConversationDetails] = useState(null);  
   const theme = useTheme();
   const colors = tokens;
+
+  // Derive conversation_id from the first message
+  const conversationId = messages.length > 0 ? messages[0].conversation_id : null;
 
   useEffect(() => {
     const fetchEditedMessages = async (msg) => {
@@ -43,35 +47,21 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`${HOST_URL}/api/messages/edited_message`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            platform_type: msg.platform_type,
-            conversation_id: msg.conversation_id,
-            message_id: msg.message_id,
-            direction: msg.direction,
-          }),
-        });
+        const data = await getEditedMessage(
+          msg.platform_type,
+          msg.conversation_id,
+          msg.message_id,
+          msg.direction
+        );
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch the edited messages.");
-        }
-
-        const data = await response.json();
         const fetchedEditedMessages = data.edited_messages || [];
 
-        if (Array.isArray(fetchedEditedMessages)) {
-          fetchedEditedMessages.sort(
-            (a, b) => new Date(b.edited_timestamp) - new Date(a.edited_timestamp)
-          );
-          setEditedMessages(fetchedEditedMessages);
-        } else {
-          setEditedMessages([]);
-        }
+        setEditedMessagesMap((prev) => ({
+          ...prev,
+          [msg.message_id]: fetchedEditedMessages,
+        }));
 
+        fetchedMessageIdsRef.current.add(msg.message_id);
         setLoading(false);
       } catch (err) {
         setLoading(false);
@@ -79,15 +69,42 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
       }
     };
 
+    // Find edited messages and fetch their edits
     messages.forEach((msg) => {
-      if (msg.response_status?.toLowerCase() === "edited") {
+      if (
+        msg.response_status?.toLowerCase() === "edited" &&
+        !fetchedMessageIdsRef.current.has(msg.message_id)
+      ) {
         fetchEditedMessages(msg);
       }
     });
   }, [messages]);
 
+  // Fetch conversation details to handle previous and next conversations
+  useEffect(() => {
+    if (conversationId) {
+      const fetchConversationDetails = async () => {
+        try {
+          setLoading(true);
+          const details = await getConversationDetails(conversationId);
+          setConversationDetails(details);
+          setLoading(false);
+        } catch (error) {
+          setLoading(false);
+          setError(error.message);
+        }
+      };
+
+      fetchConversationDetails();
+    }
+  }, [conversationId]);
+
   const handleViewMore = (msg) => {
-    setSelectedMessage(msg.message_id);
+    setSelectedMessages((prevSelectedMessages) =>
+      prevSelectedMessages.includes(msg.message_id)
+        ? prevSelectedMessages.filter((id) => id !== msg.message_id)
+        : [...prevSelectedMessages, msg.message_id] 
+    );
   };
 
   const renderFile = (filePath, fileType) => {
@@ -184,12 +201,41 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
     }
   };
 
+  const handleRedirect = (conversation) => {
+    const url = `http://localhost:3000/platforms/${conversation.platform}/${conversation.bot_id}/${conversation.scammer_unique_id}`;
+    window.location.href = url;
+  };
+
   return (
     <Box sx={{ height: "70vh", overflowY: "auto" }}>
+      {loading && <Typography variant="body2">Loading...</Typography>}
+      {error && (
+        <Typography variant="body2" color="error">
+          {error}
+        </Typography>
+      )}
+
+      {conversationDetails && conversationDetails.previous_conversation && (
+        <Typography color="error" variant="body2" gutterBottom>
+          This conversation was moved from another platform. Click{" "}
+          <Link
+            component="button"
+            underline="hover"
+            onClick={() => handleRedirect(conversationDetails.previous_conversation)}
+            sx={{ textDecoration: 'underline', color: 'white' }}
+          >
+            here
+          </Link>{" "}
+          to view.
+        </Typography>
+      )}
+
       <List>
         {messages.map((msg, index) => {
           const isEdited = msg.response_status?.toLowerCase() === "edited";
-          const mostRecentEdit = isEdited ? editedMessages[0] : null;
+          const mostRecentEdit = isEdited
+            ? editedMessagesMap[msg.message_id]?.[0]
+            : null;
 
           return (
             <ListItem
@@ -200,11 +246,15 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                 flexDirection: "column",
                 alignItems:
                   msg.direction === "incoming" ? "flex-start" : "flex-end",
-                backgroundColor:
-                  highlightedMessage === msg.id ? "yellow" : "inherit",
+                  backgroundColor:
+                  highlightedMessage === msg.id || 
+                  (highlightedMessage && highlightedMessage.message_id === msg.message_id && highlightedMessage.direction === msg.direction)
+                    ? "yellow"
+                    : "inherit",
                 transition: "background-color 0.5s ease",
                 position: "relative",
               }}
+              
             >
               <Paper
                 elevation={1}
@@ -219,6 +269,7 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                 }}
               >
                 {msg.file_path && renderFile(msg.file_path, msg.file_type)}
+
                 <Typography
                   variant="body1"
                   sx={{
@@ -231,16 +282,16 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                     ? mostRecentEdit.edited_message_text
                     : msg.message_text}
                 </Typography>
-                
+
                 {msg.response_status?.toLowerCase() === "deleted" && (
-                <Typography
-                  variant="body2"
-                  color="error"
-                  sx={{ fontStyle: "italic", marginTop: theme.spacing(1) }}
-                >
-                  This message has been deleted
-                </Typography>
-              )}
+                  <Typography
+                    variant="body2"
+                    color="error"
+                    sx={{ fontStyle: "italic", marginTop: theme.spacing(1) }}
+                  >
+                    This message has been deleted
+                  </Typography>
+                )}
 
                 {isEdited && (
                   <>
@@ -264,34 +315,39 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
                       </Link>{" "}
                       to view more
                     </Typography>
-                    {selectedMessage === msg.message_id &&
-                      editedMessages.length > 0 && (
+                    {selectedMessages.includes(msg.message_id) &&
+                      editedMessagesMap[msg.message_id]?.length > 0 && (
                         <TableContainer component={Paper} sx={{ marginTop: 2 }}>
                           <Table size="small">
                             <TableBody>
-                              {editedMessages.map((edit, idx) => (
-                                <TableRow key={idx}>
-                                  <TableCell sx={{ color: "white" }}>
-                                    {idx === editedMessages.length - 1
-                                      ? `Original Message (${new Date(
-                                          edit.previous_timestamp || msg.message_timestamp
-                                        ).toLocaleString()}):`
-                                      : `Edited Message (${new Date(
-                                          edit.previous_timestamp 
-                                        ).toLocaleString()}):`}
-                                  </TableCell>
+                              {editedMessagesMap[msg.message_id].map(
+                                (edit, idx) => (
+                                  <TableRow key={idx}>
+                                    <TableCell>
+                                      {idx ===
+                                      editedMessagesMap[msg.message_id].length - 1
+                                        ? `Original Message (${new Date(
+                                            edit.previous_timestamp ||
+                                              msg.message_timestamp
+                                          ).toLocaleString()}):`
+                                        : `Edited Message (${new Date(
+                                            edit.previous_timestamp
+                                          ).toLocaleString()}):`}
+                                    </TableCell>
 
-                                  <TableCell sx={{ color: "white" }}>
-                                    {edit.original_message_text}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
+                                    <TableCell>
+                                      {edit.original_message_text}
+                                    </TableCell>
+                                  </TableRow>
+                                )
+                              )}
                             </TableBody>
                           </Table>
                         </TableContainer>
                       )}
                   </>
                 )}
+
                 <Box
                   sx={{
                     display: "flex",
@@ -334,10 +390,19 @@ const MessagesTab = ({ messages, messageRefs, highlightedMessage }) => {
           );
         })}
       </List>
-      {loading && <Typography variant="body2">Loading...</Typography>}
-      {error && (
-        <Typography variant="body2" color="error">
-          {error}
+
+      {conversationDetails && conversationDetails.next_conversation && (
+        <Typography color="error" variant="body2" gutterBottom>
+          This conversation has moved to another platform. Click{" "}
+          <Link
+            component="button"
+            underline="hover"
+            onClick={() => handleRedirect(conversationDetails.next_conversation)}
+            sx={{ textDecoration: 'underline', color: 'white' }}
+          >
+            here
+          </Link>{" "}
+          to view.
         </Typography>
       )}
     </Box>

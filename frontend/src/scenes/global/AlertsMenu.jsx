@@ -86,19 +86,19 @@ const AlertsMenu = () => {
     } catch (error) {
       console.error("Failed to mark alert as read:", error);
     }
-
+  
+    const { platform_type, bot_id, scammer_unique_id, message_id, direction } = alert;
+  
     if (alert.link) {
       window.location.href = alert.link;
-    } else if (
-      alert.platform_type &&
-      alert.bot_id &&
-      alert.scammer_unique_id
-    ) {
-      const url = `http://localhost:3000/platforms/${alert.platform_type}/${alert.bot_id}/${alert.scammer_unique_id}`;
+    } else if (platform_type && bot_id && scammer_unique_id) {
+      const url = `http://localhost:3000/platforms/${platform_type}/${bot_id}/${scammer_unique_id}?message_id=${message_id}&direction=${direction}`;
       window.location.href = url;
     }
+  
     setAnchorEl(null);
   };
+  
 
   const handleMarkAllAsRead = async () => {
     try {

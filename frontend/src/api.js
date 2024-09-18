@@ -145,17 +145,17 @@ export const getAlerts = async () => {
   }
 };
 
-export const getEditedMessage = async (platform, botId, messageId) => {
+export const getEditedMessage = async (platform_type, conversation_id, message_id, direction) => {
   try {
-      const response = await fetch(
-          `${API_URL}/messages/${platform}/${botId}/${messageId}/edited`
-      );
-      if (!response.ok) {
-          throw new Error("Network response was not ok");
-      }
-      return await response.json();
+    const response = await fetch(
+      `${API_URL}/edits/${platform_type}/${conversation_id}/${message_id}/${direction}`
+    );
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return await response.json();
   } catch (error) {
-      throw new Error(`Error fetching edited message: ${error.message}`);
+    throw new Error(`Error fetching edited messages: ${error.message}`);
   }
 };
 
@@ -184,6 +184,19 @@ export const getConversationPauseStatus = async (platform, botId, scammerUniqueI
     throw new Error(`Error fetching pause status: ${error.message}`);
   }
 };
+
+export const getConversationDetails = async (conversationId) => {
+  try {
+    const response = await fetch(`${API_URL}/conversations/${conversationId}/details`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch conversation details");
+    }
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error fetching conversation details: ${error.message}`);
+  }
+};
+
 
 // POST APIs
 export const createBot = async (botData) => {
@@ -292,6 +305,7 @@ export const insertVictimProperty = async (bot_id, key, value) => {
     throw new Error(`Error inserting property: ${error.message}`);
   }
 };
+
 
 // PUT APIs
 export const editBot = async (botId, updatedData) => {
@@ -559,5 +573,3 @@ export const deleteVictimProperty = async (botId, key) => {
     throw new Error(`Error deleting property: ${error.message}`);
   }
 };
-
-

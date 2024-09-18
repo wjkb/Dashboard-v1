@@ -68,20 +68,29 @@ class Conversation(db.Model):
     messages = db.relationship('Message', backref='conversation', lazy=True)
     message_screenshots = db.relationship('MessageScreenshots', backref='conversation', lazy=True)
     pause = db.Column(db.Boolean, nullable=False, default=False)
+    
+    previous_conversation_id = db.Column(db.Integer, nullable=True)  
+    next_conversation_id = db.Column(db.Integer, nullable=True)     
 
     def serialize(self):
+        scammer = Scammer.query.get(self.scammer_id)  # Fetch scammer details
         return {
             'id': self.id,
             'bot_id': self.bot_id,
             'scammer_id': self.scammer_id,
+            'scammer_unique_id': scammer.unique_id if scammer else None,  # Include scammer's unique_id
             'platform': self.platform,
             'messages': [msg.serialize() for msg in self.messages],
-            'pause': self.pause
+            'pause': self.pause,
+            'previous_conversation_id': self.previous_conversation_id,  
+            'next_conversation_id': self.next_conversation_id           
         }
+
+
 
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=True)
     direction = db.Column(db.String(10), nullable=False)
     message_id = db.Column(db.String(255), nullable=True)
     message_text = db.Column(db.Text, nullable=True)
@@ -98,7 +107,7 @@ class Message(db.Model):
 
     deleted_timestamp = db.Column(db.DateTime, nullable=True)
     edited_timestamp = db.Column(db.DateTime, nullable=True)
-
+    
     platform_type = db.Column(db.String(50), nullable=False)
 
     def serialize(self):
@@ -118,8 +127,9 @@ class Message(db.Model):
             'response_status': self.response_status,
             'deleted_timestamp': self.deleted_timestamp.isoformat() if self.deleted_timestamp else None,
             'edited_timestamp': self.edited_timestamp.isoformat() if self.edited_timestamp else None,
-            'platform_type': self.platform_type
+            'platform_type': self.platform_type,
         }
+
 
 class MessageScreenshots(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -158,7 +168,7 @@ class Alert(db.Model):
     read_status = db.Column(db.Boolean, default=False, nullable=True)
     timestamp = db.Column(db.DateTime, nullable=True)
     bot_id = db.Column(db.String(255), nullable=True)
-    active = db.Column(db.Boolean, default=True, nullable=False) 
+    active = db.Column(db.Boolean, default=True, nullable=False)
 
     def serialize(self):
         return {
@@ -172,8 +182,10 @@ class Alert(db.Model):
             'read_status': self.read_status,
             'timestamp': self.timestamp.isoformat() if self.timestamp else None,
             'bot_id': self.bot_id,
-            'active': self.active 
+            'active': self.active,
         }
+
+
 
 class Edit(db.Model):
     id = db.Column(db.Integer, primary_key=True)

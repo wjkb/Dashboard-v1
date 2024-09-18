@@ -65,22 +65,23 @@ with app.app_context():
 
     # Insert conversations
     conversations_data = [
-        (90000001, 'Facebook', 1, 0), (90000001, 'Facebook', 2, 0),
-        (90000001, 'WhatsApp', 3, 0), (90000001, 'WhatsApp', 4, 0),
-        (90000002, 'Telegram', 5, 0), (90000002, 'Telegram', 6, 0),
+        (90000001, 'Facebook', 1, 0, 3, None), (90000001, 'Facebook', 2, 0, None, None),
+        (90000001, 'WhatsApp', 3, 0, None, 1), (90000001, 'WhatsApp', 4, 0, None, None),
+        (90000002, 'Telegram', 5, 0, None, None), (90000002, 'Telegram', 6, 0, None, None),
     ]
 
-    for bot_id, platform, scammer_id, pause in conversations_data:
-        conversation = Conversation(bot_id=bot_id, platform=platform, scammer_id=scammer_id)
+    for bot_id, platform, scammer_id, pause, previous_conversation_id, next_conversation_id in conversations_data:
+        conversation = Conversation(bot_id=bot_id, platform=platform, scammer_id=scammer_id, previous_conversation_id=previous_conversation_id, next_conversation_id=next_conversation_id)
         db.session.add(conversation)
     db.session.commit()
 
     # Insert WhatsApp messages
 
     messages_data = [
+        (1, 'incoming', '1', 'Changed Platform', datetime(2024, 5, 15, 14, 30), None, None, "deleted", None, None,'Facebook'),
         (3, 'incoming', '1', 'Hello! can you help me with my order?', datetime(2024, 5, 15, 14, 30), None, None, "edited", None, None,'WhatsApp'),
         (3, 'outgoing', '1', 'Sure, I\'d be happy to assist. Could you please provide your order number?', datetime(2024, 5, 15, 14, 31), None, None, "sent", None, None,'WhatsApp'),
-        (3, 'incoming', '2', 'It\'s 12345.', datetime(2024, 5, 15, 14, 32), None, None, "deleted", datetime(2024, 5, 15, 14, 33), None,'WhatsApp'),
+        (3, 'incoming', '2', 'It\'s 12345.', datetime(2024, 5, 15, 14, 32), None, None, "edited", datetime(2024, 5, 15, 14, 33), None,'WhatsApp'),
         (3, 'outgoing', '2', 'Thank you. I\'ll check the status for you now.', datetime(2024, 5, 15, 14, 33), None, None, "sent", None, None,'WhatsApp'),
         (3, 'incoming', '3', None, datetime(2024, 5, 15, 14, 34, 10), 'test/WhatsApp/90000001/90000012/cat.jpg', 'image/jpeg', None, None, None,'WhatsApp'),
         (3, 'incoming', '4', None, datetime(2024, 5, 15, 14, 34, 20), 'test/WhatsApp/90000001/90000012/cat.mp4', 'video/mp4', None, None, None,'WhatsApp'),
@@ -92,6 +93,8 @@ with app.app_context():
         (3, 'outgoing', '4', 'Hello? Are you there?', datetime(2024, 5, 15, 14, 37, 30), None, None, "sent", None, None,'WhatsApp'),
         (3, 'incoming', '9', 'OMG. I am so sorry, that was an accident', datetime(2024, 5, 15, 14, 38), None, None, "deleted", datetime(2024, 5, 15, 14, 33), None,'WhatsApp'),
         (3, 'incoming', '10','wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww, dfasdfsadfsadfsafadfafdafdafdafdad', datetime(2024, 5, 15, 14, 40), None, None, None, None, None, 'WhatsApp'),
+        (3, 'incoming', '10','Can change platform to Facebook?', datetime(2024, 5, 15, 15, 40), None, None, None, None, None, 'WhatsApp'),
+        (3, 'outgoing', '10','Sure', datetime(2024, 5, 15, 15, 40), None, None, "sent", None, None, 'WhatsApp'),
         (4, 'outgoing', '1', 'Hey Lim, do you know the store hours for today?', datetime(2024, 5, 15, 15, 30), None, None, "sent", None, None,'WhatsApp'),
         (4, 'incoming', '2', 'Yes, the store is open from 9 AM to 8 PM today.', datetime(2024, 5, 15, 15, 31), None, None, None, None, None,'WhatsApp'),
     ]
@@ -187,6 +190,16 @@ with app.app_context():
             'WhatsApp',  
             '1',  
             'Hello3 can you help me with my order?',  
+            '90000001',  
+            datetime(2024, 5, 15, 14, 35, 39)  
+        ),
+        (
+            '90000012',  
+            "It's 12345",  
+            'incoming',  
+            'WhatsApp',  
+            '2',  
+            'test12345',  
             '90000001',  
             datetime(2024, 5, 15, 14, 35, 39)  
         ),

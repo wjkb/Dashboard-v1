@@ -1094,8 +1094,7 @@ class DownloadEverything(Resource):
         
         except Exception as e:
             return {'error': str(e)}, 500
-
-        
+       
 @ns_utils.route('/api/check_overall_pause_status')
 class CheckOverallPauseStatus(Resource):
     def post(self):
@@ -1385,27 +1384,25 @@ class RestoreAlert(Resource):
         except Exception as e:
             return {'error': str(e)}, 500
 
-@ns_messages.route('/api/messages/edited_message')
-class EditedMessage(Resource):
-    def post(self):
+@ns_messages.route('/api/edits/<platform_type>/<conversation_id>/<message_id>/<direction>')
+class GetEditedMessages(Resource):
+    def get(self, platform_type, conversation_id, message_id, direction):
         try:
-            data = request.get_json()
-            platform_type = data.get('platform_type')
-            conversation_id = data.get('conversation_id')  
-            message_id = data.get('message_id')
-            direction = data.get('direction')
-
-            edited_messages = Edit.query.filter_by(
+            # Query the Edit table to find all edits for the given message
+            edits = Edit.query.filter_by(
                 platform_type=platform_type,
-                conversation_id=conversation_id,  
+                conversation_id=conversation_id,
                 message_id=message_id,
                 direction=direction
             ).order_by(Edit.edited_timestamp.desc()).all()
 
-            if not edited_messages:
-                return {'error': 'Edited messages not found'}, 404
+            # If no edits found, return an empty list
+            if not edits:
+                return {'edited_messages': []}, 200
 
-            return {'edited_messages': [edit.serialize() for edit in edited_messages]}, 200
+            # Serialize the edits and return them
+            serialized_edits = [edit.serialize() for edit in edits]
+            return {'edited_messages': serialized_edits}, 200
 
         except Exception as e:
             return {'error': str(e)}, 500
@@ -1636,3 +1633,32 @@ class UpdateVictimProperty(Resource):
                 return {'error': 'Key not found in victim details'}, 404
         except Exception as e:
             return {'error': str(e)}, 500
+
+@ns_conversations.route('/api/conversations/<conversation_id>/details')
+class GetConversationDetails(Resource):
+    def get(self, conversation_id):
+        try:
+            # Fetch the current conversation by its ID
+            conversation = Conversation.query.get(conversation_id)
+            if not conversation:
+                return {"error": "Conversation not found"}, 404
+
+            # Serialize the conversation data
+            conversation_data = conversation.serialize()
+
+            # Get previous conversation details
+            if conversation.previous_conversation_id:
+                previous_conversation = Conversation.query.get(conversation.previous_conversation_id)
+                if previous_conversation:
+                    conversation_data['previous_conversation'] = previous_conversation.serialize()
+
+            # Get next conversation details
+            if conversation.next_conversation_id:
+                next_conversation = Conversation.query.get(conversation.next_conversation_id)
+                if next_conversation:
+                    conversation_data['next_conversation'] = next_conversation.serialize()
+
+            return conversation_data, 200
+        except Exception as e:
+            return {"error": str(e)}, 500
+
